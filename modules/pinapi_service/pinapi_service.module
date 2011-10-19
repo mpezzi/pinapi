@@ -1,0 +1,29 @@
+<?php 
+
+/**
+ * @file
+ * Link general PinAPI functionalities to services module.
+ */
+
+
+/**
+ * Implements hook_service().
+ */
+function pinapi_service() {
+  return array(
+    array(
+      '#method' => 'code.redeem',
+      '#callback' => 'pinapi_service_code_redeem',
+      '#access arguments' => array('redeem codes'),
+      '#file' => array('file' => 'inc', 'module' => 'pinapi_service'),
+      '#args' => array(
+        array(
+          '#name' => 'redeem',
+          '#type' => 'array',
+          '#description' => t('A redeem object.')),
+      ),
+      '#return' => 'array',
+      '#help' => t('Returns prize data.'),
+    ),
+  );
+}

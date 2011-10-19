@@ -1,0 +1,6 @@
+name = PinAPI Service
+description = Provides a PinAPI service.
+package = Services - services
+dependencies[] = services
+dependencies[] = pinapi
+core = 6.x

@@ -1,0 +1,48 @@
+#pinapi-debug-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #000;
+  color: #c6c6c6;
+  z-index: 101;
+  font-size: 11px;
+  line-height: 16px;
+  font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
+  border-top: 1px solid #222;
+}
+
+.pinapi-debug-pool h4,
+.pinapi-debug-pool div.content {
+  padding: 5px 10px;
+  border-bottom: 1px solid #222;
+}
+
+.pinapi-debug-pool h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: bold;
+  border-bottom: 1px solid #222;
+}
+
+.pinapi-debug-pool h4,
+.pinapi-debug-pool label {
+  color: #fff;
+}
+
+.pinapi-debug-pool .content {
+  display: none;
+}
+
+.pinapi-debug-pool.open .content {
+  display: block;
+}
+
+.pinapi-debug-pool span.pin {
+  cursor: pointer;
+}
+
+.pinapi-debug-pool span.pin:hover {
+  color: #fff;
+  text-decoration: underline;
+}

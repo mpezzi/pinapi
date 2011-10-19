@@ -1,0 +1,6 @@
+name = PinAPI Node
+description = Exposes the Pin API system as nodes.
+core = 6.x
+package = PinAPI
+
+dependencies[] = pinapi

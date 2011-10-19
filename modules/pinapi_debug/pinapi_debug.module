@@ -1,0 +1,104 @@
+<?php 
+
+/**
+ * @file
+ * Provides a Debug UI for PinAPI module.
+ */
+
+/**
+ * Implements hook_init().
+ */
+function pinapi_debug_init() {
+  if ( pinapi_debug_access() ) {
+    drupal_add_css(drupal_get_path('module', 'pinapi_debug') . '/includes/pinapi_debug.toolbar.css');
+    drupal_add_js(drupal_get_path('module', 'pinapi_debug') . '/includes/pinapi_debug.toolbar.js');
+  }
+}
+
+/**
+ * Implements hook_perm().
+ */
+function pinapi_debug_perm() {
+  return array('use pin api debug toolbar');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_debug_theme() {
+  return array(
+    'pinapi_debug_toolbar' => array(
+      'arguments' => array('pools' => array()),
+      'template' => 'pinapi-debug-toolbar',
+      'path' => drupal_get_path('module', 'pinapi_debug') . '/theme',
+      'file' => 'theme.inc',
+    ),
+    'pinapi_debug_pool' => array(
+      'arguments' => array('pool_id' => NULL),
+      'template' => 'pinapi-debug-pool',
+      'path' => drupal_get_path('module', 'pinapi_debug') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function pinapi_debug_form_alter(&$form, &$form_state, $form_id) {
+  if ( $form_id == 'pinapi_code_redeem_form' && !isset($form['closed']) ) {
+    pinapi_debug_set_active($form['pool_id']['#value']);
+    
+    // Replace Pin API core debug method.
+    if ( variable_get('pinapi_debug_override', TRUE) && isset($form['debug']) ) {
+      unset($form['debug']);
+    }
+  }
+  
+  if ( $form_id == 'pinapi_settings_form' ) {
+    $form['debug']['pinapi_debug_toolbar'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Toolbar Debug Mode'),
+      '#description' => t('Enable debugging messages for users with "use pinapi debug toolbar".'),
+      '#default_value' => variable_get('pinapi_debug_toolbar', FALSE),
+    );
+  }
+}
+
+/**
+ * Implements hook_footer().
+ */
+function pinapi_debug_footer() {
+  if ( pinapi_debug_access() && count(pinapi_debug_get_active()) ) {
+    return theme('pinapi_debug_toolbar', pinapi_debug_get_active());
+  }
+}
+
+/**
+ * Checks for access to Pin API Debug Toolbar.
+ */
+function pinapi_debug_access() {
+  return ( variable_get('pinapi_debug_toolbar', FALSE) && user_access('use pin api debug toolbar') );
+}
+
+/**
+ * Set active forms.
+ */
+function pinapi_debug_set_active($pool_id = NULL) {
+  static $pools;
+  
+  if ( !isset($pools[$pool_id]) && !is_null($pool_id) ) {
+    $pools[$pool_id] = $pool_id;
+  }
+  
+  if ( is_null($pool_id) ) {
+    return isset($pools) ? $pools : array();
+  }
+}
+
+/**
+ * Get active forms.
+ */
+function pinapi_debug_get_active() {
+  return pinapi_debug_set_active();
+}

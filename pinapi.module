@@ -1,0 +1,232 @@
+<?php 
+
+/**
+ * @file
+ * A generalized pin API for Drupal.
+ */
+
+require_once dirname(__FILE__) . '/includes/pinapi.inc';
+require_once dirname(__FILE__) . '/includes/pinapi.pool.inc';
+require_once dirname(__FILE__) . '/includes/pinapi.prize.inc';
+require_once dirname(__FILE__) . '/includes/pinapi.code.inc';
+
+/**
+ * Implements hook_menu().
+ */
+function pinapi_menu() {
+  $items['admin/settings/pinapi'] = array(
+    'title' => 'Pin API',
+    'description' => 'Global settings for the Pin API',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_settings_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer pin api'),
+    'file' => 'pinapi.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['admin/settings/pinapi/general'] = array(
+    'title' => 'General',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  
+  $items['admin/reports/pinapi'] = array(
+    'title' => 'Pin API System Status',
+    'description' => 'Provides reports about the Pin API system.',
+    'page callback' => 'pinapi_report_view',
+    'access arguments' => array('view pin api reports'),
+    'file' => 'pinapi.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  
+  $items['prize/%pinapi_redeemed_prize'] = array(
+    'title callback' => 'pinapi_prize_page_title',
+    'title arguments' => array(1),
+    'page callback' => 'pinapi_prize_page_view',
+    'page arguments' => array(1),
+    'access callback' => 'pinapi_prize_access',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_perm().
+ */
+function pinapi_perm() {
+  return array(
+    'administer pin api', 
+    'debug pin api', 
+    'redeem codes',
+    'view any redeemed prizes',
+    'view own redeemed prizes',
+    'view pin api reports',
+  );
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function pinapi_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'pinapi') . '/views',
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_theme() {
+  return array(
+    'prize' => array(
+      'arguments' => array('prize' => NULL),
+      'template' => 'prize',
+      'path' => drupal_get_path('module', 'pinapi') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_block().
+ */
+function pinapi_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ( $op ) {
+    case 'list':
+      $blocks = array();
+      foreach ( pinapi_pools_select() as $pool ) {
+        $blocks['pinapi_code_form_' . $pool['pool_id']] = array(
+          'info' => t('Code Redeem Form !pool_id', array('!pool_id' => $pool['pool_id'])),
+          'pool_id' => $pool['pool_id'],
+        );
+        $blocks['pinapi_pool_prizes_' . $pool['pool_id']] = array(
+          'info' => t('Pool Prizes !pool_id', array('!pool_id' => $pool['pool_id'])),
+          'pool_id' => $pool['pool_id'],
+        );
+      }
+      
+      return $blocks;
+    case 'view':
+      if ( strpos($delta, 'pinapi_code_form_') !== FALSE ) {
+        $pool_id = str_replace('pinapi_code_form_', '', $delta);
+        
+        return array(
+          'subject' => t('Code'),
+          'content' => drupal_get_form('pinapi_code_redeem_form', $pool_id),
+        );
+      }
+      elseif ( strpos($delta, 'pinapi_pool_prizes_') !== FALSE ) {
+        $pool_id = str_replace('pinapi_pool_prizes_', '', $delta);
+        
+        $prizes = array();
+        foreach ( pinapi_pool_prizes($pool_id, $GLOBALS['user']) as $prize ) {
+          $prizes[] = array(
+            'class' => 'prize-' . $prize['pid'],
+            'data' => pinapi_prize_link($prize),
+          );
+        }
+        
+        return array(
+          'subject' => t('Prizes'),
+          'content' => theme('item_list', $prizes),
+        );
+      }
+  }
+}
+
+/**
+ * Implements hook_pinapi_code_generator().
+ */
+function pinapi_pinapi_code_generator() {
+  return array(
+    'md5' => array(
+      'name' => t('MD5'),
+      'callback' => 'pinapi_code_generate_md5',
+    ),
+    'md5_timestamp' => array(
+      'name' => t('MD5 with Timestamp'),
+      'callback' => 'pinapi_code_generate_md5_timestamp',
+    ),
+  );
+}
+
+/**
+ * Menu Callback: Load redeemed prize.
+ */
+function pinapi_redeemed_prize_load($crid) {
+  static $prizes;
+  
+  if ( !isset($prizes[$crid]) ) {
+    $sql  = "SELECT * FROM {pinapi_code_redeemed} cr ";
+    $sql .= "INNER JOIN {pinapi_prize} p ON cr.pid = p.pid ";
+    $sql .= "WHERE cr.crid = %d LIMIT 1";
+    
+    if ( $prize = db_fetch_array(db_query($sql, $crid)) ) {
+      $prize['title'] = t('Prize');
+      _pinapi_invoke('prize_redeemed_load', $prize);
+      $prizes[$crid] = $prize;
+    }
+  }
+  
+  if ( isset($prizes[$crid]) ) {
+    return $prizes[$crid];
+  }
+  
+  return FALSE;
+}
+
+/**
+ * Define redeemed prizes access.
+ */
+function pinapi_prize_access($prize, $account = NULL) {
+  global $user;
+  
+  // If no user object is supplied, the access check is for the current user.
+  if ( empty($account) ) {
+    $account = $user;
+  }
+  
+  if ( user_access('view any redeemed prizes', $account) ) {
+    return TRUE;
+  }
+  
+  if ( user_access('view own redeemed prizes', $account) && $prize['uid'] == $account->uid ) {
+    return TRUE;
+  }
+  
+  return FALSE;
+}
+
+/**
+ * Title Callback.
+ */
+function pinapi_prize_page_title($prize) {
+  return $prize['title'];
+}
+
+/**
+ * Menu Callback: view a single redeemed prize.
+ */
+function pinapi_prize_page_view($prize) {
+  //drupal_set_title(check_plain($prize['title']));
+  return pinapi_prize_show($prize);
+}
+
+/**
+ * Generate a page displaying a single redeemed prize.
+ */
+function pinapi_prize_show($prize) {
+  return pinapi_prize_view($prize, FALSE, TRUE);
+}
+
+/**
+ * Generate a display of the given redeemed prize.
+ */
+function pinapi_prize_view($prize, $teaser = FALSE, $page = TRUE) {
+  _pinapi_invoke('prize_redeemed_view', $prize, $teaser, $page);
+  return theme('prize', $prize);
+}
