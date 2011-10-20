@@ -2,7 +2,7 @@
 
 /**
  * @file
- * A generalized pin API for Drupal.
+ * A generalized Pin API for Drupal.
  */
 
 require_once dirname(__FILE__) . '/includes/pinapi.inc';
@@ -31,15 +31,6 @@ function pinapi_menu() {
     'weight' => 0,
   );
   
-  $items['admin/reports/pinapi'] = array(
-    'title' => 'Pin API System Status',
-    'description' => 'Provides reports about the Pin API system.',
-    'page callback' => 'pinapi_report_view',
-    'access arguments' => array('view pin api reports'),
-    'file' => 'pinapi.admin.inc',
-    'type' => MENU_NORMAL_ITEM,
-  );
-  
   $items['prize/%pinapi_redeemed_prize'] = array(
     'title callback' => 'pinapi_prize_page_title',
     'title arguments' => array(1),
@@ -63,7 +54,6 @@ function pinapi_perm() {
     'redeem codes',
     'view any redeemed prizes',
     'view own redeemed prizes',
-    'view pin api reports',
   );
 }
 
