@@ -2,5 +2,6 @@ name            = PinAPI Report
 description     = Report the status of Pin API.
 core            = 6.x
 package         = PinAPI
+version         = 6.x-2.x
 
 dependencies[]  = pinapi
