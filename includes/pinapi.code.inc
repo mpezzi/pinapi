@@ -99,6 +99,13 @@ function pinapi_code_clear($pool_id, $redeemed = FALSE) {
 }
 
 /**
+ * Clear all codes.
+ */
+function pinapi_code_clear_all() {
+  db_query("TRUNCATE TABLE {pinapi_code}");
+}
+
+/**
  * Batch: Import Codes.
  */
 function pinapi_code_import_batch($pool_id, $filepath, $redeemed = FALSE, $limit = 5000) {
@@ -173,10 +180,30 @@ function pinapi_code_import_file_read($filepath, $offset, $limit = 5000) {
   return $data;
 }
 
+
+
+/**
+ * Generate a code.
+ */
+function pinapi_code_generate($method = 'generic', $options = array()) {
+  //return call_user_func('pinapi_code_generate_' . $method, $options);
+  return pinapi_code_generate_generic($options);
+}
+
+/**
+ * Generation Method: Generic.
+ */
+function pinapi_code_generate_generic($options) {
+  return strtoupper(substr(sha1(time() . $options['salt'] . rand()), 0, $options['length']));
+}
+
+
+
+
 /**
  * Return an array of code generators.
  */
-function pinapi_code_generators() {
+function xpinapi_code_generators() {
   $generators = array();
   foreach ( module_invoke_all('pinapi_code_generator') as $key => $generator ) {
     $generators[$key] = $generator['name'];
@@ -187,7 +214,7 @@ function pinapi_code_generators() {
 /**
  * Batch: Generate Codes.
  */
-function pinapi_code_generate_batch($pool_id, $generator = 'pinapi_code_generate_md5_timestamp', $redeemed = FALSE, $limit = 5000) {
+function xpinapi_code_generate_batch($pool_id, $generator = 'pinapi_code_generate_md5_timestamp', $redeemed = FALSE, $limit = 5000) {
   pinapi_code_clear($pool_id, $redeemed);
   
   foreach ( pinapi_prizes_select(array('pool_id' => $pool_id)) as $prize ) {
@@ -205,7 +232,7 @@ function pinapi_code_generate_batch($pool_id, $generator = 'pinapi_code_generate
 /**
  * Batch Operation: Generate Codes for a prize.
  */
-function pinapi_code_generate_operation($prize, $generator, $limit = 5000, &$context) {
+function xpinapi_code_generate_operation($prize, $generator, $limit = 5000, &$context) {
   if ( !isset($context['sandbox']['progress']) ) {
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['current'] = 1;
@@ -227,7 +254,7 @@ function pinapi_code_generate_operation($prize, $generator, $limit = 5000, &$con
 /**
  * Invoke a code generator.
  */
-function pinapi_code_generator_invoke($pool_id, $generator) {
+function xpinapi_code_generator_invoke($pool_id, $generator) {
   $generators = module_invoke_all('pinapi_code_generator');
   
   // Allow modules to alter generators.
@@ -250,14 +277,14 @@ function pinapi_code_import_invoke($pool_id, $filepath) {
 /**
  * Generate an MD5 hash using prize information.
  */
-function pinapi_code_generate_md5($prize, $i) {
+function xpinapi_code_generate_md5($prize, $i) {
   return substr(md5($prize['pid'] . '00000000' . $i), 0, 10);
 }
 
 /**
  * Generate an MD5 hash using prize information and timestamp.
  */
-function pinapi_code_generate_md5_timestamp($prize, $i) {
+function xpinapi_code_generate_md5_timestamp($prize, $i) {
   return substr(md5($prize['pid'] . '00000000' . $i . '00000000' . time()), 0, 10);
 }
 
