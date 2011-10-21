@@ -43,12 +43,20 @@ function pinapi_drush_help($section) {
  *
  * Generate codes for a prize pool.
  */
-function drush_pinapi_code_generate($amount = 0, $length = 12) {
+function drush_pinapi_code_generate($amount = 0, $length = NULL) {
 
-  // SQL Insert Options.
-  $method = 'generic';
+  // Insert Options.
   $limit = 100000;
+  
+  // Get current system code generator.
+  $generator = pinapi_code_get_generator();
 
+  // If code generator doesn't exist.
+  if ( !$generator ) {
+    drush_die('Invalid code generator.');
+  }
+
+  // Ensure there is an amount set.
   if ( $amount == 0 ) {
     drush_die('No amount set. Aborting.');
   }
@@ -62,11 +70,9 @@ function drush_pinapi_code_generate($amount = 0, $length = 12) {
     $chunks = floor($amount / $limit);
     $leftover = $amount - ( $limit * $chunks );
 
-    // Set options for generator.
-    $options = array(
-      'salt' => variable_get('pinapi_code_generate_salt', '123456789'),
-      'length' => $length,
-    );
+    if ( !is_null($length) ) {
+      $generator['options']['length'] = $length;
+    }
 
     drush_print('Amount: ' . $amount);
     drush_print('Limit: ' . $limit);
@@ -80,19 +86,20 @@ function drush_pinapi_code_generate($amount = 0, $length = 12) {
       for ( $a = 1; $a <= $chunks; $a++ ) {
 
         // Insert a chunks of codes using one insert sql query.
-        db_query(pinapi_code_generate_insert_query($method, $options, $limit));
+        db_query(pinapi_code_generate_insert_query($generator, $limit));
         drush_pinapi_code_generate_status($limit, $limit * $a);
 
         // Insert leftover codes using one insert sql query after final chunk.
         if ( $a == $chunks && $leftover > 0 ) {
-          db_query(pinapi_code_generate_insert_query($method, $options, $leftover));
+          db_query(pinapi_code_generate_insert_query($generator, $leftover));
           drush_pinapi_code_generate_status($leftover, $amount);
         }
+
       }
     }
     // Amount is less then our limit, perform only one insert.
     else {
-      db_query(pinapi_code_generate_insert_query($method, $options, $amount));
+      db_query(pinapi_code_generate_insert_query($generator, $amount));
       drush_pinapi_code_generate_status($amount, $amount);
     }
 

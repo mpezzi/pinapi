@@ -133,13 +133,13 @@ function pinapi_block($op = 'list', $delta = 0, $edit = array()) {
  */
 function pinapi_pinapi_code_generator() {
   return array(
-    'md5' => array(
-      'name' => t('MD5'),
-      'callback' => 'pinapi_code_generate_md5',
-    ),
-    'md5_timestamp' => array(
-      'name' => t('MD5 with Timestamp'),
-      'callback' => 'pinapi_code_generate_md5_timestamp',
+    'generic' => array(
+      'name' => t('Generic'),
+      'callback' => 'pinapi_code_generate_generic',
+      'options' => array(
+        'salt' => variable_get('pinapi_code_generate_salt', '123456789'),
+        'length' => 12,
+      ),
     ),
   );
 }

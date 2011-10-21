@@ -181,13 +181,43 @@ function xpinapi_code_import_file_read($filepath, $offset, $limit = 5000) {
 }
 
 
+/**
+ * Invoke the code generator.
+ *
+ * @return
+ *   A generator object or FALSE
+ */
+function pinapi_code_get_generator($type = NULL) {
+  if ( is_null($type) ) {
+    $type = variable_get('pinapi_code_generator', 'generic');
+  }
+
+  // Invoke modules for their code generators and allow them the ability to alter them.
+  $generators = module_invoke_all('pinapi_code_generator');
+  drupal_alter('pinapi_code_generator', $generators);
+
+  // If generator exists and we have usuable callback, return the generator.
+  if ( isset($generators[$type]) && function_exists($generators[$type]['callback']) ) {
+    
+    // @TODO: Set default options.
+    if ( !isset($generators[$type]['options']) ) {
+      $generators[$type]['options'] = array();
+    }
+    
+    return $generators[$type];
+  }
+
+  return FALSE;
+}
 
 /**
  * Generate a code.
+ *
+ * @param $generator
+ *   A generator object.
  */
-function pinapi_code_generate($method = 'generic', $options = array()) {
-  //return call_user_func('pinapi_code_generate_' . $method, $options);
-  return pinapi_code_generate_generic($options);
+function pinapi_code_generate($generator) {
+  return call_user_func($generator['callback'], $generator['options']);
 }
 
 /**
@@ -200,12 +230,12 @@ function pinapi_code_generate_generic($options) {
 /**
  * Generate an insert sql statement.
  */
-function pinapi_code_generate_insert_query($method, $options = array(), $amount) {
+function pinapi_code_generate_insert_query($generator, $amount) {
   $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
 
   for ( $i = 0; $i < $amount; $i++ ) {
     $sql .= ( $i != 0 ) ? ', ' : '';
-    $sql .= "('" . pinapi_code_generate($method, $options) . "', 1)";
+    $sql .= "('" . pinapi_code_generate($generator) . "', 1)";
   }
   
   return $sql;
