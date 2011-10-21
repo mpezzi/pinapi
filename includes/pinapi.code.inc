@@ -108,7 +108,7 @@ function pinapi_code_clear_all() {
 /**
  * Batch: Import Codes.
  */
-function pinapi_code_import_batch($pool_id, $filepath, $redeemed = FALSE, $limit = 5000) {
+function xpinapi_code_import_batch($pool_id, $filepath, $redeemed = FALSE, $limit = 5000) {
   pinapi_code_clear($pool_id, $redeemed);
   
   $total = 0;
@@ -129,7 +129,7 @@ function pinapi_code_import_batch($pool_id, $filepath, $redeemed = FALSE, $limit
 /**
  * Batch Operation: Import Codes for a prize.
  */
-function pinapi_code_import_operation($pool_id, $total, $filepath, $limit = 5000, &$context) {
+function xpinapi_code_import_operation($pool_id, $total, $filepath, $limit = 5000, &$context) {
   if ( !isset($context['sandbox']['progress']) ) {
     $context['sandbox']['progress'] = 0;
     $context['sandbox']['current'] = 1;
@@ -156,7 +156,7 @@ function pinapi_code_import_operation($pool_id, $total, $filepath, $limit = 5000
 /**
  * Read File.
  */
-function pinapi_code_import_file_read($filepath, $offset, $limit = 5000) {
+function xpinapi_code_import_file_read($filepath, $offset, $limit = 5000) {
   $file = new SPLFileObject($filepath);
   $file->seek($offset);
   $i = 1;
@@ -197,7 +197,19 @@ function pinapi_code_generate_generic($options) {
   return strtoupper(substr(sha1(time() . $options['salt'] . rand()), 0, $options['length']));
 }
 
+/**
+ * Generate an insert sql statement.
+ */
+function pinapi_code_generate_insert_query($method, $options = array(), $amount) {
+  $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
 
+  for ( $i = 0; $i < $amount; $i++ ) {
+    $sql .= ( $i != 0 ) ? ', ' : '';
+    $sql .= "('" . pinapi_code_generate($method, $options) . "', 1)";
+  }
+  
+  return $sql;
+}
 
 
 /**

@@ -46,6 +46,7 @@ function pinapi_drush_help($section) {
 function drush_pinapi_code_generate($amount = 0, $length = 12) {
 
   // SQL Insert Options.
+  $method = 'generic';
   $limit = 100000;
 
   if ( $amount == 0 ) {
@@ -53,6 +54,9 @@ function drush_pinapi_code_generate($amount = 0, $length = 12) {
   }
 
   if ( drush_confirm(dt('Are you sure you want to create !amount codes?', array('!amount' => number_format($amount)))) ) {
+
+    // Calculate generating time.
+    timer_start('drush_pinapi_code_generate');
 
     // Split up amount to improve SQL performance.
     $chunks = floor($amount / $limit);
@@ -64,56 +68,47 @@ function drush_pinapi_code_generate($amount = 0, $length = 12) {
       'length' => $length,
     );
 
-    drush_print('Limit: ' . $limit);
     drush_print('Amount: ' . $amount);
+    drush_print('Limit: ' . $limit);
     drush_print('Chunks: ' . $chunks);
     drush_print('Left Overs: ' . $leftover);
+
     drush_print(dt('Generating !amount codes.', array('!amount' => number_format($amount))));
 
     // Import codes in chunks to improve SQL performance.
     if ( $amount >= $limit ) {
       for ( $a = 1; $a <= $chunks; $a++ ) {
-        $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
 
-        for ( $b = 0; $b < $limit; $b++ ) {
-          $sql .= ( $b != 0 ) ? ', ' : '';
-          $sql .= "('" . pinapi_code_generate('generic', $options) . "', 1)";
-        }
+        // Insert a chunks of codes using one insert sql query.
+        db_query(pinapi_code_generate_insert_query($method, $options, $limit));
+        drush_pinapi_code_generate_status($limit, $limit * $a);
 
-        db_query($sql);
-        drush_print(dt('Generated !current codes.', array('!current' => number_format($b * $a))));
-
-        // Import left overs after final chunk.
+        // Insert leftover codes using one insert sql query after final chunk.
         if ( $a == $chunks && $leftover > 0 ) {
-          $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
-
-          for ( $b = 0; $b < $leftover; $b++ ) {
-            $sql .= ( $b != 0 ) ? ', ' : '';
-            $sql .= "('" . pinapi_code_generate('generic', $options) . "', 1)";
-          }
-
-          db_query($sql);
-          drush_print(dt('Generated !current codes.', array('!current' => number_format($leftover))));
+          db_query(pinapi_code_generate_insert_query($method, $options, $leftover));
+          drush_pinapi_code_generate_status($leftover, $amount);
         }
       }
     }
+    // Amount is less then our limit, perform only one insert.
     else {
-      $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
-
-      for ( $b = 0; $b < $amount; $b++ ) {
-        $sql .= ( $b != 0 ) ? ', ' : '';
-        $sql .= "('" . pinapi_code_generate('generic', $options) . "', 1)";
-      }
-
-      db_query($sql);
-      drush_print(dt('Generated !current codes.', array('!current' => number_format($amount))));
+      db_query(pinapi_code_generate_insert_query($method, $options, $amount));
+      drush_pinapi_code_generate_status($amount, $amount);
     }
 
-    drush_log(dt('Successfully generated !amount codes.', array('!amount' => number_format($amount))), 'success');
+    // Stop the timer.
+    $time = timer_stop('drush_pinapi_code_generate');
+    $duration = $time['time'];
+
+    drush_log(dt('Successfully generated !amount codes in !duration.', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
   }
   else {
     drush_die('Aborting.');
   }
+}
+
+function drush_pinapi_code_generate_status($imported, $total) {
+  drush_print(dt('Added !imported codes, !total codes in total.', array('!imported' => number_format($imported), '!total' => number_format($total))));
 }
 
 /**
