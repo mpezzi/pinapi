@@ -11,6 +11,20 @@
  */
 function pinapi_drush_command() {
   return array(
+    'pinapi-code-verify' => array(
+      'description' => 'Verify a code',
+      'arguments' => array(
+        'string' => 'A code string',
+      ),
+      'aliases' => array('pcv'),
+    ),
+    'pinapi-code-redeem' => array(
+      'description' => 'Redeem a code',
+      'arguments' => array(
+        'string' => 'A code string or object',
+      ),
+      'aliases' => array('pcr'),
+    ),
     'pinapi-code-generate' => array(
       'description' => 'Generate codes for a pool',
       'arguments' => array(
@@ -42,9 +56,20 @@ function pinapi_drush_help($section) {
 }
 
 /**
- * Drush Command Callback.
- *
- * Generate codes for a prize pool.
+ * Drush Command Callback: Verify a code.
+ */
+function drush_pinapi_code_verify($string) {
+  $pool = (object) array(
+    'id' => 1,
+    'locked' => 1,
+    'status' => 1,
+  );
+  
+  drush_print( pinapi_code_verify($string, $pool) ? 'Yep' : 'Nope' );
+}
+
+/**
+ * Drush Command Callback: Generate codes for a prize pool.
  */
 function drush_pinapi_code_generate($amount = 0) {
 

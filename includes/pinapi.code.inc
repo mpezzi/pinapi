@@ -19,7 +19,7 @@
  * @return
  *   Boolean whether code was successfully redeemed.
  */
-function pinapi_code_redeem($code, $pool_id, $prize, $account) {
+function xpinapi_code_redeem($code, $pool_id, $prize, $account) {
   // Ensure this code can be used.
   if ( !pinapi_code_verify($code, $pool_id, $account) ) {
     return FALSE;
@@ -53,7 +53,7 @@ function pinapi_code_redeem($code, $pool_id, $prize, $account) {
  * @return
  *   Boolean
  */
-function pinapi_code_verify($code, $pool_id, $account = NULL, $reset = FALSE) {
+function xpinapi_code_verify($code, $pool_id, $account = NULL, $reset = FALSE) {
   static $codes;
   
   if ( pinapi_pool_is_locked($pool_id) ) {
@@ -67,6 +67,80 @@ function pinapi_code_verify($code, $pool_id, $account = NULL, $reset = FALSE) {
   
   return FALSE;
 }
+
+
+
+
+
+
+
+/**
+ * Verify a code.
+ *
+ * @param $string
+ *   A code string.
+ * @param $pool
+ *   A pool.
+ * @param $account
+ *   A user account.
+ * @param $reset
+ *   Reset the internal static cache.
+ * @return
+ *   TRUE or FALSE depending if the code is valid.
+ */
+function pinapi_code_verify($string, $pool, $account = NULL, $reset = FALSE) {
+  static $verify;
+  
+  if ( $pool->status ) {
+    if ( !isset($verify[$pool->id][$string]) || $reset ) {
+      $sql = "SELECT * FROM {pinapi_code} WHERE code = '%s' AND pool_id = %d AND status = 1 LIMIT 1";
+      $verify[$pool->id][$string] = db_fetch_object(db_query($sql, $string, $pool->id));
+    }
+    
+    return $verify[$pool->id][$string];
+  }
+  
+  return FALSE;
+}
+
+/**
+ * Redeem a code.
+ *
+ * @param $code
+ *   A string.
+ */
+function pinapi_code_redeem($string, $pool, $account = NULL) {
+  if ( $code = pinapi_code_verify($string, $pool, $account) ) {
+
+    // Invoke module hook_pinapi_pre_redeem().
+    module_invoke_all('pinapi_code_pre_redeem', $code->code, $pool, $account);
+
+    // Redeem this code in the database, set appropriate quantities.
+    db_query("UPDATE {pinapi_code} SET quantity = quantity - 1 WHERE cid = %d AND pool_id = %d AND quantity > 0", $code->cid, $pool->id);
+    db_query("UPDATE {pinapi_code} SET status = 0 WHERE cid = %d AND pool_id = %d AND quantity = 0", $code->cid, $pool->id);
+
+    // @TODO: Create a redeem record to keep track of redeemed codes.
+    //db_query("INSERT INTO {pinapi_code_redeemed} (code, pool_id, pid, uid, redeem_source, redeemed) VALUES ('%s', %d, %d, %d, '%s', %d)", $code, $pool_id, $prize['pid'], $account->uid, ip_address(), time());
+
+    // @TODO: Get id of the last redeemed prize.
+    //$prize['crid'] = db_last_insert_id('pinapi_code_redeemed', 'crid');
+
+    // Invoke hook_pinapi_code_redeem().
+    module_invoke_all('pinapi_code_redeem', $code, $pool, $account);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+
+
+
+
+
+
+
 
 /**
  * Insert code into database.
@@ -181,6 +255,12 @@ function xpinapi_code_import_file_read($filepath, $offset, $limit = 5000) {
 }
 
 
+
+
+
+
+
+
 /**
  * Invoke the code generator.
  *
@@ -222,13 +302,25 @@ function pinapi_code_generate($generator) {
 
 /**
  * Generation Method: Generic.
+ *
+ * @param $options
+ *   An array of options to generate the code with.
+ * @return
+ *   A generated code as string.
  */
 function pinapi_code_generate_generic($options) {
   return strtoupper(substr(sha1(time() . $options['salt'] . rand()), 0, $options['length']));
 }
 
 /**
- * Generate an insert sql statement.
+ * Return a INSERT sql query to mass generate codes.
+ *
+ * @param $generator
+ *   A generator.
+ * @param $amount
+ *   The amount of codes to insert.
+ * @return
+ *   An INSERT sql query.
  */
 function pinapi_code_generate_insert_query($generator, $amount) {
   $sql = "INSERT INTO {pinapi_code} (code, pool_id) VALUES ";
@@ -240,6 +332,12 @@ function pinapi_code_generate_insert_query($generator, $amount) {
   
   return $sql;
 }
+
+
+
+
+
+
 
 
 /**
@@ -310,7 +408,7 @@ function xpinapi_code_generator_invoke($pool_id, $generator) {
 /**
  * Invoke code import.
  */
-function pinapi_code_import_invoke($pool_id, $filepath) {
+function xpinapi_code_import_invoke($pool_id, $filepath) {
   if ( file_exists($filepath) && is_readable($filepath) ) {
     batch_set(pinapi_code_import_batch($pool_id, $filepath));
   }
