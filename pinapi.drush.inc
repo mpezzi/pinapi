@@ -121,7 +121,12 @@ function drush_pinapi_code_generate($amount = 0) {
 }
 
 function drush_pinapi_code_generate_status($imported, $total) {
-  drush_print(dt('Added !imported codes, !total codes in total.', array('!imported' => number_format($imported), '!total' => number_format($total))));
+  $vars = array(
+    '!imported' => format_plural($imported, '@count code', '@count codes'),
+    '!total' => format_plural($total, '@count code', '@count codes'),
+  );
+  
+  drush_print(dt('Inserted !imported, !total in total.', $vars));
 }
 
 /**
