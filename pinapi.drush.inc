@@ -15,7 +15,10 @@ function pinapi_drush_command() {
       'description' => 'Generate codes for a pool',
       'arguments' => array(
         'amount' => 'Amount of codes to generate.',
-        'length' => 'The length of the generated codes.',
+      ),
+      'options' => array(
+        '--type' => 'The type of generator to use to create the codes.',
+        '--length' => 'The length of the code to generate.',
       ),
       'aliases' => array('pcg'),
     ),
@@ -43,13 +46,16 @@ function pinapi_drush_help($section) {
  *
  * Generate codes for a prize pool.
  */
-function drush_pinapi_code_generate($amount = 0, $length = NULL) {
+function drush_pinapi_code_generate($amount = 0) {
 
   // Insert Options.
   $limit = 100000;
-  
+
+  // Drush Options.
+  $type = drush_get_option('type') ? drush_get_option('type') : NULL;
+
   // Get current system code generator.
-  $generator = pinapi_code_get_generator();
+  $generator = pinapi_code_get_generator($type);
 
   // If code generator doesn't exist.
   if ( !$generator ) {
@@ -70,8 +76,8 @@ function drush_pinapi_code_generate($amount = 0, $length = NULL) {
     $chunks = floor($amount / $limit);
     $leftover = $amount - ( $limit * $chunks );
 
-    if ( !is_null($length) ) {
-      $generator['options']['length'] = $length;
+    if ( drush_get_option('length') ) {
+      $generator['options']['length'] = drush_get_option('length');
     }
 
     drush_print('Amount: ' . $amount);
