@@ -8,154 +8,154 @@ function pinapi_schema() {
     'description' => t('Associate a prize with an existing piece of content.'),
     'fields' => array(
       'pid' => array(
-        'type' => 'serial', 
+        'type' => 'serial',
         'not null' => TRUE),
-      'pool_id' => array(
-        'type' => 'int', 
-        'unsigned' => TRUE, 
-        'not null' => TRUE, 
+      'gid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
         'default' => 0),
-      'machine_name' => array(
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'default' => ''),
+      'content_type' => array(
         'type' => 'varchar',
         'length' => '32',
         'not null' => TRUE, 
-        'default' => ''),
-      'content_type' => array(
-        'type' => 'varchar', 
-        'length' => '32', 
-        'not null' => TRUE, 
         'default' => 'node'),
       'content_id' => array(
-        'type' => 'int', 
-        'unsigned' => TRUE, 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
         'default' => 0),
       'quantity' => array(
         'type' => 'int', 
-        'not null' => TRUE, 
+        'not null' => TRUE,
+        'default' => 0),
+      'bias' => array(
+        'type' => 'float',
+        'not null' => TRUE,
         'default' => 0),
       'starts' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 0),
       'expires' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 0),
       'status' => array(
-        'type' => 'int', 
+        'type' => 'int',
         'not null' => TRUE),
     ),
     'primary key' => array('pid'),
     'indexes' => array(
-      'pool_id' => array('pool_id'),
+      'gid' => array('gid'),
       'content_id' => array('content_id'),
     ),
   );
-  
-  $schema['pinapi_pool'] = array(
-    'description' => t('Stores prize pool information.'),
+
+  $schema['pinapi_group'] = array(
+    'description' => t('Stores prize group information.'),
     'fields' => array(
-      'pool_id' => array(
-        'type' => 'serial', 
+      'gid' => array(
+        'type' => 'serial',
         'not null' => TRUE),
       'content_type' => array(
-        'type' => 'varchar', 
-        'length' => '32', 
-        'not null' => TRUE, 
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
         'default' => 'node'),
       'content_id' => array(
-        'type' => 'int', 
-        'unsigned' => TRUE, 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
         'default' => 0),
-      'locked' => array(
-        'type' => 'int', 
-        'not null' => TRUE),
       'status' => array(
         'type' => 'int', 
         'not null' => TRUE),
     ),
-    'primary key' => array('pool_id'),
+    'primary key' => array('gid'),
     'indexes' => array(
-      'pool_id' => array('pool_id'),
       'content_id' => array('content_id'),
     ),
   );
-  
+
   $schema['pinapi_code'] = array(
     'description' => t('Stores code information for prizes.'),
     'fields' => array(
       'cid' => array(
        'type' => 'serial',
        'not null' => TRUE),
+     'gid' => array(
+       'type' => 'int',
+       'not null' => TRUE,
+       'default' => 0),
       'code' => array(
-        'type' => 'varchar', 
-        'length' => '32', 
+        'type' => 'varchar',
+        'length' => '32',
         'not null' => TRUE),
-      'pool_id' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
-        'default' => 0),
       'quantity' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 1),
       'status' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 1),
     ),
     'primary key' => array('cid'),
     'indexes' => array(
       'cid' => array('cid'),
+      'gid' => array('gid'),
       'code' => array('code'),
-      'pool_id' => array('pool_id'),
     ),
   );
-  
+
   $schema['pinapi_code_redeemed'] = array(
     'description' => t('Stores redeemed code history information.'),
     'fields' => array(
       'crid' => array(
-        'type' => 'serial', 
+        'type' => 'serial',
         'not null' => TRUE),
-      'code' => array(
-        'type' => 'varchar', 
-        'length' => '32', 
-        'not null' => TRUE),
-      'pool_id' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+      'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 0),
       'pid' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 0),
       'uid' => array(
-        'type' => 'int', 
+        'type' => 'int',
+        'not null' => TRUE),
+      'code' => array(
+        'type' => 'varchar',
+        'length' => '32',
         'not null' => TRUE),
       'redeem_source' => array(
-        'type' => 'varchar', 
+        'type' => 'varchar',
         'length' => '255'),
       'redeemed' => array(
         'type' => 'int', 
-        'not null' => TRUE, 
+        'not null' => TRUE,
         'default' => 0),
       'status' => array(
-        'type' => 'int', 
-        'not null' => TRUE, 
+        'type' => 'int',
+        'not null' => TRUE,
         'default' => 1),
     ),
     'primary key' => array('crid'),
     'indexes' => array(
       'crid' => array('crid'),
-      'pool_id' => array('pool_id'),
+      'cid' => array('cid'),
       'pid' => array('pid'),
       'uid' => array('uid'),
     ),
   );
-  
+
   return $schema;
 }
 
@@ -171,13 +171,12 @@ function pinapi_install() {
  */
 function pinapi_uninstall() {
   drupal_uninstall_schema('pinapi');
-  
+
   // Remove pinapi variables.
   $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'pinapi_%'");
   while ( $row = db_fetch_object($result) ) {
     variable_del($row->name);
   }
-  
+
   drupal_set_message(t('PinAPI has been uninstalled.'));
 }
-
