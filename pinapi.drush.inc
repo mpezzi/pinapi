@@ -59,13 +59,24 @@ function pinapi_drush_help($section) {
  * Drush Command Callback: Verify a code.
  */
 function drush_pinapi_code_verify($string) {
-  $pool = (object) array(
-    'id' => 1,
-    'locked' => 1,
+  $group = (object) array(
+    'gid' => 1,
     'status' => 1,
   );
   
-  drush_print( pinapi_code_verify($string, $pool) ? 'Yep' : 'Nope' );
+  drush_print( pinapi_code_verify($string, $group) ? 'Yep' : 'Nope' );
+}
+
+/**
+ * Drush Command Callback: Verify a code.
+ */
+function drush_pinapi_code_redeem($string) {
+  $group = (object) array(
+    'gid' => 1,
+    'status' => 1,
+  );
+  
+  drush_print( pinapi_code_redeem($string, $group) ? 'Yep' : 'Nope' );
 }
 
 /**
