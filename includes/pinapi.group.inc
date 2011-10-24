@@ -114,6 +114,7 @@ function pinapi_group_get_groups($reset = FALSE) {
   }
 
   if ( !isset($groups) ) {
+    $groups = array();
     $result = db_query(db_rewrite_sql("SELECT gid FROM {pinapi_group}"));
     while ( $row = db_fetch_object($result) ) {
       $groups[$row->gid] = pinapi_group_load($row->gid, $reset);
