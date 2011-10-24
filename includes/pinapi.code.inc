@@ -148,7 +148,12 @@ function pinapi_code_generate_insert_query($generator, $amount) {
  * Clear all codes.
  */
 function pinapi_code_clear_all() {
+  // Invoke module hook_pinapi_code_clear_all().
+  module_invoke_all('pinapi_code_clear_all');
+
+  // Remove both redeemed and non-redeemed codes.
   db_query("TRUNCATE TABLE {pinapi_code}");
+  db_query("TRUNCATE TABLE {pinapi_code_redeemed}");
 }
 
 
