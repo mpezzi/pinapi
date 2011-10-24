@@ -42,25 +42,52 @@ class PinAPICodeTestCase extends PinAPITestCase {
    * Test Code Generation.
    */
   public function testCodeGeneration() {
-    $codes = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $this->group->gid));
-    $this->assertEqual($codes, 100, t('Code generation passed.'));
+    $count = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $this->group->gid));
+    $this->assertEqual($this->codes, $count, t('Code generation passed.'));
   }
 
   /**
    * Test Code Verification.
    */
   public function testCodeVerification() {
-    $code = db_fetch_object(db_query("SELECT * FROM {pinapi_code} WHERE gid = %d LIMIT 1", $this->group->gid));
-    $this->assertTrue(pinapi_code_verify($code->code, $this->group, $this->privileged_user), t('Code was successfully verified.'));
+    $pass = TRUE;
+
+    // Check each code and ensure they all verify.
+    $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d", $this->group->gid);
+    while ( $code = db_fetch_object($result) ) {
+      if ( !pinapi_code_verify($code->code, $this->group, $this->privileged_user) ) {
+        $pass = FALSE;
+      }
+    }
+
+    $this->assertTrue($pass, t('Codes were successfully verified.'));
   }
 
   /**
    * Test Code Redemption.
    */
   public function testCodeRedemption() {
-    $code = db_fetch_object(db_query("SELECT * FROM {pinapi_code} WHERE gid = %d LIMIT 1", $this->group->gid));
-    $this->assertTrue(pinapi_code_redeem($code->code, $this->group, $this->privileged_user), t('Code was successfully redeemed.'));
-    $this->assertFalse(pinapi_code_verify($code->code, $this->group, $this->privileged_user, TRUE), t('Redeemed code was made unavailable'));
+    // Redeem every available code.
+    $pass = TRUE;
+    $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d", $this->group->gid);
+    while ( $code = db_fetch_object($result) ) {
+      if ( !pinapi_code_redeem($code->code, $this->group, $this->privileged_user) ) {
+        $pass = FALSE;
+      }
+    }
+
+    $this->assertTrue($pass, t('Codes were successfully redeemed.'));
+
+    // Verify every code is unavailable.
+    $pass = TRUE;
+    $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d", $this->group->gid);
+    while ( $code = db_fetch_object($result) ) {
+      if ( pinapi_code_verify($code->code, $this->group, $this->privileged_user, TRUE) ) {
+        $pass = FALSE;
+      }
+    }
+
+    $this->assertTrue($pass, t('Redeemed codes were made unavailable.'));
   }
 
 }
