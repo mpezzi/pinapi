@@ -16,6 +16,11 @@ class PinAPITestCase extends DrupalWebTestCase {
    * Code group.
    */
   public $group;
+  
+  /**
+   * Codes to generate.
+   */
+  public $codes = 100;
 
   /**
    * Implements setUp().
@@ -36,7 +41,7 @@ class PinAPITestCase extends DrupalWebTestCase {
 
     // Create some codes to test.
     $generator = pinapi_code_get_generator();
-    pinapi_code_generate_insert($generator, 100, $this->group->gid);
+    pinapi_code_generate_insert($generator, $this->codes, $this->group->gid);
   }
 
   /**
