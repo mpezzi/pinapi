@@ -82,25 +82,30 @@ function drush_pinapi_code_redeem($string) {
 /**
  * Drush Command Callback: Generate codes for a prize pool.
  */
-function drush_pinapi_code_generate($amount = 0) {
+function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
 
   // Insert Options.
   $limit = 100000;
 
-  // Drush Options.
-  $type = drush_get_option('type') ? drush_get_option('type') : NULL;
-
-  // Get current system code generator.
-  $generator = pinapi_code_get_generator($type);
-
-  // If code generator doesn't exist.
-  if ( !$generator ) {
-    drush_die('Invalid code generator.');
+  // Ensure there is an amount set.
+  if ( is_null($amount) ) {
+    drush_die('No amount set. Aborting.');
   }
 
-  // Ensure there is an amount set.
-  if ( $amount == 0 ) {
-    drush_die('No amount set. Aborting.');
+  // @TODO: Get group, make sure it is valid.
+  $group_choices = drush_pinapi_group_choices();
+  if ( is_null($gid) ) {
+    $gid = drush_choice($group_choices, 'Enter a group number.');
+  }
+  if ( !is_null($gid) && !isset($group_choices[$gid]) ) {
+    drush_die('Invalid group id.');
+  }
+
+  // Get code generator.
+  $type = drush_get_option('type') ? drush_get_option('type') : NULL;
+  $generator = pinapi_code_get_generator($type);
+  if ( !$generator ) {
+    drush_die('Invalid code generator.');
   }
 
   if ( drush_confirm(dt('Are you sure you want to create !amount codes?', array('!amount' => number_format($amount)))) ) {
@@ -116,6 +121,7 @@ function drush_pinapi_code_generate($amount = 0) {
       $generator['options']['length'] = drush_get_option('length');
     }
 
+    drush_print("Group: " . $gid);
     drush_print('Amount: ' . $amount);
     drush_print('Limit: ' . $limit);
     drush_print('Chunks: ' . $chunks);
@@ -128,12 +134,12 @@ function drush_pinapi_code_generate($amount = 0) {
       for ( $a = 1; $a <= $chunks; $a++ ) {
 
         // Insert a chunks of codes using one insert sql query.
-        db_query(pinapi_code_generate_insert_query($generator, $limit));
+        db_query(pinapi_code_generate_insert_query($generator, $limit, $gid));
         drush_pinapi_code_generate_status($limit, $limit * $a);
 
         // Insert leftover codes using one insert sql query after final chunk.
         if ( $a == $chunks && $leftover > 0 ) {
-          db_query(pinapi_code_generate_insert_query($generator, $leftover));
+          db_query(pinapi_code_generate_insert_query($generator, $leftover, $gid));
           drush_pinapi_code_generate_status($leftover, $amount);
         }
 
@@ -141,7 +147,7 @@ function drush_pinapi_code_generate($amount = 0) {
     }
     // Amount is less then our limit, perform only one insert.
     else {
-      db_query(pinapi_code_generate_insert_query($generator, $amount));
+      db_query(pinapi_code_generate_insert_query($generator, $amount, $gid));
       drush_pinapi_code_generate_status($amount, $amount);
     }
 
@@ -178,4 +184,16 @@ function drush_pinapi_code_clear_all($type = NULL) {
   else {
     drush_die('Aborting.');
   }
+}
+
+/**
+ * Return a list of choices for groups.
+ */
+function drush_pinapi_group_choices() {
+  $groups = array();
+  foreach ( pinapi_group_get_groups() as $group ) {
+    $groups[$group->gid] = 'Group: #' . $group->content_id;
+  }
+
+  return $groups;
 }

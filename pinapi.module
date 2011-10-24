@@ -6,7 +6,7 @@
  */
 
 require_once dirname(__FILE__) . '/includes/pinapi.inc';
-require_once dirname(__FILE__) . '/includes/pinapi.pool.inc';
+require_once dirname(__FILE__) . '/includes/pinapi.group.inc';
 require_once dirname(__FILE__) . '/includes/pinapi.prize.inc';
 require_once dirname(__FILE__) . '/includes/pinapi.code.inc';
 
