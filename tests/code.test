@@ -50,7 +50,17 @@ class PinAPICodeTestCase extends PinAPITestCase {
    * Test Code Verification.
    */
   public function testCodeVerification() {
-    $this->assertTrue(TRUE, t('Code was verified.'));
+    $code = db_fetch_object(db_query("SELECT * FROM {pinapi_code} WHERE gid = %d LIMIT 1", $this->group->gid));
+    $this->assertTrue(pinapi_code_verify($code->code, $this->group, $this->privileged_user), t('Code was successfully verified.'));
+  }
+
+  /**
+   * Test Code Redemption.
+   */
+  public function testCodeRedemption() {
+    $code = db_fetch_object(db_query("SELECT * FROM {pinapi_code} WHERE gid = %d LIMIT 1", $this->group->gid));
+    $this->assertTrue(pinapi_code_redeem($code->code, $this->group, $this->privileged_user), t('Code was successfully redeemed.'));
+    $this->assertFalse(pinapi_code_verify($code->code, $this->group, $this->privileged_user, TRUE), t('Redeemed code was made unavailable'));
   }
 
 }
