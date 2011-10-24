@@ -138,12 +138,12 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
       for ( $a = 1; $a <= $chunks; $a++ ) {
 
         // Insert a chunks of codes using one insert sql query.
-        db_query(pinapi_code_generate_insert_query($generator, $limit, $gid));
+        pinapi_code_generate_insert($generator, $limit, $gid);
         drush_pinapi_code_generate_status($limit, $limit * $a);
 
         // Insert leftover codes using one insert sql query after final chunk.
         if ( $a == $chunks && $leftover > 0 ) {
-          db_query(pinapi_code_generate_insert_query($generator, $leftover, $gid));
+          pinapi_code_generate_insert($generator, $leftover, $gid);
           drush_pinapi_code_generate_status($leftover, $amount);
         }
 
@@ -151,7 +151,7 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
     }
     // Amount is less then our limit, perform only one insert.
     else {
-      db_query(pinapi_code_generate_insert_query($generator, $amount, $gid));
+      pinapi_code_generate_insert($generator, $amount, $gid);
       drush_pinapi_code_generate_status($amount, $amount);
     }
 

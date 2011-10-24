@@ -134,7 +134,7 @@ function pinapi_code_generate_generic($options) {
  * @return
  *   An INSERT sql query as string
  */
-function pinapi_code_generate_insert_query($generator, $amount, $gid = 0) {
+function pinapi_code_generate_insert($generator, $amount, $gid = 0) {
   $sql = "INSERT INTO {pinapi_code} (gid, code) VALUES ";
 
   for ( $i = 0; $i < $amount; $i++ ) {
@@ -142,7 +142,7 @@ function pinapi_code_generate_insert_query($generator, $amount, $gid = 0) {
     $sql .= "(" . $gid . ", '" . pinapi_code_generate($generator) . "')";
   }
 
-  return $sql;
+  return db_query($sql);
 }
 
 /**
