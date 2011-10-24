@@ -39,6 +39,14 @@ class PinAPICodeTestCase extends PinAPITestCase {
   }
 
   /**
+   * Test Code Generation.
+   */
+  public function testCodeGeneration() {
+    $codes = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $this->group->gid));
+    $this->assertEqual($codes, 100, t('Code generation passed.'));
+  }
+
+  /**
    * Test Code Verification.
    */
   public function testCodeVerification() {

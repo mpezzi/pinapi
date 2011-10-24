@@ -13,14 +13,30 @@ class PinAPITestCase extends DrupalWebTestCase {
   public $privileged_user;
 
   /**
+   * Code group.
+   */
+  public $group;
+
+  /**
    * Implements setUp().
    */
   public function setUp() {
     parent::setUp('pinapi');
 
     // Create and log in our privileged user.
-    $this->privileged_user = $this->drupalCreateUser(array());
+    $this->privileged_user = $this->drupalCreateUser(array('redeem codes'));
     $this->drupalLogin($this->privileged_user);
+
+    // Create a test group.
+    $this->group = new stdClass;
+    $this->group->name = 'simpletest';
+    $this->group->content_id = 0;
+    $this->group->status = 1;
+    pinapi_group_save($this->group);
+
+    // Create some codes to test.
+    $generator = pinapi_code_get_generator();
+    pinapi_code_generate_insert($generator, 100, $this->group->gid);
   }
 
   /**
