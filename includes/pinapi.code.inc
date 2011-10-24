@@ -146,6 +146,18 @@ function pinapi_code_generate_insert_query($generator, $amount, $gid = 0) {
 }
 
 /**
+ * Clear codes from a group.
+ */
+function pinapi_code_clear($gid) {
+  // Invoke module hook_pinapi_code_clear().
+  module_invoke_all('pinapi_code_clear');
+
+  // Remove both redeemed and non-redeemed codes from group.
+  db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $gid);
+  db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
+}
+
+/**
  * Clear all codes.
  */
 function pinapi_code_clear_all() {
