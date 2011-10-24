@@ -63,6 +63,11 @@ function pinapi_schema() {
       'gid' => array(
         'type' => 'serial',
         'not null' => TRUE),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'default' => ''),
       'content_type' => array(
         'type' => 'varchar',
         'length' => '32',
@@ -117,10 +122,14 @@ function pinapi_schema() {
   $schema['pinapi_code_redeemed'] = array(
     'description' => t('Stores redeemed code history information.'),
     'fields' => array(
-      'crid' => array(
+      'rid' => array(
         'type' => 'serial',
         'not null' => TRUE),
       'cid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
+      'gid' => array(
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0),
@@ -147,10 +156,11 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 1),
     ),
-    'primary key' => array('crid'),
+    'primary key' => array('rid'),
     'indexes' => array(
-      'crid' => array('crid'),
+      'rid' => array('rid'),
       'cid' => array('cid'),
+      'gid' => array('gid'),
       'pid' => array('pid'),
       'uid' => array('uid'),
     ),
