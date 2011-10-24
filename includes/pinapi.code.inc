@@ -21,7 +21,7 @@
 function pinapi_code_redeem($string, $group, $account = NULL) {
   if ( $code = pinapi_code_verify($string, $group, $account, TRUE) ) {
 
-    // Invoke module hook_pinapi_pre_redeem().
+    // Invoke module hook_pinapi_code_pre_redeem().
     module_invoke_all('pinapi_code_pre_redeem', $code, $group, $account);
 
     // Redeem this code in the database, set appropriate quantities.
@@ -40,6 +40,7 @@ function pinapi_code_redeem($string, $group, $account = NULL) {
     return TRUE;
   }
 
+  // Code was not verified, therefore cannot be redeemed.
   return FALSE;
 }
 
@@ -89,12 +90,12 @@ function pinapi_code_get_generator($type = NULL) {
 
   // If generator exists and we have usuable callback, return the generator.
   if ( isset($generators[$type]) && function_exists($generators[$type]['callback']) ) {
-    
+
     // @TODO: Set default options.
     if ( !isset($generators[$type]['options']) ) {
       $generators[$type]['options'] = array();
     }
-    
+
     return $generators[$type];
   }
 
@@ -131,7 +132,7 @@ function pinapi_code_generate_generic($options) {
  * @param $amount
  *   The amount of codes to insert.
  * @return
- *   An INSERT sql query.
+ *   An INSERT sql query as string
  */
 function pinapi_code_generate_insert_query($generator, $amount) {
   $sql = "INSERT INTO {pinapi_code} (gid, code) VALUES ";
