@@ -36,6 +36,13 @@ function pinapi_drush_command() {
       ),
       'aliases' => array('pcg'),
     ),
+    'pinapi-code-clear' => array(
+      'description' => 'Clear group codes from the database.',
+      'arguments' => array(
+        'gid' => 'A group id.',
+      ),
+      'aliases' => array('pcc'),
+    ),
     'pinapi-code-clear-all' => array(
       'description' => 'Clear all codes from the database.',
       'aliases' => array('pcca'),
@@ -93,14 +100,11 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
   }
 
   // @TODO: Get group, make sure it is valid.
-  $group_choices = drush_pinapi_group_choices();
-  if ( is_null($gid) ) {
-    $gid = drush_choice($group_choices, 'Enter a group number.');
+  $gid = drush_pinapi_group_choice('Choose the group you would like to generate for.', $gid);
+  if ( !$gid ) {
+    drush_die('Invalid group.');
   }
-  if ( !is_null($gid) && !isset($group_choices[$gid]) ) {
-    drush_die('Invalid group id.');
-  }
-
+  
   // Get code generator.
   $type = drush_get_option('type') ? drush_get_option('type') : NULL;
   $generator = pinapi_code_get_generator($type);
@@ -162,6 +166,9 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
   }
 }
 
+/**
+ * Display a status update for code generation.
+ */
 function drush_pinapi_code_generate_status($imported, $total) {
   $vars = array(
     '!imported' => format_plural($imported, '@count code', '@count codes'),
@@ -172,11 +179,24 @@ function drush_pinapi_code_generate_status($imported, $total) {
 }
 
 /**
- * Drush Command Callback.
- *
- * Clear all codes.
+ * Drush Command Callback: Clear codes from group.
  */
-function drush_pinapi_code_clear_all($type = NULL) {
+function drush_pinapi_code_clear($gid = NULL) {
+  if ( $gid = drush_pinapi_group_choice('Choose the group you would like to clear.', $gid) ) {
+    if ( drush_confirm(dt('Are you sure you want to clear this group?')) ) {
+      pinapi_code_clear($gid);
+      drush_log(dt('Cleared all group codes.'), 'success');
+    }
+  }
+  else {
+    drush_die('Aborting.');
+  }
+}
+
+/**
+ * Drush Command Callback: Clear all codes.
+ */
+function drush_pinapi_code_clear_all() {
   if ( drush_confirm(dt('Are you sure you want to remove all codes?')) ) {
     pinapi_code_clear_all();
     drush_log(dt('Cleared all codes.'), 'success');
@@ -188,12 +208,21 @@ function drush_pinapi_code_clear_all($type = NULL) {
 
 /**
  * Return a list of choices for groups.
+ *
+ * @param $gid
+ *   A group id.
+ * @return
+ *   A valid group id.
  */
-function drush_pinapi_group_choices() {
-  $groups = array();
+function drush_pinapi_group_choice($prompt, $gid = NULL) {
+  $choices = array();
   foreach ( pinapi_group_get_groups() as $group ) {
-    $groups[$group->gid] = 'Group: #' . $group->content_id;
+    $choices[$group->name] = $group->gid;
   }
 
-  return $groups;
+  if ( is_null($gid) ) {
+    $gid = drush_choice($choices, $prompt, '!key');
+  }
+
+  return isset($choices[$gid]) ? $choices[$gid] : FALSE;
 }
