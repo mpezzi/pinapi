@@ -84,7 +84,7 @@ function pinapi_theme() {
 /**
  * Implements hook_block().
  */
-function pinapi_block($op = 'list', $delta = 0, $edit = array()) {
+function xpinapi_block($op = 'list', $delta = 0, $edit = array()) {
   switch ( $op ) {
     case 'list':
       $blocks = array();
