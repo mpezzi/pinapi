@@ -8,7 +8,7 @@
 /**
  * Implements hook_pinapi_groupapi().
  */
-function hook_pinapi_groupapi(&$group, $op) {
+function hook_pinapi_groupapi($op, &$group) {
   
 }
 

@@ -154,7 +154,7 @@ function pinapi_code_generate_insert($generator, $amount, $gid = 0) {
  */
 function pinapi_code_clear($gid) {
   // Invoke module hook_pinapi_code_clear().
-  module_invoke_all('pinapi_code_clear');
+  module_invoke_all('pinapi_code_clear', $gid);
 
   // Remove both redeemed and non-redeemed codes from group.
   db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $gid);

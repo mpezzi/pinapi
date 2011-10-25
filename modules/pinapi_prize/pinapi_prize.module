@@ -69,3 +69,42 @@ function pinapi_prize_pinapi_codeapi($op, &$code, &$group, &$account) {
     db_query("INSERT INTO {pinapi_prize_redeemed} (rid, pid) VALUES (%d, %d)", $code->rid, $code->prize->pid);
   }
 }
+
+/**
+ * Implements hook_pinapi_code_clear().
+ */
+function pinapi_prize_pinapi_code_clear($gid) {
+  db_query("DELETE pr FROM {pinapi_prize_redeemed} pr JOIN {pinapi_prize} p ON pr.pid = p.pid WHERE p.gid = %d", $gid);
+}
+
+/**
+ * Define redeemed prizes access.
+ *
+ * @param $prize
+ *   A prize object.
+ * @param $account
+ *   A user account.
+ * @return
+ *   TRUE or FALSE whether user has access to the prize.
+ */
+function pinapi_prize_access($prize, $account = NULL) {
+  global $user;
+
+  // If no user object is supplied, the access check is for the current user.
+  if ( empty($account) ) {
+    $account = $user;
+  }
+
+  // Check to see if user can view any prize.
+  if ( user_access('view any redeemed prizes', $account) ) {
+    return TRUE;
+  }
+
+  // Check to see if user can view own prize.
+  if ( user_access('view own redeemed prizes', $account) && $prize->uid == $account->uid ) {
+    return TRUE;
+  }
+
+  // User does not have access.
+  return FALSE;
+}
