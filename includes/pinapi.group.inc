@@ -34,7 +34,7 @@ function pinapi_group_load($gid, $reset = FALSE) {
 
   if ( $group && $group->gid ) {
     // Invoke hook_pinapi_groupapi operation in all modules and attach results to the group object.
-    if ( $extra = pinapi_groupapi_invoke($group, 'load') ) {
+    if ( $extra = pinapi_groupapi_invoke('load', $group) ) {
       foreach ( $extra as $key => $value ) {
         $group->$key = $value;
       }
@@ -52,7 +52,7 @@ function pinapi_group_load($gid, $reset = FALSE) {
  */
 function pinapi_group_save(&$group) {
   // Invoke hook_pinapi_groupapi operation in all modules.
-  pinapi_groupapi_invoke($group, 'presave');
+  pinapi_groupapi_invoke('presave', $group);
 
   // Determine whether this is a new group.
   $group->is_new = empty($group->gid);
@@ -67,7 +67,7 @@ function pinapi_group_save(&$group) {
   }
 
   // Invoke hook_pinapi_groupapi operation in all modules.
-  pinapi_groupapi_invoke($group, $op);
+  pinapi_groupapi_invoke($op, $group);
 
   // Clear the page and blocks cache.
   cache_clear_all();
@@ -83,11 +83,11 @@ function pinapi_group_save(&$group) {
  * @return
  *   The returned value of the invoked hooks.
  */
-function pinapi_groupapi_invoke(&$group, $op) {
+function pinapi_groupapi_invoke($op, &$group) {
   $return = array();
   foreach ( module_implements('pinapi_groupapi') as $name ) {
     $function = $name . '_pinapi_groupapi';
-    $result = $function($group, $op);
+    $result = $function($op, $group);
     if ( isset($result) && is_array($result) ) {
       $return = array_merge($return, $result);
     }

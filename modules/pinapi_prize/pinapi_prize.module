@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Provides a prize to redeemed codes.
+ */
+
+require_once dirname(__FILE__) . '/pinapi_prize.inc';
+
+/**
+ * Implements hook_perm().
+ */
+function pinapi_prize_perm() {
+  return array(
+    'view any redeemed prizes',
+    'view own redeemed prizes',
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function xpinapi_prize_menu() {
+  $items['prize/%pinapi_redeemed_prize'] = array(
+    'title callback' => 'pinapi_prize_page_title',
+    'title arguments' => array(1),
+    'page callback' => 'pinapi_prize_page_view',
+    'page arguments' => array(1),
+    'access callback' => 'pinapi_prize_access',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_prize_theme() {
+  return array(
+    'pinapi_prize' => array(
+      'arguments' => array('prize' => NULL),
+      'template' => 'pinapi-prize',
+      'path' => drupal_get_path('module', 'pinapi_prize') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_pinapi_codeapi().
+ */
+function pinapi_prize_pinapi_codeapi($op, &$code, &$group, &$account) {
+  // Pre redeem operation, lets check and see if a prize is availble to give out, and pass it back with the code.
+  if ( $op == 'pre redeem' ) {
+    // Check to see if a prize is available.
+    if ( $prize = pinapi_prize_award($group, $account) ) {
+      $code->prize = $prize;
+    }
+    // No prize available, mark code as unredeemable.
+    else {
+      $code->redeemable = FALSE;
+    }
+  }
+
+  // The code has been redeemed, we can now redeem the prize.
+  if ( $op == 'redeem' && isset($code->prize) ) {
+    db_query("INSERT INTO {pinapi_prize_redeemed} (rid, pid) VALUES (%d, %d)", $code->rid, $code->prize->pid);
+  }
+}

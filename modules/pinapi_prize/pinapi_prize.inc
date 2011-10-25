@@ -5,6 +5,240 @@
  * Provides a generalized prize API for Drupal.
  */
 
+
+/**
+ * Load a Pin API Prize Object.
+ *
+ * @param $pid
+ *   A prize id.
+ * @param $reset
+ *   Whether to reset the internal pinapi_prize_load cache.
+ * @return
+ *   A prize object.
+ */
+function pinapi_prize_load($pid, $reset = FALSE) {
+  static $prizes = array();
+
+  // Reset internal static cache.
+  if ( $reset ) {
+    $prizes = array();
+  }
+
+  // Return the statically cached prize.
+  if ( isset($prizes[$pid]) ) {
+    return is_object($prizes[$pid]) ? drupal_clone($prizes[$pid]) : $prizes[$pid];
+  }
+
+  // Retrieve the prize object.
+  $prize = db_fetch_object(db_query("SELECT * FROM {pinapi_prize} WHERE pid = %d", $pid));
+
+  if ( $prize && $prize->pid ) {
+    // Invoke hook_pinapi_prizeapi operatioon in all module and attach results to the prize object.
+    if ( $extra = pinapi_prize_prizeapi_invoke('load', $prize) ) {
+      foreach ( $extra as $key => $value ) {
+        $prize->$key = $value;
+      }
+    }
+
+    // Store prize object to the internal static cache.
+    $prizes[$prize->pid] = is_object($prize) ? drupal_clone($prize) : $prize;
+  }
+
+  return $prize;
+}
+
+/**
+ * Save a Pin API Group Object.
+ *
+ * @param $prize
+ *   A prize object.
+ */
+function pinapi_prize_save(&$prize) {
+  // Invoke hook_pinapi_groupapi operation in all modules.
+  pinapi_prize_prizeapi_invoke('presave', $prize);
+
+  // Determine whether this is a new group.
+  $prize->is_new = empty($prize->pid);
+
+  if ( $prize->is_new ) {
+    drupal_write_record('pinapi_prize', $prize);
+    $op = 'insert';
+  }
+  else {
+    drupal_write_record('pinapi_prize', $prize, 'pid');
+    $op = 'update';
+  }
+
+  // Invoke hook_pinapi_groupapi operation in all modules.
+  pinapi_prize_prizeapi_invoke($op, $prize);
+
+  // Clear the page and blocks cache.
+  cache_clear_all();
+}
+
+/**
+ * Return an array of prizes.
+ *
+ * @param $param
+ *   Either the nid of the node or an array of conditions to match against in the database query
+ * @param $reset
+ *   Whether to reset the internal pinapi_prize_get_prizes cache.
+ */
+function pinapi_prize_get_prizes($param = array(), $reset = FALSE) {
+  $cond = array();
+  $arguments = array();
+  $prizes = array();
+
+  if ( !isset($param['status']) ) {
+    $param['status'] = 1;
+  }
+
+  if ( is_array($param) && count($param) > 0 ) {
+    // Turn the conditions into a query.
+    foreach ( $param as $key => $value ) {
+      $cond[] = db_escape_table($key) . " = '%s'";
+      $arguments[] = $value;
+    }
+    $cond = implode(' AND ', $cond);
+  }
+
+  if ( count($arguments) > 0 ) {
+    $result = db_query("SELECT pid FROM {pinapi_prize} WHERE " . $cond, $arguments);
+  }
+  else {
+    $result = db_query("SELECT pid FROM {pinapi_prize}");
+  }
+
+  while ( $row = db_fetch_object($result) ) {
+    $prizes[$row->pid] = pinapi_prize_load($row->pid, $reset);
+  }
+
+  return $prizes;
+}
+
+/**
+ * Award a prize from a pool of prizes.
+ *
+ * @param $group
+ *   A group.
+ * @param $account
+ *   A user account.
+ * @return
+ *   The awarded prize or FALSE
+ */
+function pinapi_prize_award($group, $account = NULL) {
+  $prize = pinapi_prize_random($group, $account);
+
+  if ( $prize && $prize->quantity > 0 ) {
+    $prize->redeemable = TRUE;
+
+    // Allow other modules to alter the prize before it is awarded.
+    pinapi_prize_prizeapi_invoke('pre award', $prize, $group, $account);
+
+    if ( $prize->redeemable ) {
+      db_query("UPDATE {pinapi_prize} SET quantity = quantity - 1 WHERE pid = %d", $prize->pid);
+      db_query("UPDATE {pinapi_prize} SET status = 0 WHERE quantity = 0");
+    }
+
+    // Allow other modules to alter the prize after it is awarded.
+    pinapi_prize_prizeapi_invoke('award', $prize, $group, $account);
+
+    return $prize;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Choose a random prize from an array of prizes based on quantities.
+ *
+ * @param $group
+ *   A group.
+ * @param $account
+ *   A user account
+ * @return
+ *   A random prize object.
+ */
+function pinapi_prize_random($group, $account = NULL) {
+  $prizes = pinapi_prize_get_prizes(array('gid' => $group->gid), TRUE);
+
+  // Calculate a random number based on available prize quantities.
+  $rand = rand(0, pinapi_prize_group_sum($prizes) - 1);
+
+  // Sum up the totals and look for an appropriate match.
+  $sum = 0;
+  foreach ( $prizes as $prize ) {
+    $sum += $prize->quantity * $prize->bias;
+    if ( $rand < $sum ) {
+      // Invoke hook_pinapi_groupapi operation in all modules, allow modules to alter chosen prize.
+      pinapi_prize_prizeapi_invoke('random', $prize, $group, $account);
+      return $prize;
+    }
+  }
+
+  return FALSE;
+}
+
+/**
+ * Internal helper to calculate the sum of an array key value.
+ * 
+ * @param $array
+ *   An object.
+ * @param $key
+ *   A key contained within the object.
+ * @return
+ *   The sum of the values of that key.
+ */
+function pinapi_prize_group_sum($prizes) {
+  $sum = 0;
+  foreach ( $prizes as $a ) {
+    $sum += $a->quantity * $a->bias;
+  }
+  return $sum;
+}
+
+/**
+ * Invoke a hook_pinapi_prizeapi operation in all modules.
+ */
+function pinapi_prize_prizeapi_invoke($op, &$prize, $group = NULL, $account = NULL) {
+  $return = array();
+  foreach ( module_implements('pinapi_prizeapi') as $name ) {
+    $function = $name . '_pinapi_prizeapi';
+    $result = $function($op, $prize, $group, $account);
+    if ( isset($result) && is_array($result) ) {
+      $return = array_merge($return, $result);
+    }
+    else {
+      $return[] = $result;
+    }
+  }
+  return $return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Return a prize name.
  */
@@ -45,62 +279,9 @@ function pinapi_prize_link($prize) {
   }
 }
 
-/**
- * Award a prize from a pool of prizes.
- *
- * @param $pool_id
- *   A pool id.
- * @param $account
- *   A user object.
- */
-function pinapi_prize_award($pool_id, $account = NULL) {
-  $prize = pinapi_prize_random($pool_id, $account);
-  
-  if ( $prize && $prize['quantity'] > 0 ) {
-    $prize['decrease'] = TRUE;
-    
-    // Allow other modules to alter prize before it is awarded.
-    _pinapi_invoke('prize_pre_award', $prize, $account);
-    
-    if ( $prize['decrease'] ) {
-      db_query("UPDATE {pinapi_prize} SET quantity = quantity - 1 WHERE pid = %d", $prize['pid']);
-    }
-    
-    // Allow other modules to alter prize after it is awarded.
-    _pinapi_invoke('prize_award', $prize, $account);
-    
-    return $prize;
-  }
-  
-  return FALSE;
-}
 
-/**
- * Choose a random prize from an array of prizes based on quantities.
- *
- * @param $pool_id
- *   A pool_id
- * @param $account
- *   A user account
- */
-function pinapi_prize_random($pool_id, $account) {
-  $prizes = pinapi_pool_prizes($pool_id, $account, TRUE);
-  
-  // Calculate a random number based on available prize quantities.
-  $rand = rand(0, _pinapi_prize_pool_sum($prizes) - 1);
-  
-  // Sum up the totals and look for an appropriate match.
-  $total = 0;
-  foreach ( $prizes as $prize ) {
-    $total += $prize['quantity'] * $prize['bias'];
-    if ( $rand < $total ) {
-      _pinapi_invoke('prize_random', $prize, $account);
-      return $prize;
-    }
-  }
-  
-  return FALSE;
-}
+
+
 
 /**
  * Save a collection of prizes to the database.
@@ -305,20 +486,3 @@ function _pinapi_prizes_query_builder($name, $value, &$query, &$args, $col_is_st
   }
 }
 
-/**
- * Internal helper to calculate the sum of an array key value.
- * 
- * @param $array
- *   An object.
- * @param $key
- *   A key contained within the object.
- * @return
- *   The sum of the values of that key.
- */
-function _pinapi_prize_pool_sum($array) {
-  $total = 0;
-  foreach ( $array as $a ) {
-    $total += $a['quantity'] * $a['bias'];
-  }
-  return $total;
-}

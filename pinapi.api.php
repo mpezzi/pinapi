@@ -11,3 +11,10 @@
 function hook_pinapi_groupapi(&$group, $op) {
   
 }
+
+/**
+ * Implements hook_pinapi_groupapi().
+ */
+function hook_pinapi_codeapi($op, &$code, &$group, &$account) {
+  
+}

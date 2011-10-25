@@ -4,59 +4,6 @@
  * Implements hook_schema().
  */
 function pinapi_schema() {
-  $schema['pinapi_prize'] = array(
-    'description' => t('Associate a prize with an existing piece of content.'),
-    'fields' => array(
-      'pid' => array(
-        'type' => 'serial',
-        'not null' => TRUE),
-      'gid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'name' => array(
-        'type' => 'varchar',
-        'length' => '32',
-        'not null' => TRUE,
-        'default' => ''),
-      'content_type' => array(
-        'type' => 'varchar',
-        'length' => '32',
-        'not null' => TRUE, 
-        'default' => 'node'),
-      'content_id' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'quantity' => array(
-        'type' => 'int', 
-        'not null' => TRUE,
-        'default' => 0),
-      'bias' => array(
-        'type' => 'float',
-        'not null' => TRUE,
-        'default' => 0),
-      'starts' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0),
-      'expires' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0),
-      'status' => array(
-        'type' => 'int',
-        'not null' => TRUE),
-    ),
-    'primary key' => array('pid'),
-    'indexes' => array(
-      'gid' => array('gid'),
-      'content_id' => array('content_id'),
-    ),
-  );
-
   $schema['pinapi_group'] = array(
     'description' => t('Stores prize group information.'),
     'fields' => array(
@@ -133,10 +80,6 @@ function pinapi_schema() {
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0),
-      'pid' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0),
       'uid' => array(
         'type' => 'int',
         'not null' => TRUE),
@@ -159,9 +102,6 @@ function pinapi_schema() {
     'primary key' => array('rid'),
     'indexes' => array(
       'rid' => array('rid'),
-      'cid' => array('cid'),
-      'gid' => array('gid'),
-      'pid' => array('pid'),
       'uid' => array('uid'),
     ),
   );

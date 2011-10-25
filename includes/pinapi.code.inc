@@ -21,23 +21,27 @@
 function pinapi_code_redeem($string, $group, $account = NULL) {
   if ( $code = pinapi_code_verify($string, $group, $account, TRUE) ) {
 
-    // Invoke module hook_pinapi_code_pre_redeem().
-    module_invoke_all('pinapi_code_pre_redeem', $code, $group, $account);
+    // Invoke module hook_pinapi_codeapi().
+    pinapi_codeapi_invoke('pre redeem', $code, $group, $account);
 
-    // Redeem this code in the database, set appropriate quantities.
-    db_query("UPDATE {pinapi_code} SET quantity = quantity - 1 WHERE cid = %d AND gid = %d AND quantity > 0", $code->cid, $group->gid);
-    db_query("UPDATE {pinapi_code} SET status = 0 WHERE cid = %d AND gid = %d AND quantity = 0", $code->cid, $group->gid);
+    // Modules can prevent this code from being redeemable if they choose.
+    if ( $code->redeemable ) {
 
-    // @TODO: Create a redeem record to keep track of redeemed codes.
-    //db_query("INSERT INTO {pinapi_code_redeemed} (code, pool_id, pid, uid, redeem_source, redeemed) VALUES ('%s', %d, %d, %d, '%s', %d)", $code, $pool_id, $prize['pid'], $account->uid, ip_address(), time());
+      // Redeem this code in the database, set appropriate quantities.
+      db_query("UPDATE {pinapi_code} SET quantity = quantity - 1 WHERE cid = %d AND gid = %d AND quantity > 0", $code->cid, $group->gid);
+      db_query("UPDATE {pinapi_code} SET status = 0 WHERE cid = %d AND gid = %d AND quantity = 0", $code->cid, $group->gid);
 
-    // @TODO: Get id of the last redeemed prize.
-    //$prize['crid'] = db_last_insert_id('pinapi_code_redeemed', 'crid');
+      // Create a redeem record to keep track of redeemed codes.
+      db_query("INSERT INTO {pinapi_code_redeemed} (code, cid, gid, uid, redeem_source, redeemed) VALUES ('%s', %d, %d, %d, '%s', %d)", $string, $code->cid, $group->gid, $account->uid, ip_address(), time());
 
-    // Invoke hook_pinapi_code_redeem().
-    module_invoke_all('pinapi_code_redeem', $code, $group, $account);
+      // Get id of the last redeemed code.
+      $code->rid = db_last_insert_id('pinapi_code_redeemed', 'rid');
 
-    return TRUE;
+      // Invoke module hook_pinapi_codeapi().
+      pinapi_codeapi_invoke('redeem', $code, $group, $account);
+
+      return TRUE;
+    }
   }
 
   // Code was not verified, therefore cannot be redeemed.
@@ -169,8 +173,30 @@ function pinapi_code_clear_all() {
   db_query("TRUNCATE TABLE {pinapi_code_redeemed}");
 }
 
+/**
+ * Invoke a hook_pinapi_codeapi operation in all modules.
+ */
+function pinapi_codeapi_invoke($op, &$code, &$group, &$account) {
+  $return = array();
 
+  // By default set a code as redeemable, other module may alter this as needed.
+  if ( $op == 'pre redeem' ) {
+    $code->redeemable = TRUE;
+  }
 
+  foreach ( module_implements('pinapi_codeapi') as $name ) {
+    $function = $name . '_pinapi_codeapi';
+    $result = $function($op, $code, $group, $account);
+    if ( isset($result) && is_array($result) ) {
+      $return = array_merge($return, $result);
+    }
+    else {
+      $return[] = $result;
+    }
+  }
+
+  return $return;
+}
 
 
 

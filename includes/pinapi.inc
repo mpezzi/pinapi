@@ -8,35 +8,32 @@
 /**
  * Redeem a code and award a prize.
  *
- * @param $code
- *   A code
- * @param $pool_id
- *   A pool id
+ * @param $string
+ *   A string to use as code.
+ * @param $group
+ *   A group object.
  * @param $account
- *   A user object to award the prize to.
+ *   A user account or user id.
  * @return
  *   A prize array.
  */
-function pinapi_redeem($code, $pool_id, $account = NULL) {
+function pinapi_redeem($string, $group, $account = NULL) {
   // If uid is passed load the user object.
   if ( is_numeric($account) ) {
     $account = user_load($account);
   }
-  
+
   // If no account is supplied, use the anonymous user.
   if ( is_null($account) || !$account ) {
     $account = user_load(0);
   }
-  
+
+  // @TODO: Clean up logic.
   // Ensure code is valid and only redeem if prize can be awarded.
-  if ( pinapi_code_verify($code, $pool_id, $account) ) {
-    if ( $prize = pinapi_prize_award($pool_id, $account) ) {
-      if ( pinapi_code_redeem($code, $pool_id, $prize, $account) ) {
-        return $prize;
-      }
-    }
+  if ( pinapi_code_redeem($string, $group, $account) ) {
+    return TRUE;
   }
-  
+
   return FALSE;
 }
 
