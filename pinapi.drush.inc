@@ -36,6 +36,20 @@ function pinapi_drush_command() {
       ),
       'aliases' => array('pcg'),
     ),
+    'pinapi-code-import' => array(
+      'description' => 'Import codes from a file.',
+      'arguments' => array(
+        'file' => 'A file to import the codes from.',
+      ),
+      'aliases' => array('pci'),
+    ),
+    'pinapi-code-export' => array(
+      'description' => 'Export codes to a file.',
+      'options' => array(
+        '--file' => 'The filename of the output file.',
+      ),
+      'aliases' => array('pce'),
+    ),
     'pinapi-code-clear' => array(
       'description' => 'Clear group codes from the database.',
       'arguments' => array(
@@ -57,8 +71,14 @@ function pinapi_drush_help($section) {
   switch ( $section ) {
     case 'drush:pinapi-code-generate':
       return dt("Generate codes for a pool.");
+    case 'drush:pinapi-code-import':
+      return dt("Import all code from file.");
+    case 'drush:pinapi-code-export':
+      return dt("Export all codes to file.");
     case 'drush:pinapi-code-clear':
-      return dt("Clear codes from the database.");
+      return dt("Clear codes from group.");
+    case 'drush:pinapi-code-clear-all':
+      return dt("Clear all codes.");
   }
 }
 
@@ -176,6 +196,61 @@ function drush_pinapi_code_generate_status($imported, $total) {
   );
   
   drush_print(dt('Inserted !imported, !total in total.', $vars));
+}
+
+/**
+ * Drush Command Callback: Import codes for a group.
+ */
+function drush_pinapi_code_import() {
+  // @TODO: import codes from a file, or series of files.
+}
+
+/**
+ * Drush Command Callback: Export codes for a group.
+ */
+function drush_pinapi_code_export() {
+  // @TODO: Refactor code, this is old code from the previous version.
+  
+  /*
+  $limit = 1000000;
+
+  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code}"));
+  //$total = 500000;
+  $chunks = ceil($total / $limit);
+
+  $filename = drush_get_option('file');
+  $name = basename($filename);
+
+  drush_print(ceil($total / $limit));
+  //drush_die('Abort!');
+
+  for ( $i = 1; $i <= $chunks; $i++ ) {
+    $output = '';
+    
+    $result = db_query("SELECT * FROM {pinapi_code} LIMIT %d, %d", ( $i - 1 ) * $limit, $limit);
+    while ( $row = db_fetch_object($result) ) {
+      $output .= $row->code . "\n";
+    }
+
+    //if ( $filename ) {
+      //if ( file_exists($filename) ) {
+      //  if ( !drush_confirm(dt("File $filename exists. Do you really want to overwrite?")) ) {
+      //    return;
+      //  }
+      //}
+
+      if ( file_put_contents('pins-' . $i . '.txt', $output) ) {
+        drush_log(dt('Export complete.'), 'success');
+      }
+      else {
+        drush_log(dt('Export failed.'), 'failed');
+      }
+    //}
+    //else {
+      //drush_print_r($output);
+    //}
+  }
+  */
 }
 
 /**
