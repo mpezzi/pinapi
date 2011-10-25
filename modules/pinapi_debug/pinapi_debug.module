@@ -28,14 +28,14 @@ function pinapi_debug_perm() {
 function pinapi_debug_theme() {
   return array(
     'pinapi_debug_toolbar' => array(
-      'arguments' => array('pools' => array()),
+      'arguments' => array('gids' => array()),
       'template' => 'pinapi-debug-toolbar',
       'path' => drupal_get_path('module', 'pinapi_debug') . '/theme',
       'file' => 'theme.inc',
     ),
-    'pinapi_debug_pool' => array(
-      'arguments' => array('pool_id' => NULL),
-      'template' => 'pinapi-debug-pool',
+    'pinapi_debug_group' => array(
+      'arguments' => array('group' => NULL),
+      'template' => 'pinapi-debug-group',
       'path' => drupal_get_path('module', 'pinapi_debug') . '/theme',
       'file' => 'theme.inc',
     ),
@@ -46,15 +46,15 @@ function pinapi_debug_theme() {
  * Implements hook_form_alter().
  */
 function pinapi_debug_form_alter(&$form, &$form_state, $form_id) {
-  if ( $form_id == 'pinapi_code_redeem_form' && !isset($form['closed']) ) {
-    pinapi_debug_set_active($form['pool_id']['#value']);
-    
+  if ( $form_id == 'pinapi_redeem_form' && !isset($form['closed']) ) {
+    pinapi_debug_set_active($form_state['storage']['group']->gid);
+
     // Replace Pin API core debug method.
     if ( variable_get('pinapi_debug_override', TRUE) && isset($form['debug']) ) {
       unset($form['debug']);
     }
   }
-  
+
   if ( $form_id == 'pinapi_settings_form' ) {
     $form['debug']['pinapi_debug_toolbar'] = array(
       '#type' => 'checkbox',
@@ -84,15 +84,15 @@ function pinapi_debug_access() {
 /**
  * Set active forms.
  */
-function pinapi_debug_set_active($pool_id = NULL) {
-  static $pools;
-  
-  if ( !isset($pools[$pool_id]) && !is_null($pool_id) ) {
-    $pools[$pool_id] = $pool_id;
+function pinapi_debug_set_active($gid = NULL) {
+  static $gids;
+
+  if ( !isset($gids[$gid]) && !is_null($gid) ) {
+    $gids[$gid] = $gid;
   }
-  
-  if ( is_null($pool_id) ) {
-    return isset($pools) ? $pools : array();
+
+  if ( is_null($gid) ) {
+    return isset($gids) ? $gids : array();
   }
 }
 

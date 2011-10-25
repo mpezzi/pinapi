@@ -11,46 +11,50 @@
  */
 function template_preprocess_pinapi_debug_toolbar(&$vars) {
   $vars['toolbars'] = array();
-  foreach ( $vars['pools'] as $pool_id ) {
-    $vars['toolbars'][] = theme('pinapi_debug_pool', $pool_id);
+  foreach ( $vars['gids'] as $gid ) {
+    $vars['toolbars'][] = theme('pinapi_debug_group', pinapi_group_load($gid));
   }
 }
 
 /**
- * Implements template_preprocess_pinapi_debug_pool().
+ * Implements template_preprocess_pinapi_debug_group().
  */
-function template_preprocess_pinapi_debug_pool(&$vars) {
-  $pool_id = $vars['pool_id'];
-  
+function template_preprocess_pinapi_debug_group(&$vars) {
+  $group = $vars['group'];
+
+  /*
   $availability = array();
   $prizes = pinapi_pool_prizes($pool_id);
   foreach ( $prizes as $prize ) {
     $availability[] = $prize['name'] . ' (' . $prize['quantity'] . ' left x' . $prize['bias'] . ')';
   }
-  
-  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE pool_id = %d AND status = 1", $pool_id));
-  
+  */
+
+  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d AND status = 1", $group->gid));
+
   $codes = array();
-  $result = db_query("SELECT * FROM {pinapi_code} WHERE pool_id = %d AND status = 1 LIMIT %d, 30", $pool_id, rand(0, $total));
-  while ( $code = db_fetch_array($result) ) {
-    $codes[] = '<span class="pin" data-code="' . $code['code'] . '">' . $code['code'] . ' x' . $code['quantity'] . '</span>';
+  $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d AND status = 1 LIMIT 30", $group->gid);
+  while ( $code = db_fetch_object($result) ) {
+    $codes[] = '<span class="pin" data-code="' . $code->code . '">' . $code->code . ' x' . $code->quantity . '</span>';
   }
 
+  /*
   $content['prizes'] = array(
     '#type' => 'item',
     '#title' => t('Prizes'),
     '#value' => theme('item_list', $availability),
     '#weight' => 0,
   );
+  */
 
-  $content['pins'] = array(
+  $content['codes'] = array(
     '#type' => 'item',
-    '#prefix' => '<div class="pins" data-pool="' . $pool_id . '">',
+    '#prefix' => '<div class="codes" data-pool="' . $group->gid . '">',
     '#suffix' => '</div>',
-    '#title' => t('Pins'),
+    '#title' => t('Codes'),
     '#value' => implode(', ', $codes),
     '#weight' => 1,
   );
-  
+
   $vars['debug'] = drupal_render($content);
 }
