@@ -49,6 +49,16 @@ function pinapi_prize_theme() {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function pinapi_prize_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'pinapi_prize') . '/views',
+  );
+}
+
+/**
  * Implements hook_pinapi_codeapi().
  */
 function pinapi_prize_pinapi_codeapi($op, &$code, &$group, &$account) {
