@@ -7,6 +7,24 @@
 
 
 /**
+ * Implements hook_menu().
+ */
+function pinapi_node_menu() {
+  return array(
+    'admin/settings/pinapi/node' => array(
+      'title' => 'Nodes',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_node_settings_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'file' => 'pinapi_node.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+    ),
+  );
+}
+
+/**
  * Implements hook_pinapi_relationships().
  */
 function pinapi_node_pinapi_relationships() {
