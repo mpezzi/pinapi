@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Provides an administrative ui for Pin API.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function pinapi_ui_menu() {
+  $admin_access = array('administer pin api');
+  
+  return array(
+    'admin/build/pinapi' => array(
+      'title' => 'Pin API',
+      'description' => 'Create and maintain Pin API groups.',
+      'page callback' => 'pinapi_ui_view_overview',
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_NORMAL_ITEM,
+    ),
+    'admin/build/pinapi/overview' => array(
+      'title' => 'Overview',
+      'weight' => -1,
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    ),
+    'admin/build/pinapi/groups' => array(
+      'title' => 'Groups',
+      'page callback' => 'pinapi_ui_view_groups',
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
+    'admin/build/pinapi/group/add' => array(
+      'title' => 'Add Group',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_ui_group_form'),
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_CALLBACK,
+    ),
+    'admin/build/pinapi/group/%pinapi_group/edit' => array(
+      'title' => 'Edit Group',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_ui_group_form', 4),
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_CALLBACK,
+    ),
+    'admin/build/pinapi/group/%pinapi_group/delete' => array(
+      'title' => 'Edit Group',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_ui_group_delete_form', 4),
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_CALLBACK,
+    ),
+    'admin/build/pinapi/prizes' => array(
+      'title' => 'Prizes',
+      'page callback' => 'pinapi_ui_view_prizes',
+      'access arguments' => $admin_access,
+      'file' => 'pinapi_ui.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+    ),
+  );
+}
