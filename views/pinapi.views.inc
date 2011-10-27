@@ -12,8 +12,123 @@
 function pinapi_views_data() {
   // -------------------------------------------------------------------
   // PinAPI Code Redeemed
-  $data['pinapi_code_redeemed']['table']['group'] = t('Pin API Code Redeemed');
+  $data['pinapi_code']['table']['group'] = t('Pin API Code');
 
+  // Code ID.
+  $data['pinapi_code']['cid'] = array(
+    'title' => t('Code ID'),
+    'help' => t('The ID of the code'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument',
+      'numeric' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Quantity
+  $data['pinapi_code']['quantity'] = array(
+    'title' => t('Code Quantity'),
+    'help' => t('The Code Quantity'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Status.
+  $data['pinapi_code']['status'] = array(
+    'title' => t('Published'),
+    'help' => t('Whether or not the code is published.'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Published'),
+      'type' => 'yes-no',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // -------------------------------------------------------------------
+  // PinAPI Code Redeemed
+  $data['pinapi_group']['table']['group'] = t('Pin API Group');
+
+  // Group ID.
+  $data['pinapi_group']['gid'] = array(
+    'title' => t('Group ID'),
+    'help' => t('The ID of the group'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument',
+      'numeric' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Group name.
+  $data['pinapi_group']['name'] = array(
+    'title' => t('Group name'),
+    'help' => t('The group machine name.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Group status.
+  $data['pinapi_group']['status'] = array(
+    'title' => t('Published'),
+    'help' => t('Whether or not the group is published.'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Published'),
+      'type' => 'yes-no',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // -------------------------------------------------------------------
+  // PinAPI Code Redeemed
+  $data['pinapi_code_redeemed']['table']['group'] = t('Pin API Code Redeemed');
   $data['pinapi_code_redeemed']['table']['base'] = array(
     'field' => 'rid',
     'title' => t('Redeemed codes'),
@@ -39,33 +154,25 @@ function pinapi_views_data() {
 
   // Code ID.
   $data['pinapi_code_redeemed']['cid'] = array(
-    'title' => t('Code ID'),
-    'help' => t('The code ID'),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
+    'title' => t('Code'),
+    'help' => t('The Pin API Code this redeemed code is from.'),
+    'relationship' => array(
+      'base' => 'pinapi_code',
+      'base field' => 'cid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Pin API Code'),
     ),
   );
 
   // Group ID.
   $data['pinapi_code_redeemed']['gid'] = array(
-    'title' => t('Group ID'),
-    'help' => t('The group ID'),
-    'field' => array(
-      'handler' => 'views_handler_field',
-      'click sortable' => TRUE,
-    ),
-    'filter' => array(
-      'handler' => 'views_handler_filter',
-    ),
-    'sort' => array(
-      'handler' => 'views_handler_sort',
+    'title' => t('Group'),
+    'help' => t('The Pin API Group this redeemed code is from.'),
+    'relationship' => array(
+      'base' => 'pinapi_group',
+      'base field' => 'gid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Pin API Group'),
     ),
   );
 
