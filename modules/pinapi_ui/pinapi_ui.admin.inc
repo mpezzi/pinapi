@@ -185,10 +185,42 @@ function pinapi_ui_view_prizes() {
  * Prize Edit Form.
  */
 function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
+  $format = 'm-d-Y';
+
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Machine Name'),
     '#default_value' => isset($prize->name) ? $prize->name : '',
+  );
+
+  $form['quantity'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Quantity'),
+    '#default_value' => isset($prize->quantity) ? $prize->quantity : 0,
+  );
+
+  $form['bias'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Bias'),
+    '#default_value' => isset($prize->bias) ? $prize->bias : 1,
+  );
+
+  $xform['starts'] = array(
+    '#type' => 'date_select',
+    '#date_format' => $format,
+    '#date_label_position' => 'within',
+    '#date_year_range' => '0:+3',
+    '#title' => t('Starts'),
+    '#default_value' => isset($prize->starts) ? date_convert($prize->starts, DATE_UNIX, DATE_DATETIME) : 0,
+  );
+
+  $xform['expires'] = array(
+    '#type' => 'date_select',
+    '#date_format' => $format,
+    '#date_label_position' => 'within',
+    '#date_year_range' => '0:+3',
+    '#title' => t('Expires'),
+    '#default_value' => isset($prize->expires) ? date_convert($prize->expires, DATE_UNIX, DATE_DATETIME) : 0,
   );
 
   $form['status'] = array(
@@ -240,9 +272,7 @@ function pinapi_ui_prize_delete_form(&$form_state, $prize) {
  */
 function pinapi_ui_prize_form_submit($form, &$form_state) {
   $prize = (object) $form_state['values'];
-
   pinapi_prize_save($prize);
-
   $form_state['redirect'] = 'admin/build/pinapi/prizes';
 }
 
