@@ -23,7 +23,7 @@ function pinapi_views_data() {
 
   // Code Redeemed ID.
   $data['pinapi_code_redeemed']['rid'] = array(
-    'title' => t('ID'),
+    'title' => t('Redeem ID'),
     'help' => t('The code redeemed ID'),
     'field' => array(
       'handler' => 'views_handler_field',
@@ -34,6 +34,50 @@ function pinapi_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Code ID.
+  $data['pinapi_code_redeemed']['cid'] = array(
+    'title' => t('Code ID'),
+    'help' => t('The code ID'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // Group ID.
+  $data['pinapi_code_redeemed']['gid'] = array(
+    'title' => t('Group ID'),
+    'help' => t('The group ID'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  // User ID
+  $data['pinapi_code_redeemed']['uid'] = array(
+    'title' => t('User'),
+    'help' => t('The User ID that redeemed the code.'),
+    'relationship' => array(
+      'base' => 'users',
+      'base field' => 'uid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('User'),
     ),
   );
 
@@ -50,18 +94,6 @@ function pinapi_views_data() {
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
-    ),
-  );
-
-  // User ID
-  $data['pinapi_code_redeemed']['uid'] = array(
-    'title' => t('User'),
-    'help' => t('The User ID that redeemed the code.'),
-    'relationship' => array(
-      'base' => 'users',
-      'base field' => 'uid',
-      'handler' => 'views_handler_relationship',
-      'label' => t('User'),
     ),
   );
 
@@ -94,6 +126,24 @@ function pinapi_views_data() {
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_date',
+    ),
+  );
+
+  // Status.
+  $data['pinapi_code_redeemed']['status'] = array(
+    'title' => t('Published'),
+    'help' => t('Whether or not the redeemed code is available.'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Published'),
+      'type' => 'yes-no',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
     ),
   );
 
