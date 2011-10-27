@@ -7,6 +7,20 @@
 
 
 /**
+ * Implements hook_views_handlers().
+ */
+function pinapi_views_handlers() {
+  return array(
+    'handlers' => array(
+      'pinapi_views_handler_relationship' => array(
+        'parent' => 'views_handler_relationship',
+        'path' => drupal_get_path('module', 'pinapi') . '/views',
+      ),
+    ),
+  );
+}
+
+/**
  * Implements hook_views_data().
  */
 function pinapi_views_data() {
@@ -255,4 +269,26 @@ function pinapi_views_data() {
   );
 
   return $data;
+}
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function pinapi_views_data_alter(&$data) {
+  $relationships = module_invoke_all('pinapi_relationships');
+
+  if ( isset($relationships['pinapi_group']) ) {
+    foreach ( $relationships['pinapi_group'] as $type => $relationship ) {
+      $data['pinapi_group'][$type] = array(
+        'title' => $relationship['title'],
+        'help' => $relationship['help'],
+        'relationship' => array(
+          'base' => $relationship['base'],
+          'base field' => $relationship['base field'],
+          'handler' => $relationship['handler'],
+          'label' => $relationship['title'],
+        ),
+      );
+    }
+  }
 }
