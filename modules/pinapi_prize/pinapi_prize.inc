@@ -77,6 +77,18 @@ function pinapi_prize_save(&$prize) {
 }
 
 /**
+ * Delete a Pin API Group Object.
+ */
+function pinapi_prize_delete($prize) {
+  // Invoke hook_pinapi_prizeapi operation in all modules.
+  pinapi_prize_prizeapi_invoke('delete', $prize);
+
+  // Delete group information.
+  db_query("DELETE FROM {pinapi_prize} WHERE pid = %d", $prize->pid);
+  db_query("DELETE FROM {pinapi_prize_redeemed} WHERE pid = %d", $prize->pid);
+}
+
+/**
  * Return an array of prizes.
  *
  * @param $param

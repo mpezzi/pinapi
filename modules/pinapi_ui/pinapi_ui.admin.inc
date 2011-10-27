@@ -13,9 +13,8 @@ function pinapi_ui_view_overview() {
   return __FUNCTION__;
 }
 
-
 /**
- * Adminstration Page.
+ * Group Administration Page.
  */
 function pinapi_ui_view_groups() {
   $links = array(
@@ -52,7 +51,6 @@ function pinapi_ui_view_groups() {
 
   return $output;
 }
-
 
 /**
  * Group Edit Form.
@@ -124,7 +122,7 @@ function pinapi_ui_group_form_submit($form, &$form_state) {
  */
 function pinapi_ui_group_delete_form_submit($form, &$form_state) {
   if ( $form_state['values']['confirm'] ) {
-    pinapi_group_delete($form_state['values']['gid']);
+    pinapi_group_delete(pinapi_group_load($form_state['values']['gid']));
     drupal_set_message(t('The group has been deleted.'));
   }
   $form_state['redirect'] = 'admin/build/pinapi/groups';
@@ -145,9 +143,130 @@ function pinapi_ui_group_form_delete_submit($form, &$form_state) {
 }
 
 /**
- * Adminstration Page.
+ * Prize Administration Page.
  */
 function pinapi_ui_view_prizes() {
-  return __FUNCTION__;
+  $links = array(
+    'add' => l(t('Add Prize'), 'admin/build/pinapi/prize/add'),
+  );
+  
+  $output = theme('item_list', $links);
+
+  // Fetch all Pin API prizes.
+  $prizes = pinapi_prize_get_prizes();
+  if ( empty($prizes) ) {
+    return $output . t('No prizes exist.');
+  }
+
+  $header = array(
+    array('data' => t('Name')),
+    array('data' => t('Operation')),
+  );
+
+  $rows = array();
+  foreach ( $prizes as $prize ) {
+    $operations = array(
+      'edit' => l(t('Edit'), "admin/build/pinapi/prize/$prize->pid/edit"),
+    );
+
+    $rows[] = array(
+      array('class' => 'pinapi-prize-name', 'data' => check_plain($prize->name)),
+      array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
+    );
+  }
+
+  $output .= theme('table', $header, $rows);
+  $output .= theme('pager', NULL, 25);
+
+  return $output;
 }
 
+/**
+ * Prize Edit Form.
+ */
+function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Machine Name'),
+    '#default_value' => isset($prize->name) ? $prize->name : '',
+  );
+
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Published'),
+    '#default_value' => isset($prize->status) ? $prize->status : NULL,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => isset($prize->pid) ? t('Update') : t('Add'),
+  );
+
+  if ( isset($prize->pid) ) {
+    $form['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete'),
+      '#validate' => array('pinapi_ui_prize_form_delete_validate'),
+      '#submit' => array('pinapi_ui_prize_form_delete_submit'),
+    );
+    $form['pid'] = array(
+      '#type' => 'hidden',
+      '#value' => $prize->pid,
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Prize Delete Form.
+ */
+function pinapi_ui_prize_delete_form(&$form_state, $prize) {
+  $form['pid'] = array(
+    '#type' => 'hidden',
+    '#value' => $prize->pid,
+  );
+
+  return confirm_form($form,
+    t('Are you sure you want to delete "%name"?', array('%name' => $prize->name)),
+    isset($_GET['destination']) ? $_GET['destination'] : 'admin/build/pinapi/groups',
+    t('This action cannot be undone.'),
+    t('Delete'), t('Cancel')
+  );
+}
+
+/**
+ * Submit Callback: Prize Edit Form.
+ */
+function pinapi_ui_prize_form_submit($form, &$form_state) {
+  $prize = (object) $form_state['values'];
+
+  pinapi_prize_save($prize);
+
+  $form_state['redirect'] = 'admin/build/pinapi/prizes';
+}
+
+/**
+ * Submit Callback: Prize Delete Form.
+ */
+function pinapi_ui_prize_delete_form_submit($form, &$form_state) {
+  if ( $form_state['values']['confirm'] ) {
+    pinapi_prize_delete(pinapi_prize_load($form_state['values']['pid']));
+    drupal_set_message(t('The prize has been deleted.'));
+  }
+  $form_state['redirect'] = 'admin/build/pinapi/prizes';
+}
+
+/**
+ * Validation Callback: Prize Delete Button.
+ */
+function pinapi_ui_prize_form_delete_validate($form, &$form_state) {
+  // Used to prevent default validation.
+}
+
+/**
+ * Submit Callback: Prize Delete Button.
+ */
+function pinapi_ui_prize_form_delete_submit($form, &$form_state) {
+  $form_state['redirect'] = 'admin/build/pinapi/prize/' . $form_state['values']['pid'] . '/delete';
+}

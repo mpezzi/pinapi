@@ -76,14 +76,14 @@ function pinapi_group_save(&$group) {
 /**
  * Delete a Pin API Group Object.
  */
-function pinapi_group_delete($gid) {
+function pinapi_group_delete($group) {
   // Invoke hook_pinapi_groupapi operation in all modules.
-  pinapi_groupapi_invoke('delete', $gid);
+  pinapi_groupapi_invoke('delete', $group);
 
   // Delete group information.
-  db_query("DELETE FROM {pinapi_group} WHERE gid = %d", $gid);
-  db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $gid);
-  db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
+  db_query("DELETE FROM {pinapi_group} WHERE gid = %d", $group->gid);
+  db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $group->gid);
+  db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $group->gid);
 }
 
 /**
