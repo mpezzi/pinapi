@@ -89,7 +89,11 @@ function pinapi_pinapi_code_generator() {
 function pinapi_redeem_form(&$form_state, $group) {
   global $user;
 
-  $form_state['storage']['account'] = user_load($user->uid);
+  if ( $user->uid ) {
+    $user = user_load($user->uid);
+  }
+
+  $form_state['storage']['account'] = $user;
   $form_state['storage']['group'] = $group;
 
   $form['code'] = array(
