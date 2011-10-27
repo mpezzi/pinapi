@@ -1,0 +1,459 @@
+<?php 
+
+/**
+ * @file
+ * Exposes the Pin API system as nodes.
+ */
+
+require_once dirname(__FILE__) . '/pinapi_node.inc';
+
+/**
+ * Implements hook_help().
+ */
+function pinapi_node_help($path, $arg) {
+  
+}
+
+/**
+ * Implements hook_menu().
+ */
+function pinapi_node_menu() {
+  return array(
+    'admin/settings/pinapi/node' => array(
+      'title' => 'Nodes',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_node_settings_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'file' => 'pinapi_node.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+    ),
+    'node/%pinapi_node_pool_node/pinapi' => array(
+      'title' => 'Pin API',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_node_pool_prize_form', 1),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'pinapi_node.pages.inc',
+      'weight' => 10,
+    ),
+    'node/%pinapi_node_pool_node/pinapi/prizes' => array(
+      'title' => 'Prizes',
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+      'weight' => 0,
+    ),
+    'node/%pinapi_node_pool_node/pinapi/codes' => array(
+      'title' => 'Codes',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_node_pool_code_form', 1),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'pinapi_node.pages.inc',
+      'weight' => 1,
+    ),
+  );
+}
+
+/**
+ * Menu Callbacks
+ */
+function pinapi_node_pool_node_load($nid) {
+  $node = node_load($nid);
+  
+  if ( pinapi_node_types('pool', $node->type) ) {
+    
+    // Load original node.
+    if ( !empty($node->tnid) ) {
+      $node = node_load($node->tnid);
+    }
+    
+    return $node;
+  }
+  
+  return FALSE;
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function pinapi_node_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'pinapi_node') . '/views',
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_node_theme() {
+  return array(
+    'pinapi_node_pool_prize_form' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'pinapi_node.theme.inc',
+    )
+  );
+}
+
+/**
+ * Implements hook_pinapi_pool_load().
+ */
+function pinapi_node_pinapi_pool_load(&$pool) {
+  if ( $pool['content_type'] == 'node' ) {
+    if ( $name = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $pool['content_id'])) ) {
+      $pool['name'] = check_plain($name);
+    }
+    else {
+      $pool['name'] = $pool['pool_id'];
+    }
+  }
+}
+
+/**
+ * Implements hook_nodeapi().
+ */
+function pinapi_node_nodeapi(&$node, $op) {
+  // Pool node operations.
+  if ( pinapi_node_types('pool', $node->type) ) {
+    switch ( $op ) {
+      
+      // Load prize information to the node object.
+      case 'load':
+        $criteria = array(
+          'content_type' => 'node',
+          'content_id' => !empty($node->tnid) ? $node->tnid : $node->nid,
+        );
+        
+        $node->pinapi['pool'] = pinapi_pools_select_single($criteria);
+        break;
+      
+      // Create or update prize when saving or updating a node.
+      case 'insert':
+      case 'update':
+        $pool = array(
+          'content_type' => 'node',
+          'content_id' => !empty($node->tnid) ? $node->tnid : $node->nid,
+          'locked' => $node->pinapi['pool']['locked'],
+          'status' => $node->pinapi['pool']['status'],
+          'pool_id' => isset($node->pinapi['pool']['pool_id']) ? $node->pinapi['pool']['pool_id'] : NULL,
+        );
+        
+        pinapi_pools_set($pool);
+        break;
+      
+      // Delete a pool when a node is deleted.
+      case 'delete':
+      // NOTE: Only delete pool information from original node and not translated nodes.
+        if ( isset($node->pinapi['pool']) && empty($node->tnid) ) {
+          pinapi_pools_delete($node->pinapi['pool']);
+        }
+        break;
+      
+      case 'view':
+        $node->content['pinapi'] = array(
+          '#value' => drupal_get_form('pinapi_code_redeem_form', $node->pinapi['pool']['pool_id']),
+        );
+    }
+  }
+  
+  // Prize node operations.
+  if ( pinapi_node_types('prize', $node->type) ) {
+    switch ( $op ) {
+      
+      // Load prize information to the node object.
+      case 'load':
+        $criteria = array(
+          'content_type' => 'node',
+          'content_id' => !empty($node->tnid) ? $node->tnid : $node->nid,
+        );
+        
+        $node->pinapi['prize'] = pinapi_prizes_select_single($criteria);
+        break;
+      
+      // Create or update prize when saving or updating a node.
+      case 'insert':
+      case 'update':
+        if ( !pinapi_pool_is_locked($node->pinapi['prize']['pool_id']) ) {
+          $prize = array(
+            'content_type' => 'node',
+            'content_id' => !empty($node->tnid) ? $node->tnid : $node->nid,
+            'machine_name' => $node->pinapi['prize']['machine_name'],
+            'pool_id' => $node->pinapi['prize']['pool_id'],
+            'quantity' => $node->pinapi['prize']['quantity'],
+            'status' => $node->pinapi['prize']['status'],
+            'pid' => isset($node->pinapi['prize']['pid']) ? $node->pinapi['prize']['pid'] : NULL,
+          );
+
+          pinapi_prizes_set($prize);
+        }
+        
+        break;
+      case 'delete':
+        // NOTE: Only delete prize information from original node and not translated nodes.
+        if ( isset($node->pinapi['prize']) && empty($node->tnid) ) {
+          pinapi_prizes_delete($node->pinapi['prize']);
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_content_extra_fields().
+ */
+function pinapi_node_content_extra_fields() {
+  return array(
+    'pinapi' => array(
+      'label' => t('Pin API'),
+      'description' => t('Pin API Node module form.'),
+      'weight' => 10,
+    ),
+  );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function pinapi_node_form_alter(&$form, &$form_state, $form_id) {
+  if ( isset($form['type']) && isset($form['#node']) ) {
+    $node = $form['#node'];
+    
+    if ( module_exists('translation') ) {
+      $nid = FALSE;
+      
+      if ( !empty($node->tnid) ) {
+        $nid = $node->tnid;
+      }
+      elseif ( isset($_GET['translation']) && is_numeric($_GET['translation']) ) {
+        $nid = $_GET['translation'];
+      }
+      
+      if ( $nid ) {
+        $node = node_load($nid);
+      }
+    }
+    
+    // Add pool settings field set to node form.
+    if ( pinapi_node_types('pool', $form['type']['#value']) ) {
+      $form['pinapi']['#tree'] = TRUE;
+      $form['pinapi']['pool'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Pool settings'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#tree' => TRUE,
+      );
+      
+      $form['pinapi']['pool']['locked'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Locked'),
+        '#description' => t('Prevent prize values from being changed.'),
+        '#default_value' => isset($node->pinapi['pool']['locked']) ? $node->pinapi['pool']['locked'] : 0,
+      );
+
+      $form['pinapi']['pool']['status'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Public'),
+        '#description' => t('Is this prize pool open to the public?'),
+        '#default_value' => isset($node->pinapi['pool']['status']) ? $node->pinapi['pool']['status'] : 0,
+      );
+      
+      $form['pinapi']['pool']['content_type'] = array(
+        '#type' => 'hidden',
+        '#value' => 'node',
+      );
+      
+      $form['pinapi']['pool']['content_id'] = array(
+        '#type' => 'hidden',
+        '#value' => isset($node->pinapi['pool']['content_id']) ? $node->pinapi['pool']['content_id'] : NULL,
+      );
+      
+      if ( isset($node->pinapi['pool']) && $node->pinapi['pool'] ) {
+        $form['pinapi']['pool']['pool_id'] = array(
+          '#type' => 'hidden',
+          '#value' => $node->pinapi['pool']['pool_id'],
+        );
+      }
+    }
+
+    // Add prize settings field set to node form.
+    if ( pinapi_node_types('prize', $form['type']['#value']) ) {
+      $pools = array();
+      foreach ( pinapi_pools_select(array('locked' => 0, 'status' => 1)) as $pool ) {
+        $pools[$pool['pool_id']] = $pool['name'];
+      }
+      
+      $locked = isset($node->pinapi['prize']['locked']) ? $node->pinapi['prize']['locked'] : FALSE;
+      
+      $form['pinapi']['#tree'] = TRUE;
+      $form['pinapi']['prize'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Prize settings'),
+        '#collapsed' => TRUE,
+        '#collapsible' => TRUE,
+        '#tree' => TRUE,
+      );
+      
+      $form['pinapi']['prize']['content_type'] = array(
+        '#type' => 'hidden',
+        '#value' => 'node',
+      );
+      
+      $form['pinapi']['prize']['status'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Available'),
+        '#description' => t('Is this node available to be redeemed?'),
+        '#default_value' => isset($node->pinapi['prize']['status']) ? $node->pinapi['prize']['status'] : 0,
+        '#disabled' => $locked,
+      );
+      
+      $form['pinapi']['prize']['pool_id'] = array(
+        '#type' => 'select',
+        '#title' => t('Pool'),
+        '#suffix' => isset($node->pinapi['prize']['pool_id']) ? l('edit', 'node/' . $node->pinapi['prize']['pool_id'] . '/edit') : NULL,
+        '#options' => $pools,
+        '#default_value' => isset($node->pinapi['prize']['pool_id']) ? $node->pinapi['prize']['pool_id'] : NULL,
+        '#disabled' => $locked,
+      );
+      
+      $form['pinapi']['prize']['machine_name'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Machine Name'),
+        '#description' => t('Internal machine name of the prize.'),
+        '#default_value' => isset($node->pinapi['prize']['machine_name']) ? $node->pinapi['prize']['machine_name'] : '',
+        '#disabled' => $locked,
+      );
+      
+      $form['pinapi']['prize']['quantity'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Quantity'),
+        '#description' => t('Available prizes to be won.'),
+        '#default_value' => isset($node->pinapi['prize']['quantity']) ? $node->pinapi['prize']['quantity'] : 0,
+        '#size' => 20,
+        '#maxlength' => 20,
+        '#disabled' => $locked,
+      );
+      
+      if ( isset($node->pinapi['prize']) && $node->pinapi['prize'] ) {
+        $form['pinapi']['prize']['pid'] = array(
+          '#type' => 'hidden',
+          '#value' => $node->pinapi['prize']['pid'],
+        );
+      }
+    }
+
+  }
+}
+
+/**
+ * Implements hook_pinapi_code_redeem().
+ */
+function pinapi_node_pinapi_code_redeem($code, $pool_id, $prize, $account = NULL) {
+  if ( module_exists('rules') ) {
+    $nid = _pinapi_prize_get_nid($prize['content_id']);
+    if ( $node = node_load($nid) ) {
+      watchdog('pinapi_node', '%title was awarded to %name', array('%title' => $node->title, '%name' => $account->name), WATCHDOG_NOTICE, 'node/' . $node->nid);
+      rules_invoke_event('pinapi_node_prize_award', $account, $node);
+    }
+  }
+}
+
+/**
+ * Implements hook_pinapi_relationships().
+ */
+function pinapi_node_pinapi_relationships() {
+  $relationships['pinapi_prize']['node'] = array(
+    'title' => t('Node'),
+    'help' => t('The node that is associated with the prize.'),
+    'base' => 'node',
+    'base field' => 'nid',
+    'handler' => 'pinapi_views_handler_relationship',
+  );
+  
+  return $relationships;
+}
+
+/**
+ * Implements hook_pinapi_prize_redeemed_load().
+ */
+function pinapi_node_pinapi_prize_redeemed_load(&$prize) {
+  if ( $prize['content_type'] == 'node' ) {
+    $nid = _pinapi_prize_get_nid($prize['content_id']);
+    if ( $node = node_load($nid) ) {
+      $prize['node'] = $node;
+      $prize['title'] = $node->title;
+    }
+  }
+}
+
+/**
+ * Implements hook_pinapi_prize_redeemed_view().
+ */
+function pinapi_node_pinapi_prize_redeemed_view(&$prize, $teaser = FALSE, $page = FALSE) {
+  if ( $prize['content_type'] == 'node' ) {
+    $prize['content']['node'] = array(
+      '#value' => node_view($prize['node'], $teaser, $page, FALSE),
+      '#weight' => 0,
+    );
+  }
+}
+
+/**
+ * Implements _pinapi_prize_title_type().
+ */
+function _pinapi_prize_name_node($prize) {
+  $nid = _pinapi_prize_get_nid($prize['content_id']);
+  return check_plain(db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $nid)));
+}
+
+/**
+ * Implements _pinapi_prize_object_type().
+ */
+function _pinapi_prize_object_node($prize) {
+  $nid = _pinapi_prize_get_nid($prize['content_id']);
+  return node_load($nid);
+}
+
+/**
+ * Implements _pinapi_prize_operations_type().
+ */
+function _pinapi_prize_operations_node($prize) {
+  return array(
+    'node_view' => l('view', 'node/' . $prize['content_id']),
+    'node_edit' => l('edit', 'node/' . $prize['content_id'] . '/edit'),
+  );
+}
+
+/**
+ * Implements _pinapi_prize_link_node().
+ */
+function _pinapi_prize_link_node($prize) {
+  $nid = _pinapi_prize_get_nid($prize['content_id']);
+  $node = node_load($nid);
+  
+  return l($node->title, 'node/' . $nid);
+}
+
+/**
+ * Get the appropriate nid.
+ */
+function _pinapi_prize_get_nid($nid, $lang_code = NULL) {
+  global $language;
+  
+  // If the translation module is active the node might be available in other languages.
+  if ( module_exists('translation') ) {
+    $translations = translation_node_get_translations($nid);
+    
+    if ( !empty($translations[$language->language]) ) {
+      $nid = $translations[$language->language]->nid;
+    }
+    elseif ( !is_null($lang_code) && !empty($translations[$lang_code]) ) {
+      $nid = $translations[$lang_code]->nid;
+    }
+  }
+  
+  return $nid;
+}
