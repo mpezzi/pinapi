@@ -5,6 +5,19 @@
  * Provide views data and handers for pinapi_prize.module
  */
 
+/**
+ * Implements hook_views_handlers().
+ */
+function pinapi_prize_views_handlers() {
+  return array(
+    'handlers' => array(
+      'pinapi_prize_views_handler_field_prize_redeemed' => array(
+        'parent' => 'views_handler_field',
+        'path' => drupal_get_path('module', 'pinapi_prize') . '/views',
+      ),
+    ),
+  );
+}
 
 /**
  * Implements hook_views_data().
@@ -26,7 +39,7 @@ function pinapi_prize_views_data() {
     'title' => t('Prize name'),
     'help' => t('The prize machine name.'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'handler' => 'pinapi_prize_views_handler_field_prize_redeemed',
       'click sortable' => TRUE,
     ),
     'filter' => array(
