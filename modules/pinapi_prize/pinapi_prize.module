@@ -20,17 +20,15 @@ function pinapi_prize_perm() {
 /**
  * Implements hook_menu().
  */
-function xpinapi_prize_menu() {
-  $items['prize/%pinapi_redeemed_prize'] = array(
-    'title callback' => 'pinapi_prize_page_title',
-    'title arguments' => array(1),
-    'page callback' => 'pinapi_prize_page_view',
+function pinapi_prize_menu() {
+  $items['prize/%pinapi_prize_redeemed'] = array(
+    'page callback' => 'pinapi_prize_redeemed_view',
     'page arguments' => array(1),
-    'access callback' => 'pinapi_prize_access',
+    'access callback' => 'pinapi_prize_redeemed_access',
     'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
-  
+
   return $items;
 }
 
@@ -97,7 +95,7 @@ function pinapi_prize_pinapi_code_clear($gid) {
  * @return
  *   TRUE or FALSE whether user has access to the prize.
  */
-function pinapi_prize_access($prize, $account = NULL) {
+function pinapi_prize_redeemed_access($prize_redeemed, $account = NULL) {
   global $user;
 
   // If no user object is supplied, the access check is for the current user.
@@ -111,10 +109,19 @@ function pinapi_prize_access($prize, $account = NULL) {
   }
 
   // Check to see if user can view own prize.
-  if ( user_access('view own redeemed prizes', $account) && $prize->uid == $account->uid ) {
+  if ( user_access('view own redeemed prizes', $account) && $prize_redeemed->uid == $account->uid ) {
     return TRUE;
   }
 
   // User does not have access.
   return FALSE;
+}
+
+/**
+ * Display a redeemed prize.
+ */
+function pinapi_prize_redeemed_view($prize_redeemed) {
+  dpm($prize_redeemed);
+  
+  return __FUNCTION__;
 }

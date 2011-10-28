@@ -227,7 +227,30 @@ function pinapi_prize_prizeapi_invoke($op, &$prize, $group = NULL, $account = NU
   return $return;
 }
 
+/**
+ * Load a Redeemed Prize Object.
+ *
+ * @param $rid
+ *   The redeem id.
+ */
+function pinapi_prize_redeemed_load($rid, $reset = FALSE) {
+  static $prizes_redeemed;
 
+  if ( !isset($prizes_redeemed[$rid]) || $reset ) {
+    $prize_redeemed = db_fetch_object(db_query("SELECT * FROM {pinapi_prize_redeemed} pr INNER JOIN {pinapi_code_redeemed} cr ON pr.rid = cr.rid WHERE cr.rid = %d", $rid));
+
+    // Load associated objects and append to redeemed prize.
+    if ( $prize_redeemed ) {
+      $prize_redeemed->user = user_load($prize_redeemed->uid);
+      $prize_redeemed->prize = pinapi_prize_load($prize_redeemed->pid);
+      $prize_redeemed->group = pinapi_group_load($prize_redeemed->gid);
+    }
+
+    $prizes_redeemed[$rid] = $prize_redeemed;
+  }
+
+  return $prizes_redeemed[$rid];
+}
 
 
 
