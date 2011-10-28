@@ -5,6 +5,7 @@
  * Exposes the Pin API system as nodes.
  */
 
+require_once dirname(__FILE__) . '/pinapi_node.inc';
 
 /**
  * Implements hook_menu().
@@ -21,7 +22,42 @@ function pinapi_node_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 10,
     ),
+    'pinapi_node/autocomplete' => array(
+      'title' => 'Autocomplete',
+      'page callback' => 'pinapi_node_autocomplete',
+      'access arguments' => array('administer pin api'),
+      'file' => 'pinapi_node.admin.inc',
+      'type' => MENU_CALLBACK,
+    ),
   );
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function pinapi_node_form_alter(&$form, &$form_state, $form_id) {
+  if ( $form_id == 'pinapi_ui_prize_form' ) {
+    $form['content_id'] = array(
+      '#type' => 'textfield',
+      '#autocomplete_path' => 'pinapi_node/autocomplete/prize',
+      '#attributes' => array('class' => 'pinapi-node-content-id'),
+    );
+    
+    //dpm($form);
+  }
+}
+
+/**
+ * Implements hook_pinapi_prizeapi().
+ */
+function pinapi_node_pinapi_prizeapi($op, &$prize, $group = NULL, $account = NULL) {
+  switch ( $op ) {
+    case 'load':
+      if ( $prize->content_type == 'node' && $node = node_load($prize->content_id) ) {
+        $prize->node = $node;
+      }
+      break;
+  }
 }
 
 /**
@@ -52,4 +88,15 @@ function pinapi_node_pinapi_prize_relationships() {
   );
 
   return $relationships;
+}
+
+/**
+ * Implements hook_pinapi_prize_redeemed_view().
+ */
+function pinapi_node_pinapi_prize_redeemed_view($prize_redeemed) {
+  return array(
+    'pinapi_node' => array(
+      '#value' => node_view($prize_redeemed->prize->node, FALSE, TRUE, TRUE),
+    ),
+  );
 }
