@@ -27,6 +27,12 @@ function pinapi_views_data() {
   // -------------------------------------------------------------------
   // PinAPI Code Redeemed
   $data['pinapi_code']['table']['group'] = t('Pin API Code');
+  $data['pinapi_code']['table']['join'] = array(
+    'pinapi_code_redeemed' => array(
+      'left_field' => 'cid',
+      'field' => 'cid',
+    ),
+  );
 
   // Code ID.
   $data['pinapi_code']['cid'] = array(
@@ -85,6 +91,12 @@ function pinapi_views_data() {
   // -------------------------------------------------------------------
   // PinAPI Code Redeemed
   $data['pinapi_group']['table']['group'] = t('Pin API Group');
+  $data['pinapi_group']['table']['join'] = array(
+    'pinapi_code_redeemed' => array(
+      'left_field' => 'gid',
+      'field' => 'gid',
+    ),
+  );
 
   // Group ID.
   $data['pinapi_group']['gid'] = array(
