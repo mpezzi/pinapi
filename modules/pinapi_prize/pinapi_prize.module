@@ -121,7 +121,13 @@ function pinapi_prize_redeemed_access($prize_redeemed, $account = NULL) {
  * Display a redeemed prize.
  */
 function pinapi_prize_redeemed_view($prize_redeemed) {
-  dpm($prize_redeemed);
-  
-  return __FUNCTION__;
+  $content = array();
+
+  // Allow module to add to content.
+  $content = module_invoke_all('pinapi_prize_redeemed_view', $prize_redeemed);
+
+  // ALlow modules to alter the content.
+  drupal_alter('pinapi_prize_redeemed_view', $prize_redeemed, $content);
+
+  return count($content) ? drupal_render($content) : t('Nothing to show');
 }
