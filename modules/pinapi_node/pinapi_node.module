@@ -29,11 +29,17 @@ function pinapi_node_menu() {
  * Implements hook_form_alter().
  */
 function pinapi_node_form_alter(&$form, &$form_state, $form_id) {
-  if ( $form_id == 'pinapi_ui_prize_form' || $form_id == 'pinapi_ui_group_form' ) {
+  if ( $form_id == 'pinapi_ui_prize_form' ) {
+    // Load prize object.
+    if ( !empty($form['pid']['#value']) ) {
+      $prize = pinapi_prize_load($form['pid']['#value']);
+    }
+
     $form['content_id'] = array(
       '#type' => 'select',
       '#title' => t('Node'),
-      '#options' => array(),
+      '#options' => pinapi_node_potential_references('prize'),
+      '#default_value' => isset($prize->content_id) ? $prize->content_id : 0,
     );
   }
 }
@@ -90,4 +96,19 @@ function pinapi_node_pinapi_prize_redeemed_view($prize_redeemed) {
       '#value' => node_view($prize_redeemed->prize->node, FALSE, TRUE, TRUE),
     ),
   );
+}
+
+/**
+ * Return an array of potential node references.
+ */
+function pinapi_node_potential_references($type) {
+  $types = pinapi_node_types($type);
+  
+  $nodes = array('0' => t('- None -'));
+  $result = db_query("SELECT nid, title FROM {node} WHERE type IN ('" . implode("', '", $types) . "')");
+  while ( $node = db_fetch_object($result) ) {
+    $nodes[$node->nid] = check_plain($node->title);
+  }
+
+  return $nodes;
 }
