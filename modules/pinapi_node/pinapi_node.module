@@ -42,6 +42,20 @@ function pinapi_node_form_alter(&$form, &$form_state, $form_id) {
       '#default_value' => isset($prize->content_id) ? $prize->content_id : 0,
     );
   }
+
+  if ( $form_id == 'pinapi_ui_group_form' ) {
+    // Load group object.
+    if ( !empty($form['gid']['#value']) ) {
+      $group = pinapi_group_load($form['gid']['#value']);
+    }
+
+    $form['content_id'] = array(
+      '#type' => 'select',
+      '#title' => t('Node'),
+      '#options' => pinapi_node_potential_references('group'),
+      '#default_value' => isset($group->content_id) ? $group->content_id : 0,
+    );
+  }
 }
 
 /**
