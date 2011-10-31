@@ -22,13 +22,6 @@ function pinapi_node_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 10,
     ),
-    'pinapi_node/autocomplete' => array(
-      'title' => 'Autocomplete',
-      'page callback' => 'pinapi_node_autocomplete',
-      'access arguments' => array('administer pin api'),
-      'file' => 'pinapi_node.admin.inc',
-      'type' => MENU_CALLBACK,
-    ),
   );
 }
 
@@ -36,14 +29,12 @@ function pinapi_node_menu() {
  * Implements hook_form_alter().
  */
 function pinapi_node_form_alter(&$form, &$form_state, $form_id) {
-  if ( $form_id == 'pinapi_ui_prize_form' ) {
+  if ( $form_id == 'pinapi_ui_prize_form' || $form_id == 'pinapi_ui_group_form' ) {
     $form['content_id'] = array(
-      '#type' => 'textfield',
-      '#autocomplete_path' => 'pinapi_node/autocomplete/prize',
-      '#attributes' => array('class' => 'pinapi-node-content-id'),
+      '#type' => 'select',
+      '#title' => t('Node'),
+      '#options' => array(),
     );
-    
-    //dpm($form);
   }
 }
 

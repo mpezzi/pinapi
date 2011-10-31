@@ -47,18 +47,3 @@ function pinapi_node_settings_form() {
 
   return system_settings_form($form);
 }
-
-/**
- * Page callback for autocomplete.
- */
-function pinapi_node_autocomplete() {
-  $type = 'prize';
-  $types = pinapi_node_types($type);
-
-  $result = db_query("SELECT nid, title FROM {node} WHERE type IN ('" . implode("', '", $types) . "')");
-  while ( $node = db_fetch_object($result) ) {
-    $nodes[$node->nid] = $node->title;
-  }
-
-  drupal_json($nodes);
-}
