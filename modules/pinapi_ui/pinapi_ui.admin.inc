@@ -60,17 +60,20 @@ function pinapi_ui_group_form(&$form_state, $group = NULL) {
     '#type' => 'textfield',
     '#title' => t('Machine Name'),
     '#default_value' => isset($group->name) ? $group->name : '',
+    '#weight' => -1,
   );
 
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Published'),
     '#default_value' => isset($group->status) ? $group->status : NULL,
+    '#weight' => 1,
   );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => isset($group->gid) ? t('Update') : t('Add'),
+    '#weight' => 20,
   );
 
   if ( isset($group->gid) ) {
@@ -79,6 +82,7 @@ function pinapi_ui_group_form(&$form_state, $group = NULL) {
       '#value' => t('Delete'),
       '#validate' => array('pinapi_ui_group_form_delete_validate'),
       '#submit' => array('pinapi_ui_group_form_delete_submit'),
+      '#weight' => 21,
     );
     $form['gid'] = array(
       '#type' => 'hidden',
@@ -191,18 +195,23 @@ function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
     '#type' => 'textfield',
     '#title' => t('Machine Name'),
     '#default_value' => isset($prize->name) ? $prize->name : '',
+    '#weight' => -1,
   );
 
   $form['quantity'] = array(
     '#type' => 'textfield',
     '#title' => t('Quantity'),
     '#default_value' => isset($prize->quantity) ? $prize->quantity : 0,
+    '#size' => 7,
+    '#weight' => 1,
   );
 
   $form['bias'] = array(
     '#type' => 'textfield',
     '#title' => t('Bias'),
     '#default_value' => isset($prize->bias) ? $prize->bias : 1,
+    '#size' => 4,
+    '#weight' => 2,
   );
 
   $xform['starts'] = array(
@@ -212,6 +221,7 @@ function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
     '#date_year_range' => '0:+3',
     '#title' => t('Starts'),
     '#default_value' => isset($prize->starts) ? date_convert($prize->starts, DATE_UNIX, DATE_DATETIME) : 0,
+    '#weight' => 3,
   );
 
   $xform['expires'] = array(
@@ -221,17 +231,20 @@ function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
     '#date_year_range' => '0:+3',
     '#title' => t('Expires'),
     '#default_value' => isset($prize->expires) ? date_convert($prize->expires, DATE_UNIX, DATE_DATETIME) : 0,
+    '#weight' => 4,
   );
 
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Published'),
     '#default_value' => isset($prize->status) ? $prize->status : NULL,
+    '#weight' => 5,
   );
 
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => isset($prize->pid) ? t('Update') : t('Add'),
+    '#weight' => 20,
   );
 
   if ( isset($prize->pid) ) {
@@ -240,6 +253,7 @@ function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
       '#value' => t('Delete'),
       '#validate' => array('pinapi_ui_prize_form_delete_validate'),
       '#submit' => array('pinapi_ui_prize_form_delete_submit'),
+      '#weight' => 21,
     );
     $form['pid'] = array(
       '#type' => 'hidden',
