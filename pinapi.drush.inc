@@ -209,48 +209,97 @@ function drush_pinapi_code_import() {
  * Drush Command Callback: Export codes for a group.
  */
 function drush_pinapi_code_export() {
-  // @TODO: Refactor code, this is old code from the previous version.
-  
-  /*
   $limit = 1000000;
 
-  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code}"));
-  //$total = 500000;
-  $chunks = ceil($total / $limit);
+  // @TODO: Get group, make sure it is valid.
+  $gid = drush_pinapi_group_choice('Choose the group you would like to export for.', $gid);
+  if ( !$gid ) {
+    drush_die('Invalid group.');
+  }
 
-  $filename = drush_get_option('file');
-  $name = basename($filename);
+  // Get a amount of codes in database.
+  $amount = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $gid));
 
-  drush_print(ceil($total / $limit));
-  //drush_die('Abort!');
+  if ( drush_confirm(dt('Are you sure you want to export !amount codes?', array('!amount' => number_format($amount)))) ) {
+    timer_start('drush_pinapi_code_export');
 
-  for ( $i = 1; $i <= $chunks; $i++ ) {
-    $output = '';
-    
-    $result = db_query("SELECT * FROM {pinapi_code} LIMIT %d, %d", ( $i - 1 ) * $limit, $limit);
-    while ( $row = db_fetch_object($result) ) {
-      $output .= $row->code . "\n";
+    // Split up amount to improve SQL performance.
+    $chunks = floor($amount / $limit);
+    $leftover = $amount - ( $limit * $chunks );
+
+    // Export codes in chunks to improve SQL performance.
+    if ( $amount >= $limit ) {
+      for ( $a = 1; $a <= $chunks; $a++ ) {
+        // Insert a chunks of codes using one insert sql query.
+        $output = '';
+        $result = db_query_range("SELECT * FROM {pinapi_code} WHERE gid = %d", array($gid), $limit * ( $a - 1 ), $limit);
+        while ( $row = db_fetch_object($result) ) {
+          $output .= $row->code . "\n";
+        }
+
+        if ( file_put_contents('pinapi-export-' . $a . '.txt', $output) ) {
+          drush_log(dt('Export complete.'), 'success');
+        }
+        else {
+          drush_log(dt('Export failed.'), 'failed');
+          drush_die('Aborting.');
+        }
+        //pinapi_code_generate_insert($generator, $limit, $gid);
+        //drush_pinapi_code_generate_status($limit, $limit * $a);
+
+        // Insert leftover codes using one insert sql query after final chunk.
+        if ( $a == $chunks && $leftover > 0 ) {
+          // Insert a chunks of codes using one insert sql query.
+          $output = '';
+          $result = db_query_range("SELECT * FROM {pinapi_code} WHERE gid = %d", array($gid), $amount - $leftover, $leftover);
+          while ( $row = db_fetch_object($result) ) {
+            $output .= $row->code . "\n";
+          }
+
+          if ( file_put_contents('pinapi-export-' . ( $a + 1 ) . '.txt', $output) ) {
+            drush_log(dt('Export complete.'), 'success');
+          }
+          else {
+            drush_log(dt('Export failed.'), 'failed');
+            drush_die('Aborting.');
+          }
+          //pinapi_code_generate_insert($generator, $leftover, $gid);
+          //drush_pinapi_code_generate_status($leftover, $amount);
+        }
+
+      }
     }
+    // Amount is less then our limit, perform only one insert.
+    else {
+      drush_print(dt('Limit: ' . $amount));
+      drush_print(dt('Offset: ' . 0));
+      // Insert a chunks of codes using one insert sql query.
+      $output = '';
+      $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d", $gid);
+      while ( $row = db_fetch_object($result) ) {
+        $output .= $row->code . "\n";
+      }
 
-    //if ( $filename ) {
-      //if ( file_exists($filename) ) {
-      //  if ( !drush_confirm(dt("File $filename exists. Do you really want to overwrite?")) ) {
-      //    return;
-      //  }
-      //}
-
-      if ( file_put_contents('pins-' . $i . '.txt', $output) ) {
+      if ( file_put_contents('pinapi-export-0.txt', $output) ) {
         drush_log(dt('Export complete.'), 'success');
       }
       else {
         drush_log(dt('Export failed.'), 'failed');
+        drush_die('Aborting.');
       }
-    //}
-    //else {
-      //drush_print_r($output);
-    //}
+      //pinapi_code_generate_insert($generator, $amount, $gid);
+      //drush_pinapi_code_generate_status($amount, $amount);
+    }
+
+    // Stop the timer.
+    $time = timer_stop('drush_pinapi_code_export');
+    $duration = $time['time'];
+
+    drush_log(dt('Successfully exported !amount codes in !duration', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
   }
-  */
+  else {
+    drush_die('Aborting.');
+  }
 }
 
 /**
