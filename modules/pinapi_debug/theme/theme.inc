@@ -30,7 +30,7 @@ function template_preprocess_pinapi_debug_group(&$vars) {
   }
   */
 
-  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d AND status = 1", $group->gid));
+  //$total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d AND status = 1", $group->gid));
 
   $codes = array();
   $result = db_query("SELECT * FROM {pinapi_code} WHERE gid = %d AND status = 1 LIMIT 30", $group->gid);
