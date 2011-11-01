@@ -1,0 +1,7 @@
+name            = PinAPI Collect
+description     = Provides PinAPI collecting functionality.
+core            = 6.x
+package         = PinAPI
+version         = 6.x-2.x
+
+dependencies[]  = pinapi

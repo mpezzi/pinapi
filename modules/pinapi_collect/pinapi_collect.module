@@ -1,0 +1,65 @@
+<?php
+
+/**
+ * @file
+ * Provides PinAPI collecting functionality.
+ */
+
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_collect_theme() {
+  return array(
+    'pinapi_collect_block' => array(
+      'arguments' => array('group' => NULL),
+      'template' => 'block-pinapi-collect',
+      'path' => drupal_get_path('module', 'pinapi_collect') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_block().
+ */
+function pinapi_collect_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+
+    case 'list':
+      return array(
+        array('info' => t('Pin API Collect')),
+      );
+
+    case 'configure':
+      if ( user_access('administer pin api') ) {
+        $groups = array('' => t('- None -'));
+        foreach ( pinapi_group_get_groups() as $group ) {
+          $groups[$group->gid] = $group->name;
+        }
+        
+        $form['pinapi_collect_gid'] = array(
+          '#type' => 'select',
+          '#title' => t('Group'),
+          '#options' => $groups,
+          '#default_value' => variable_get('pinapi_collect_gid', ''),
+        );
+      }
+      return $form;
+
+    case 'save':
+      if ( $delta == 0 ) {
+        variable_set('pinapi_collect_gid', $edit['pinapi_collect_gid']);
+      }
+      break;
+
+    case 'view':
+      if ( $delta == 0 ) {
+        $group = pinapi_group_load(variable_get('pinapi_collect_gid', 0));
+        $block['subject'] = t('Pin API Collect');
+        $block['content'] = theme('pinapi_collect_block', $group);
+      }
+      return $block;
+  }
+}
+
