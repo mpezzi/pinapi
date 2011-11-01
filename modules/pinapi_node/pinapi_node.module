@@ -107,7 +107,7 @@ function pinapi_node_pinapi_prize_relationships() {
 function pinapi_node_pinapi_prize_redeemed_view($prize_redeemed) {
   return array(
     'pinapi_node' => array(
-      '#value' => node_view($prize_redeemed->prize->node, FALSE, TRUE, TRUE),
+      '#value' => node_view($prize_redeemed->prize->node, FALSE, FALSE, TRUE),
     ),
   );
 }
