@@ -20,6 +20,7 @@ function pinapi_ui_view_overview() {
 
   $header = array(
     array('data' => t('Name')),
+    array('data' => t('Codes')),
     array('data' => t('Status')),
     array('data' => t('Operation')),
   );
@@ -36,14 +37,20 @@ function pinapi_ui_view_overview() {
       $items[] = l($prize->name, "admin/build/pinapi/prize/$prize->pid/edit");
     }
 
+    $vars = array(
+      '!total' => number_format(db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $group->gid))),
+      '!available' => number_format(db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d AND status = 1", $group->gid))),
+    );
+
     $rows[] = array(
-      array('class' => 'pinapi-name', 'data' => check_plain($group->name)),
+      array('class' => 'pinapi-group-name', 'data' => check_plain($group->name)),
+      array('class' => 'pinapi-group-codes', 'data' => t('!available / !total', $vars)),
       array('class' => 'pinapi-group-status', 'data' => $group->status ? t('Active') : t('Inactive')),
       array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
     );
 
     $rows[] = array(
-      array('class' => 'pinapi-group-prizes', 'data' => theme('item_list', $items), 'colspan' => 3),
+      array('class' => 'pinapi-group-prizes', 'data' => implode(', ', $items), 'colspan' => 4),
     );
   }
 
