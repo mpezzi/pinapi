@@ -101,8 +101,9 @@ function pinapi_prize_get_prizes($param = array(), $reset = FALSE) {
   $arguments = array();
   $prizes = array();
 
+  // @TODO: remove status clause
   if ( !isset($param['status']) ) {
-    $param['status'] = 1;
+    //$param['status'] = 1;
   }
 
   if ( is_array($param) && count($param) > 0 ) {
@@ -172,7 +173,7 @@ function pinapi_prize_award($group, $account = NULL) {
  *   A random prize object.
  */
 function pinapi_prize_random($group, $account = NULL) {
-  $prizes = pinapi_prize_get_prizes(array('gid' => $group->gid), TRUE);
+  $prizes = pinapi_prize_get_prizes(array('status' => 1, 'gid' => $group->gid), TRUE);
 
   // Calculate a random number based on available prize quantities.
   $rand = rand(0, pinapi_prize_group_sum($prizes) - 1);
