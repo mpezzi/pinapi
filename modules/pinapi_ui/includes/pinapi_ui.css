@@ -1,0 +1,21 @@
+td.pinapi-group-name,
+td.pinapi-prize-name {
+  width: 75px;
+}
+
+td.pinapi-prize-quantity {
+  width: 100px;
+}
+
+td.pinapi-prize-bias {
+  width: 40px;
+}
+
+td.pinapi-group-status,
+td.pinapi-prize-status {
+  width: 50px;
+}
+
+td.pinapi-operation {
+  width: 100px;
+}

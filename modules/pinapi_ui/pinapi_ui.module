@@ -102,3 +102,10 @@ function pinapi_ui_menu() {
 
   return $items;
 }
+
+/**
+ * Include UI files.
+ */
+function pinapi_ui_includes() {
+  drupal_add_css(drupal_get_path('module', 'pinapi_ui') . '/includes/pinapi_ui.css');
+}

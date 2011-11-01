@@ -10,13 +10,54 @@
  * Adminstration Page.
  */
 function pinapi_ui_view_overview() {
-  return __FUNCTION__;
+  pinapi_ui_includes();
+
+  $output = '';
+  $groups = pinapi_group_get_groups();
+  if ( empty($groups) ) {
+    return $output . t('No groups exists.');
+  }
+
+  $header = array(
+    array('data' => t('Name')),
+    array('data' => t('Status')),
+    array('data' => t('Operation')),
+  );
+
+  $rows = array();
+  foreach ( $groups as $group ) {
+    $operations = array(
+      'edit' => l(t('Edit'), "admin/build/pinapi/group/$group->gid/edit"),
+    );
+
+    $items = array();
+    $prizes = pinapi_prize_get_prizes(array('gid' => $group->gid));
+    foreach ( $prizes as $prize ) {
+      $items[] = l($prize->name, "admin/build/pinapi/prize/$prize->pid/edit");
+    }
+
+    $rows[] = array(
+      array('class' => 'pinapi-name', 'data' => check_plain($group->name)),
+      array('class' => 'pinapi-group-status', 'data' => $group->status ? t('Active') : t('Inactive')),
+      array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
+    );
+
+    $rows[] = array(
+      array('class' => 'pinapi-group-prizes', 'data' => theme('item_list', $items), 'colspan' => 3),
+    );
+  }
+
+  $output .= theme('table', $header, $rows);
+
+  return $output;
 }
 
 /**
  * Group Administration Page.
  */
 function pinapi_ui_view_groups() {
+  pinapi_ui_includes();
+
   $links = array(
     'add' => l(t('Add Group'), 'admin/build/pinapi/group/add'),
   );
@@ -31,6 +72,7 @@ function pinapi_ui_view_groups() {
 
   $header = array(
     array('data' => t('Name')),
+    array('data' => t('Status')),
     array('data' => t('Operation')),
   );
 
@@ -42,12 +84,12 @@ function pinapi_ui_view_groups() {
 
     $rows[] = array(
       array('class' => 'pinapi-group-name', 'data' => check_plain($group->name)),
+      array('class' => 'pinapi-group-status', 'data' => $group->status ? t('Active') : t('Inactive')),
       array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
     );
   }
 
   $output .= theme('table', $header, $rows);
-  $output .= theme('pager', NULL, 25);
 
   return $output;
 }
@@ -150,10 +192,12 @@ function pinapi_ui_group_form_delete_submit($form, &$form_state) {
  * Prize Administration Page.
  */
 function pinapi_ui_view_prizes() {
+  pinapi_ui_includes();
+
   $links = array(
     'add' => l(t('Add Prize'), 'admin/build/pinapi/prize/add'),
   );
-  
+
   $output = theme('item_list', $links);
 
   // Fetch all Pin API prizes.
@@ -164,6 +208,9 @@ function pinapi_ui_view_prizes() {
 
   $header = array(
     array('data' => t('Name')),
+    array('data' => t('Quantity')),
+    array('data' => t('Bias')),
+    array('data' => t('Status')),
     array('data' => t('Operation')),
   );
 
@@ -175,6 +222,9 @@ function pinapi_ui_view_prizes() {
 
     $rows[] = array(
       array('class' => 'pinapi-prize-name', 'data' => check_plain($prize->name)),
+      array('class' => 'pinapi-prize-quantity', 'data' => check_plain(number_format($prize->quantity))),
+      array('class' => 'pinapi-prize-bias', 'data' => check_plain($prize->bias)),
+      array('class' => 'pinapi-prize-status', 'data' => $prize->status ? t('Active') : t('Inactive')),
       array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
     );
   }
@@ -191,11 +241,24 @@ function pinapi_ui_view_prizes() {
 function pinapi_ui_prize_form(&$form_state, $prize = NULL) {
   $format = 'm-d-Y';
 
+  $groups[0] = t('- None -');
+  foreach ( pinapi_group_get_groups() as $group ) {
+    $groups[$group->gid] = $group->name;
+  }
+
   $form['name'] = array(
     '#type' => 'textfield',
     '#title' => t('Machine Name'),
     '#default_value' => isset($prize->name) ? $prize->name : '',
     '#weight' => -1,
+    '#required' => TRUE,
+  );
+  
+  $form['gid'] = array(
+    '#type' => 'select',
+    '#title' => t('Group'),
+    '#options' => $groups,
+    '#default_value' => isset($prize->gid) ? $prize->gid : 0,
   );
 
   $form['quantity'] = array(
