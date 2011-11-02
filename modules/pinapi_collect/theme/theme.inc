@@ -15,13 +15,14 @@ function template_preprocess_pinapi_collect_block(&$vars) {
   $vars['content'] = '';
 
   // Only display for authenticated users.
-  if ( $user->uid ) {
-    // Determine the number of codes redeemed for the user.
-    $redeemed = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code_redeemed} WHERE uid = %d AND gid = %d AND status = 1", $user->uid, $vars['group']->gid));
+  if ( user_access('redeem codes') ) {
+    $redeemed = $user->pinapi['redeemed'][$vars['group']->gid];
 
     // If the user has redeemed enough codes, display prizes.
-    if ( $redeemed >= variable_get('pinapi_collect_block_required', 20) ) {
+    if ( $redeemed >= variable_get('pinapi_collect_block_required', 5) ) {
       $vars['content'] = 'OK!';
     }
+
+    $vars['content'] = $redeemed;
   }
 }
