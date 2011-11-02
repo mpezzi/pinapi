@@ -31,7 +31,7 @@ function pinapi_schema() {
     ),
     'primary key' => array('gid'),
     'indexes' => array(
-      'content_id' => array('content_id'),
+      'content' => array('content_type', 'content_id'),
     ),
   );
 
@@ -41,10 +41,10 @@ function pinapi_schema() {
       'cid' => array(
        'type' => 'serial',
        'not null' => TRUE),
-     'gid' => array(
-       'type' => 'int',
-       'not null' => TRUE,
-       'default' => 0),
+      'gid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0),
       'code' => array(
         'type' => 'varchar',
         'length' => '32',
@@ -60,9 +60,7 @@ function pinapi_schema() {
     ),
     'primary key' => array('cid'),
     'indexes' => array(
-      'cid' => array('cid'),
-      'gid' => array('gid'),
-      'code' => array('code'),
+      'gid_code_status' => array('gid', 'code', 'status'),
     ),
   );
 
@@ -101,8 +99,22 @@ function pinapi_schema() {
     ),
     'primary key' => array('rid'),
     'indexes' => array(
-      'rid' => array('rid'),
-      'uid' => array('uid'),
+      'uid_gid' => array('uid', 'gid'),
+    ),
+  );
+
+  $schema['pinapi_code_redeemed_cache'] = array(
+    'description' => 'Stores cached data about number of redeemed codes.',
+    'fields' => array(
+      'rcid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'uid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'gid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'value' => array('type' => 'float', 'not null' => TRUE, 'default' => 0),
+      'timestamp' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+    ),
+    'primary key' => array('rcid'),
+    'indexes' => array(
+      'uid_gid' => array('uid', 'gid'),
     ),
   );
 
