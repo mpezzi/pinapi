@@ -82,7 +82,17 @@ function pinapi_prize_pinapi_codeapi($op, &$code, &$group, &$account) {
  * Implements hook_pinapi_code_clear().
  */
 function pinapi_prize_pinapi_code_clear($gid) {
+  // Delete redeemed prize information based on the group id.
+  // @NOTE: Since the pinapi_prize_redeemed table does not have a gid field, 
+  //        we need to join the pinapi_prize table to search for that variable.
   db_query("DELETE pr FROM {pinapi_prize_redeemed} pr JOIN {pinapi_prize} p ON pr.pid = p.pid WHERE p.gid = %d", $gid);
+}
+
+/**
+ * Implements hook_pinapi_code_clear_all().
+ */
+function pinapi_prize_pinapi_code_clear_all() {
+  db_query("TRUNCATE TABLE {pinapi_prize_redeemed}");
 }
 
 /**
