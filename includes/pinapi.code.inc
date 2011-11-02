@@ -34,6 +34,9 @@ function pinapi_code_redeem($string, $group, $account = NULL) {
       // Create a redeem record to keep track of redeemed codes.
       db_query("INSERT INTO {pinapi_code_redeemed} (code, cid, gid, uid, redeem_source, redeemed) VALUES ('%s', %d, %d, %d, '%s', %d)", $string, $code->cid, $group->gid, $account->uid, ip_address(), time());
 
+      // Insert or update cached count.
+      pinapi_code_redeemed_add_count($group, $account);
+
       // Get id of the last redeemed code.
       $code->rid = db_last_insert_id('pinapi_code_redeemed', 'rid');
 
@@ -171,6 +174,21 @@ function pinapi_code_clear_all() {
   // Remove both redeemed and non-redeemed codes.
   db_query("TRUNCATE TABLE {pinapi_code}");
   db_query("TRUNCATE TABLE {pinapi_code_redeemed}");
+}
+
+/**
+ * Increase the redeem count value for user.
+ */
+function pinapi_code_redeemed_add_count($group, $account) {
+  // Determine wheather we need to insert or update result.
+  $exist = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code_redeemed_cache} WHERE uid = %d AND gid = %d", $account->uid, $group->gid));
+
+  if ( !$exist ) {
+    db_query("INSERT INTO {pinapi_code_redeemed_cache} (uid, gid, value, timestamp) VALUES (%d, %d, %d, %d)", $account->uid, $group->gid, 1, time());
+  }
+  else {
+    db_query("UPDATE {pinapi_code_redeemed_cache} SET value = value + 1, timestamp = %d WHERE uid = %d AND gid = %d", time(), $account->uid, $group->gid);
+  }
 }
 
 /**
