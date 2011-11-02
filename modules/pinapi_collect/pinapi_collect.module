@@ -12,7 +12,7 @@
 function pinapi_collect_theme() {
   return array(
     'pinapi_collect_block' => array(
-      'arguments' => array('group' => NULL),
+      'arguments' => array('account' => NULL, 'group' => NULL),
       'template' => 'block-pinapi-collect',
       'path' => drupal_get_path('module', 'pinapi_collect') . '/theme',
       'file' => 'theme.inc',
@@ -54,10 +54,11 @@ function pinapi_collect_block($op = 'list', $delta = 0, $edit = array()) {
       break;
 
     case 'view':
-      if ( $delta == 0 ) {
+      if ( $delta == 0 && user_access('redeem codes') ) {
         $group = pinapi_group_load(variable_get('pinapi_collect_gid', 0));
+        $user = user_load($GLOBALS['user']->uid);
         $block['subject'] = t('Pin API Collect');
-        $block['content'] = theme('pinapi_collect_block', $group);
+        $block['content'] = theme('pinapi_collect_block', $user, $group);
       }
       return $block;
   }
