@@ -162,6 +162,7 @@ function pinapi_code_clear($gid) {
   // Remove both redeemed and non-redeemed codes from group.
   db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $gid);
   db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
+  db_query("DELETE FROM {pinapi_code_redeemed_cache} WHERE gid = %d", $gid);
 }
 
 /**
@@ -174,6 +175,7 @@ function pinapi_code_clear_all() {
   // Remove both redeemed and non-redeemed codes.
   db_query("TRUNCATE TABLE {pinapi_code}");
   db_query("TRUNCATE TABLE {pinapi_code_redeemed}");
+  db_query("TRUNCATE TABLE {pinapi_code_redeemed_cache}");
 }
 
 /**
