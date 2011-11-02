@@ -34,11 +34,11 @@ function pinapi_code_redeem($string, $group, $account = NULL) {
       // Create a redeem record to keep track of redeemed codes.
       db_query("INSERT INTO {pinapi_code_redeemed} (code, cid, gid, uid, redeem_source, redeemed) VALUES ('%s', %d, %d, %d, '%s', %d)", $string, $code->cid, $group->gid, $account->uid, ip_address(), time());
 
-      // Insert or update cached count.
-      pinapi_code_redeemed_add_count($group, $account);
-
       // Get id of the last redeemed code.
       $code->rid = db_last_insert_id('pinapi_code_redeemed', 'rid');
+
+      // Insert or update cached count.
+      pinapi_code_redeemed_add_count($group, $account);
 
       // Invoke module hook_pinapi_codeapi().
       pinapi_codeapi_invoke('redeem', $code, $group, $account);
