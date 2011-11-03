@@ -31,10 +31,12 @@ function pinapi_ui_view_overview() {
       'edit' => l(t('Edit'), "admin/build/pinapi/group/$group->gid/edit"),
     );
 
-    $items = array();
-    $prizes = pinapi_prize_get_prizes(array('gid' => $group->gid));
-    foreach ( $prizes as $prize ) {
-      $items[] = l($prize->name, "admin/build/pinapi/prize/$prize->pid/edit");
+    if ( module_exists('pinapi_prize') ) {
+      $items = array();
+      $prizes = pinapi_prize_get_prizes(array('gid' => $group->gid));
+      foreach ( $prizes as $prize ) {
+        $items[] = l($prize->name, "admin/build/pinapi/prize/$prize->pid/edit");
+      }
     }
 
     $vars = array(
@@ -49,9 +51,11 @@ function pinapi_ui_view_overview() {
       array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
     );
 
-    $rows[] = array(
-      array('class' => 'pinapi-group-prizes', 'data' => implode(', ', $items), 'colspan' => 4),
-    );
+    if ( module_exists('pinapi_prize') ) {
+      $rows[] = array(
+        array('class' => 'pinapi-group-prizes', 'data' => implode(', ', $items), 'colspan' => 4),
+      );
+    }
   }
 
   $output .= theme('table', $header, $rows);
