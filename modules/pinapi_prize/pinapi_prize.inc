@@ -203,14 +203,18 @@ function pinapi_prize_random($group, $account = NULL) {
   // Sum up the totals and look for an appropriate match.
   $sum = 0;
   foreach ( $prizes as $prize ) {
-    $sum += $prize->quantity * $prize->bias;
+    // @TODO: Will adding ceil or floor effect anything? Need to confirm.
+    $sum += ceil($prize->quantity * $prize->bias);
     if ( $rand < $sum ) {
-      // Invoke hook_pinapi_groupapi operation in all modules, allow modules to alter chosen prize.
+      // Invoke hook_pinapi_prizeapi operation in all modules, allow modules to alter chosen prize.
       pinapi_prize_prizeapi_invoke('random', $prize, $group, $account);
+      
+      // Return the random prize.
       return $prize;
     }
   }
 
+  // No prize was available.
   return FALSE;
 }
 
