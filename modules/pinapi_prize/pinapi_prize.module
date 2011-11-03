@@ -68,7 +68,7 @@ function pinapi_prize_pinapi_codeapi($op, &$code, &$group, &$account) {
     }
     // No prize available, mark code as unredeemable.
     else {
-      $code->redeemable = FALSE;
+      $code->redeemable = variable_get('pinapi_prize_depleted_group_' . $group->gid . '_code_redeemable', FALSE);
     }
   }
 
