@@ -3,6 +3,6 @@ $(function(){
     $(this).parents('div.pinapi-debug-group').find('div.content').slideToggle(125);
   });
   $('#pinapi-debug-toolbar span.pin').click(function(){
-    $('#edit-code').val( $(this).attr('data-code') );
+    $('form input.pinapi-code').val( $(this).attr('data-code') );
   });
 });
