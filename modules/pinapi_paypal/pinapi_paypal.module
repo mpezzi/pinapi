@@ -1,0 +1,165 @@
+<?php
+
+/**
+ * @file
+ * Provides simple PayPal integration.
+ */
+
+/**
+ * Pinapi PayPal environment constants  
+ */
+define('PINAPI_PAYPAL_ENV_DEVELOPMENT', 1);
+define('PINAPI_PAYPAL_ENV_PRODUCTION', 2);
+
+/**
+ * Pinapi PayPal constants required by PayPal
+ * @see https://merchant.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_html_Appx_websitestandard_htmlvariables
+ */
+define('PINAPI_PAYPAL_SHIPPING_REQUIRED', 2);   
+
+// include required functions for populating the pinapi paypal form
+require_once(dirname(__FILE__) . '/pinapi_paypal.inc');
+
+/**
+ * Implements hook_menu()
+ */
+function pinapi_paypal_menu() {
+  return array(
+    'admin/settings/pinapi/paypal' => array(
+      'title' => 'Paypal',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_paypal_settings_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'file' => 'pinapi_paypal.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 15,
+    ),
+    'pinapi/paypal' => array(
+      'title' => 'Pinapi Paypal',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_paypal_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    ),
+    'pinapi/paypal/notify' => array(
+      'page callback' => 'pinapi_paypal_notify',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function xpinapi_paypal_theme() {
+  return array(
+    'pinapi_paypal' => array(
+      'arguments' => array('paypal' => NULL),
+      'template' => 'pinapi-paypal',
+      'path' => drupal_get_path('module', 'pinapi_paypal') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
+ * Displays a form for adding an item to a Paypal cart
+ */
+function pinapi_paypal_form() {
+  $environment = pinapi_paypal_environment();
+  
+  $form['#action'] = $environment['action'];
+  $form['#method'] = 'get';
+  $form['display'] = array(
+    '#type' => 'hidden',
+    '#value' => '1',
+  );
+  $form['cmd'] = array(
+    '#type' => 'hidden',
+    '#value' => '_cart',
+  );
+  $form['first_name'] = array(
+    '#type' => 'hidden',
+    '#value' => 'Enter name here',
+  );
+  $form['business'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('pinapi_paypal_business_email', ''),
+  );  
+  $form['item_name'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('pinapi_paypal_item_name', ''),
+  );
+  $item_amount = variable_get('pinapi_paypal_item_amount', null);
+  if ($item_amount) {
+    $form['amount'] = array(
+      '#type' => 'hidden',
+      '#value' => $item_amount,
+    );
+  }
+  $item_number = variable_get('pinapi_paypal_item_number', null);
+  if ($item_number) {
+    $form['item_number'] = array(
+      '#type' => 'hidden',
+      '#value' => $item_number,
+    );
+  }
+  $form['shipping'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('pinapi_paypal_shipping_rate', ''),
+  );
+  $form['page_style'] = array(
+    '#type' => 'hidden',
+    '#value' => 'PayPal',
+  );
+  $form['no_shipping'] = array(
+    '#type' => 'hidden',
+    '#value' => PINAPI_PAYPAL_SHIPPING_REQUIRED,
+  );
+  $form['cart-return'] = array(
+    '#type' => 'hidden',
+    '#value' => '',
+  );
+  $form['cancel_return'] = array(
+    '#type' => 'hidden',
+    '#value' => url(variable_get('pinapi_paypal_cancel_return_path', ''), array('absolute' => TRUE)),
+  );
+  $form['notify_url'] = array(
+    '#type' => 'hidden',
+    '#value' => url(variable_get('pinapi_paypal_notify_path', ''), array('absolute' => TRUE)),
+  );
+  $form['return'] = array(
+    '#type' => 'hidden',
+    '#value' => url(variable_get('pinapi_paypal_return_path', ''), array('absolute' => TRUE)),
+  );
+  $form['currency_code'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('pinapi_paypal_currency_code', ''),
+  );
+  $form['lc'] = array(
+    '#type' => 'hidden',
+    '#value' => variable_get('pinapi_paypal_language_code', ''),
+  );
+  $form['bn'] = array(
+    '#type' => 'hidden',
+    '#value' => 'PP-ShopCartBF',
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Submit',
+  );
+  
+  return $form;
+}
+
+function pinapi_paypal_notify() {
+  watchdog('pinapi_paypal', json_encode($_POST));
+  print '';  
+}
+
+function xpinapi_paypal_form_submit($form, &$form_state) {
+  dsm($form_state);
+}
