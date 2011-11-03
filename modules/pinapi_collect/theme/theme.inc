@@ -24,4 +24,7 @@ function template_preprocess_pinapi_collect_block(&$vars) {
   if ( $redeemed >= variable_get('pinapi_collect_block_required', 15) ) {
     $vars['content'] .= '<p>Yay!</p>';
   }
+  else {
+    $vars['content'] .= drupal_get_form('pinapi_redeem_form', $group);
+  }
 }
