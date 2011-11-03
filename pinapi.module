@@ -103,35 +103,52 @@ function pinapi_pinapi_code_generator() {
 function pinapi_redeem_form(&$form_state, $group) {
   global $user;
 
+  // Set the current user as the account to redeem code for.
   if ( $user->uid ) {
     $user = user_load($user->uid);
   }
 
+  // Store user a group information to be used with this form.
   $form_state['storage']['account'] = $user;
   $form_state['storage']['group'] = $group;
 
-  $form['code'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Enter your pin'),
-    '#size' => 20,
-    '#maxlength' => 32,
-    '#required' => TRUE,
+  $form['pinapi'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('PinAPI Contest'),
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
   );
 
-  $form['gid'] = array(
-    '#type' => 'hidden',
-    '#value' => $group->gid,
-  );
+  if ( $group->status ) {
+    $form['pinapi']['code'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Enter your pin'),
+      '#size' => 20,
+      '#maxlength' => 32,
+      '#required' => TRUE,
+    );
 
-  $form['uid'] = array(
-    '#type' => 'hidden',
-    '#value' => $user->uid,
-  );
+    $form['pinapi']['gid'] = array(
+      '#type' => 'hidden',
+      '#value' => $group->gid,
+    );
 
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Submit'),
-  );
+    $form['pinapi']['uid'] = array(
+      '#type' => 'hidden',
+      '#value' => $user->uid,
+    );
+
+    $form['pinapi']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Submit'),
+    );
+  }
+  else {
+    $form['pinapi']['status'] = array(
+      '#type' => 'item',
+      '#value' => variable_get('pinapi_message_closed', 'The contest is currently unavailable.'),
+    );
+  }
 
   return $form;
 }
