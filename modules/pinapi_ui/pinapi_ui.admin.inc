@@ -217,6 +217,7 @@ function pinapi_ui_view_prizes() {
     array('data' => t('Name')),
     array('data' => t('Quantity')),
     array('data' => t('Bias')),
+    array('data' => t('Availability')),
     array('data' => t('Status')),
     array('data' => t('Operation')),
   );
@@ -231,6 +232,7 @@ function pinapi_ui_view_prizes() {
       array('class' => 'pinapi-prize-name', 'data' => check_plain($prize->name)),
       array('class' => 'pinapi-prize-quantity', 'data' => check_plain(number_format($prize->quantity))),
       array('class' => 'pinapi-prize-bias', 'data' => check_plain($prize->bias)),
+      array('class' => 'pinapi-prize-availability', 'data' => check_plain(number_format($prize->quantity * $prize->bias))),
       array('class' => 'pinapi-prize-status', 'data' => $prize->status ? t('Active') : t('Inactive')),
       array('class' => 'pinapi-operation', 'data' => implode(' | ', $operations)),
     );

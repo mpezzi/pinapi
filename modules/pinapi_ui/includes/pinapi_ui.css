@@ -7,6 +7,7 @@ td.pinapi-prize-quantity {
   width: 100px;
 }
 
+td.pinapi-prize-availability,
 td.pinapi-prize-bias {
   width: 40px;
 }
