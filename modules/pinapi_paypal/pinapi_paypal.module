@@ -73,17 +73,9 @@ function pinapi_paypal_form() {
   
   $form['#action'] = $environment['action'];
   $form['#method'] = 'get';
-  $form['add'] = array(
-    '#type' => 'hidden',
-    '#value' => '1',
-  );
   $form['cmd'] = array(
     '#type' => 'hidden',
-    '#value' => '_cart',
-  );
-  $form['first_name'] = array(
-    '#type' => 'hidden',
-    '#value' => 'Enter name here',
+    '#value' => '_xclick',
   );
   $form['business'] = array(
     '#type' => 'hidden',
@@ -119,10 +111,6 @@ function pinapi_paypal_form() {
     '#type' => 'hidden',
     '#value' => PINAPI_PAYPAL_SHIPPING_REQUIRED,
   );
-  $form['cart-return'] = array(
-    '#type' => 'hidden',
-    '#value' => '',
-  );
   $form['cancel_return'] = array(
     '#type' => 'hidden',
     '#value' => url(variable_get('pinapi_paypal_cancel_return_path', ''), array('absolute' => TRUE)),
@@ -145,18 +133,25 @@ function pinapi_paypal_form() {
   );
   $form['bn'] = array(
     '#type' => 'hidden',
-    '#value' => 'PP-ShopCartBF',
+    '#value' => 'BuyNow',
+  );
+  $form['custom'] = array(
+    '#type' => 'hidden',
+    '#value' => $GLOBALS['user']->uid,
   );
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Submit',
   );
-  
+
   return $form;
 }
 
 function pinapi_paypal_notify() {
   watchdog('pinapi_paypal', json_encode($_POST));
+  if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
+    db_query("INSERT INTO {pinapi_paypal} (uid, status) VALUES (%d, %d)", $_POST['custom'], 1);
+  }
   print '';  
 }
 
