@@ -194,6 +194,9 @@ function pinapi_prize_award($group, $account = NULL) {
 function pinapi_prize_random($group, $account = NULL) {
   $prizes = pinapi_prize_get_prizes(array('status' => 1, 'gid' => $group->gid), TRUE);
 
+  // Invoke hook_pinapi_prizeapi operations in all modules, allow modules to alter available prizes.
+  drupal_alter('pinapi_prize_availablity', $prizes);
+
   // Calculate a random number based on available prize quantities.
   $rand = rand(0, pinapi_prize_group_sum($prizes) - 1);
 
