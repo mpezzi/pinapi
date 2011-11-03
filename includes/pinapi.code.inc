@@ -37,8 +37,8 @@ function pinapi_code_redeem($string, $group, $account = NULL) {
       // Get id of the last redeemed code.
       $code->rid = db_last_insert_id('pinapi_code_redeemed', 'rid');
 
-      // Insert or update cached count.
-      pinapi_code_redeemed_add_count($group, $account);
+      // Insert or update cached redeemed count.
+      pinapi_code_redeemed_cache_add_count($group, $account);
 
       // Invoke module hook_pinapi_codeapi().
       pinapi_codeapi_invoke('redeem', $code, $group, $account);
@@ -181,7 +181,7 @@ function pinapi_code_clear_all() {
 /**
  * Increase the redeem count value for user.
  */
-function pinapi_code_redeemed_add_count($group, $account) {
+function pinapi_code_redeemed_cache_add_count($group, $account) {
   // Determine wheather we need to insert or update result.
   $exist = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code_redeemed_cache} WHERE uid = %d AND gid = %d", $account->uid, $group->gid));
 
