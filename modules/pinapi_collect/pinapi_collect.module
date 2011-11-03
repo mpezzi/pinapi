@@ -54,7 +54,7 @@ function pinapi_collect_block($op = 'list', $delta = 0, $edit = array()) {
       break;
 
     case 'view':
-      if ( $delta == 0 && user_access('redeem codes') ) {
+      if ( $delta == 0 && user_access('redeem codes') && variable_get('pinapi_collect_gid', '') ) {
         $group = pinapi_group_load(variable_get('pinapi_collect_gid', 0));
         $user = user_load($GLOBALS['user']->uid);
         $block['subject'] = t('Pin API Collect');
