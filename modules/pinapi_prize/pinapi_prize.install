@@ -105,5 +105,5 @@ function pinapi_prize_uninstall() {
     variable_del($row->name);
   }
 
-  drupal_set_message(t('PinAPI has been uninstalled.'));
+  drupal_set_message(t('PinAPI Prize has been uninstalled.'));
 }
