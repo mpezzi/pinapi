@@ -54,8 +54,18 @@ function pinapi_prize_load($pid, $reset = FALSE) {
  *   A prize object.
  */
 function pinapi_prize_save(&$prize) {
+  // @TODO: What if a group wasn't specified? Possibily add this logic here.
+  $group = pinapi_group_load($prize->gid);
+
   // Invoke hook_pinapi_groupapi operation in all modules.
   pinapi_prize_prizeapi_invoke('presave', $prize);
+
+  // Only save prizes to a group that is not published.
+  // @NOTE: We do this so a visitor can't redeem a prize while the quantities are being edited.
+  if ( $group && $group->status ) {
+    $quantity = $prize->quantity;
+    unset($prize->quantity);
+  }
 
   // Determine whether this is a new group.
   $prize->is_new = empty($prize->pid);
@@ -67,6 +77,15 @@ function pinapi_prize_save(&$prize) {
   else {
     drupal_write_record('pinapi_prize', $prize, 'pid');
     $op = 'update';
+  }
+
+  // If we omitted the quantity when saving, reset it here so we don't break anything referencing the prize argument.
+  if ( $group && $group->status ) {
+    $prize->quantity = $quantity;
+    $prize->quantity_omitted = TRUE;
+  }
+  else {
+    $prize->quantity_omitted = FALSE;
   }
 
   // Invoke hook_pinapi_groupapi operation in all modules.

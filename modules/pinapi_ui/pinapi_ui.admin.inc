@@ -357,6 +357,11 @@ function pinapi_ui_prize_delete_form(&$form_state, $prize) {
 function pinapi_ui_prize_form_submit($form, &$form_state) {
   $prize = (object) $form_state['values'];
   pinapi_prize_save($prize);
+
+  if ( $prize->quantity_omitted ) {
+    drupal_set_message(t('Quantity value was omitted when saving because the group is currently running. If you would like to change this value please un-publish the !group this prizes is associated with.', array('!group' => l("group", "admin/build/pinapi/group/$prize->gid/edit"))));
+  }
+
   $form_state['redirect'] = 'admin/build/pinapi/prizes';
 }
 
