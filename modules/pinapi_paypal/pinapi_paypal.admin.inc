@@ -5,11 +5,6 @@
  * Provides Pin API Paypal Administrative Forms.
  */
 
-define('PAYPAL_SANDBOX_URL', 'https://www.sandbox.paypal.com/cgi-bin/webscr');
-define('PAYPAL_PRODUCTION_URL', 'https://www.paypal.com/cgi-bin/webscr');
-define('ENV_DEVELOPMENT', '0');
-define('ENV_PRODUCTION', '1');
-
 /**
  * Pin API Paypal Administrative Settings Form.
  */
@@ -23,6 +18,7 @@ function pinapi_paypal_settings_form() {
   $form['pinapi_paypal_business_email'] = array(
     '#type' => 'textfield',
     '#title' => 'Business (Vendor) Email',
+    '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_business_email', ''),
   );
   $form['pinapi_paypal_item_name'] = array(
@@ -62,49 +58,17 @@ function pinapi_paypal_settings_form() {
     '#title' => 'Notify Path',
     '#default_value' => variable_get('pinapi_paypal_notify_path', ''),
   );
-  $currency_codes = array(
-    'AUD' => t('Australian Dollar'),
-    'GBP' => t('British Pound'),
-    'CAD' => t('Canadian Dollar'),
-    'CZK' => t('Czech Koruna'),
-    'DKK' => t('Danish Kroner'),
-    'EUR' => t('Euro'),
-    'HKD' => t('Hong Kong Dollar'),
-    'HUF' => t('Hungarian Forint'),
-    'ILS' => t('Israeli New Shekel'),
-    'JPY' => t('Japanese Yen'),
-    'MXN' => t('Mexican Peso'),
-    'NZD' => t('New Zealand Dollar'),
-    'NOK' => t('Norwegian Kroner'),
-    'PLN' => t('Polish Zlotych'),
-    'SGD' => t('Singapore Dollar'),
-    'SEK' => t('Swedish Kronor'),
-    'CHF' => t('Swiss Franc'),
-    'USD' => t('U.S. Dollar'),
-  );
   $form['pinapi_paypal_currency_code'] = array(
     '#type' => 'select',
     '#title' => t('Currency'),
-    '#options' => $currency_codes,
+    '#options' => pinapi_paypal_currency_codes(),
     '#default_value' => variable_get('pinapi_paypal_currency_code', ''),
   );  
   $form['pinapi_paypal_language_code'] = array(
     '#type' => 'select',
     '#title' => t('Language Code'),
-    '#options' => array(
-      'CA' => 'Canadian English',
-    ),
+    '#options' => pinapi_paypal_language_codes(),
     '#default_value' => variable_get('pinapi_paypal_language_code', ''),
   );
   return system_settings_form($form);
-}
-
-function pinapi_paypal_settings_form_submit($form, &$form_state) {
-  // if ($form_state['values']['pinapi_paypal_environment'] === ENV_DEVELOPMENT) {
-  //   variable_set('pinapi_paypal_action', 'hello');
-  // } else {
-  //   variable_set('pinapi_paypal_action', 'helloooo');
-  // }
-  // 
-  dsm($form_state);
 }

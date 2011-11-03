@@ -73,7 +73,7 @@ function pinapi_paypal_form() {
   
   $form['#action'] = $environment['action'];
   $form['#method'] = 'get';
-  $form['display'] = array(
+  $form['add'] = array(
     '#type' => 'hidden',
     '#value' => '1',
   );

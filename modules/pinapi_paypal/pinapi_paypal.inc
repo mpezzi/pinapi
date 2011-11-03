@@ -41,3 +41,54 @@ function pinapi_paypal_environment_options() {
   }
   return $options;
 }
+
+function pinapi_paypal_currency_codes() {
+  return array(
+    'AUD' => t('Australian Dollar'),
+    'GBP' => t('British Pound'),
+    'CAD' => t('Canadian Dollar'),
+    'CZK' => t('Czech Koruna'),
+    'DKK' => t('Danish Kroner'),
+    'EUR' => t('Euro'),
+    'HKD' => t('Hong Kong Dollar'),
+    'HUF' => t('Hungarian Forint'),
+    'ILS' => t('Israeli New Shekel'),
+    'JPY' => t('Japanese Yen'),
+    'MXN' => t('Mexican Peso'),
+    'NZD' => t('New Zealand Dollar'),
+    'NOK' => t('Norwegian Kroner'),
+    'PLN' => t('Polish Zlotych'),
+    'SGD' => t('Singapore Dollar'),
+    'SEK' => t('Swedish Kronor'),
+    'CHF' => t('Swiss Franc'),
+    'USD' => t('U.S. Dollar'),
+  );
+}
+
+/**
+ * Returns an array of language codes supported by PayPal
+ * @see Appendice C in https://cms.paypal.com/cms_content/US/en_US/files/developer/PP_WebsitePaymentsStandard_IntegrationGuide.pdf
+ */
+function pinapi_paypal_language_codes() {
+  return array(
+    'AU'	=> 'Australia',
+    'AT'	=> 'Austria',
+    'BE'	=> 'Belgium',
+    'CA'	=> 'Canada',
+    'CN'	=> 'China',
+    'FR'	=> 'France',
+    'DE'	=> 'Germany',
+    'HK'	=> 'Hong Kong',
+    'IT'	=> 'Italy',
+    'MX'	=> 'Mexico',
+    'NL'	=> 'Netherlands',
+    'NZ'	=> 'New Zealand',
+    'PL'	=> 'Poland',
+    'SG'	=> 'Singapore',
+    'ES'	=> 'Spain',
+    'SE'	=> 'Sweden',
+    'CH'	=> 'Switzerland',
+    'GB'	=> 'United Kingdom',
+    'US'	=> 'United States',
+  );
+}
