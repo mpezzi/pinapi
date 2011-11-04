@@ -25,11 +25,6 @@ function pinapi_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0),
-      'codes' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
       'status' => array(
         'type' => 'int', 
         'not null' => TRUE),
