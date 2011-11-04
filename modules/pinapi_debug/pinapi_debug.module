@@ -47,7 +47,7 @@ function pinapi_debug_theme() {
  */
 function pinapi_debug_form_alter(&$form, &$form_state, $form_id) {
   if ( $form_id == 'pinapi_redeem_form' && !isset($form['closed']) ) {
-    pinapi_debug_set_active($form['pinapi']['gid']['#value']);
+    pinapi_debug_set_active($form['gid']['#value']);
 
     // Replace Pin API core debug method.
     if ( variable_get('pinapi_debug_override', TRUE) && isset($form['debug']) ) {
