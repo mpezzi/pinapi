@@ -35,6 +35,30 @@ function pinapi_schema() {
     ),
   );
 
+  $schema['pinapi_group_cache'] = array(
+    'description' => t('Stores group cache information'),
+    'fields' => array(
+      'gid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE,
+        'default' => ''),
+      'value' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+    ),
+    'indexes' => array(
+      'gid_name' => array('gid', 'name'),
+    ),
+  );
+
   $schema['pinapi_code'] = array(
     'description' => t('Stores code information for prizes.'),
     'fields' => array(

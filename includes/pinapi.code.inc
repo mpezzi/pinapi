@@ -40,6 +40,9 @@ function pinapi_code_redeem($string, $group, $account = NULL) {
       // Insert or update cached redeemed count.
       pinapi_code_redeemed_cache_add_count($group, $account);
 
+      // Update the cached group code count.
+      pinapi_group_cache_code_redeem($group);
+
       // Invoke module hook_pinapi_codeapi().
       pinapi_codeapi_invoke('redeem', $code, $group, $account);
 
@@ -163,6 +166,8 @@ function pinapi_code_clear($gid) {
   db_query("DELETE FROM {pinapi_code} WHERE gid = %d", $gid);
   db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
   db_query("DELETE FROM {pinapi_code_redeemed_cache} WHERE gid = %d", $gid);
+
+  pinapi_group_cache_clear($gid);
 }
 
 /**
@@ -172,10 +177,11 @@ function pinapi_code_clear_all() {
   // Invoke module hook_pinapi_code_clear_all().
   module_invoke_all('pinapi_code_clear_all');
 
-  // Remove both redeemed and non-redeemed codes.
+  // Remove code dependent tables.
   db_query("TRUNCATE TABLE {pinapi_code}");
   db_query("TRUNCATE TABLE {pinapi_code_redeemed}");
   db_query("TRUNCATE TABLE {pinapi_code_redeemed_cache}");
+  db_query("TRUNCATE TABLE {pinapi_group_cache}");
 }
 
 /**

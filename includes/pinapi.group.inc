@@ -33,6 +33,9 @@ function pinapi_group_load($gid, $reset = FALSE) {
   $group = db_fetch_object(db_query("SELECT * FROM {pinapi_group} WHERE gid = %d", $gid));
 
   if ( $group && $group->gid ) {
+    // Attach in-depth information about codes.
+    $group->info = pinapi_group_cache_get($group);
+    
     // Invoke hook_pinapi_groupapi operation in all modules and attach results to the group object.
     if ( $extra = pinapi_groupapi_invoke('load', $group) ) {
       foreach ( $extra as $key => $value ) {
@@ -135,4 +138,59 @@ function pinapi_group_get_groups($reset = FALSE) {
   }
 
   return $groups;
+}
+
+/**
+ * Calculate group codes.
+ */
+function pinapi_group_cache_code_calculate(&$group) {
+  $total = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code} WHERE gid = %d", $group->gid));
+  $used = db_result(db_query("SELECT COUNT(*) FROM {pinapi_code_redeemed} WHERE gid = %d", $group->gid));
+
+  // Reset cache variables.
+  db_query("DELETE FROM {pinapi_group_cache} WHERE gid = %d AND name = '%s'", $group->gid, 'total');
+  db_query("DELETE FROM {pinapi_group_cache} WHERE gid = %d AND name = '%s'", $group->gid, 'used');
+  db_query("INSERT INTO {pinapi_group_cache} (gid, name, value) VALUES (%d, '%s', %d)", $group->gid, 'total', $total);
+  db_query("INSERT INTO {pinapi_group_cache} (gid, name, value) VALUES (%d, '%s', %d)", $group->gid, 'used', $used);
+
+  $group->info = array(
+    'total' => $total,
+    'used' => $used,
+  );
+}
+
+/**
+ * Recalculate the group stats when a code is redeemed.
+ */
+function pinapi_group_cache_code_redeem($group) {
+  if ( !isset($group->info['total']) ) {
+    pinapi_group_code_calculate($group);
+  }
+
+  if ( !empty($group->info['total']) && $group->info['total'] > $group->info['used'] ) {
+    db_query("UPDATE {pinapi_group_cache} SET value = value + 1 WHERE gid = %d AND name = '%s'", $group->gid, 'used');
+  }
+}
+
+/**
+ * Clear group in-depth information.
+ */
+function pinapi_group_cache_clear($gid) {
+  db_query("DELETE FROM {pinapi_group_cache} WHERE gid = %d", $gid);
+}
+
+/**
+ * Return in-depth group information.
+ */
+function pinapi_group_cache_get($group) {
+  $caches = array();
+  $result = db_query("SELECT * FROM {pinapi_group_cache} WHERE gid = %d", $group->gid);
+  while ( $cache = db_fetch_object($result) ) {
+    $caches[$cache->name] = $cache->value;
+  }
+
+  // Calculate available.
+  $caches['available'] = $caches['total'] - $caches['used'];
+
+  return $caches;
 }

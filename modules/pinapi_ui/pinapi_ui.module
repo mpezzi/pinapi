@@ -63,6 +63,15 @@ function pinapi_ui_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['admin/build/pinapi/group/%pinapi_group/calculate'] = array(
+    'title' => 'Calculate Group',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_ui_group_calculate_form', 4),
+    'access arguments' => $admin_access,
+    'file' => 'pinapi_ui.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
   if ( module_exists('pinapi_prize') ) {
     $items['admin/build/pinapi/prizes'] = array(
       'title' => 'Prizes',

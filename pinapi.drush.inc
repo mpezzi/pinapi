@@ -179,6 +179,9 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
     $time = timer_stop('drush_pinapi_code_generate');
     $duration = $time['time'];
 
+    // Calculate group code counts.
+    pinapi_group_cache_code_calculate(pinapi_group_load($gid));
+
     drush_log(dt('Successfully generated !amount codes in !duration.', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
   }
   else {
