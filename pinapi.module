@@ -175,39 +175,3 @@ function pinapi_redeem_form_submit($form, &$form_state) {
 
   drupal_set_message( pinapi_redeem($string, $group, $account) ? t('Yep') : t('Nope') );
 }
-
-
-
-
-
-
-
-/**
- * Title Callback.
- */
-function xpinapi_prize_page_title($prize) {
-  return $prize['title'];
-}
-
-/**
- * Menu Callback: view a single redeemed prize.
- */
-function xpinapi_prize_page_view($prize) {
-  //drupal_set_title(check_plain($prize['title']));
-  return pinapi_prize_show($prize);
-}
-
-/**
- * Generate a page displaying a single redeemed prize.
- */
-function xpinapi_prize_show($prize) {
-  return pinapi_prize_view($prize, FALSE, TRUE);
-}
-
-/**
- * Generate a display of the given redeemed prize.
- */
-function xpinapi_prize_view($prize, $teaser = FALSE, $page = TRUE) {
-  _pinapi_invoke('prize_redeemed_view', $prize, $teaser, $page);
-  return theme('prize', $prize);
-}
