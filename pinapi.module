@@ -16,6 +16,20 @@ require_once dirname(__FILE__) . '/includes/pinapi.code.inc';
 
 
 /**
+ * Implements hook_theme().
+ */
+function pinapi_theme() {
+  return array(
+    'pinapi_redeem_form' => array(
+      'arguments' => array('form' => NULL, 'group' => NULL),
+      'template' => 'pinapi-redeem-form',
+      'path' => drupal_get_path('module', 'pinapi') . '/theme',
+      'file' => 'theme.inc',
+    ),
+  );
+}
+
+/**
  * Implements hook_perm().
  */
 function pinapi_perm() {
@@ -108,15 +122,8 @@ function pinapi_redeem_form(&$form_state, $group) {
     $user = user_load($user->uid);
   }
 
-  $form['pinapi'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('PinAPI Contest'),
-    '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
-  );
-
   if ( $group->status ) {
-    $form['pinapi']['code'] = array(
+    $form['code'] = array(
       '#type' => 'textfield',
       '#title' => t('Enter your pin'),
       '#size' => 20,
@@ -127,23 +134,23 @@ function pinapi_redeem_form(&$form_state, $group) {
       ),
     );
 
-    $form['pinapi']['gid'] = array(
+    $form['gid'] = array(
       '#type' => 'hidden',
       '#value' => $group->gid,
     );
 
-    $form['pinapi']['uid'] = array(
+    $form['uid'] = array(
       '#type' => 'hidden',
       '#value' => $user->uid,
     );
 
-    $form['pinapi']['submit'] = array(
+    $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Submit'),
     );
   }
   else {
-    $form['pinapi']['status'] = array(
+    $form['status'] = array(
       '#type' => 'item',
       '#value' => variable_get('pinapi_message_closed', 'The contest is currently unavailable.'),
     );
