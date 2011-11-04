@@ -34,8 +34,7 @@ function pinapi_theme() {
  */
 function pinapi_perm() {
   return array(
-    'administer pin api', 
-    'debug pin api', 
+    'administer pin api',
     'redeem codes',
   );
 }
