@@ -25,6 +25,13 @@ function pinapi_drush_command() {
       ),
       'aliases' => array('pcr'),
     ),
+    'pinapi-code-recalculate' => array(
+      'description' => 'Recalculate the code counts for a group.',
+      'arguments' => array(
+        'gid' => 'A group id',
+      ),
+      'aliases' => array('pcrc'),
+    ),
     'pinapi-code-generate' => array(
       'description' => 'Generate codes for a pool',
       'arguments' => array(
@@ -35,6 +42,17 @@ function pinapi_drush_command() {
         '--length' => 'The length of the code to generate.',
       ),
       'aliases' => array('pcg'),
+    ),
+    'pinapi-code-generate-dump' => array(
+      'description' => 'Generate codes for a pool',
+      'arguments' => array(
+        'amount' => 'Amount of codes to generate.',
+      ),
+      'options' => array(
+        '--type' => 'The type of generator to use to create the codes.',
+        '--length' => 'The length of the code to generate.',
+      ),
+      'aliases' => array('pcgd'),
     ),
     'pinapi-code-import' => array(
       'description' => 'Import codes from a file.',
@@ -104,6 +122,22 @@ function drush_pinapi_code_redeem($string) {
   );
   
   drush_print( pinapi_code_redeem($string, $group) ? 'Yep' : 'Nope' );
+}
+
+/**
+ * Drush Command Callback: Recalculate a group code count.
+ */
+function drush_pinapi_code_recalculate($gid = NULL) {
+  // @TODO: Get group, make sure it is valid.
+  $gid = drush_pinapi_group_choice('Choose the group you would like to generate for.', $gid);
+  if ( !$gid ) {
+    drush_die('Invalid group.');
+  }
+
+  // Recalculate the totals for the group codes.
+  pinapi_group_cache_code_calculate(pinapi_group_load($gid));
+
+  drush_log(dt('Successfully recalculated codes.', array()), 'success');
 }
 
 /**
@@ -181,6 +215,113 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
 
     // Calculate group code counts.
     pinapi_group_cache_code_calculate(pinapi_group_load($gid));
+
+    drush_log(dt('Successfully generated !amount codes in !duration.', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
+  }
+  else {
+    drush_die('Aborting.');
+  }
+}
+
+/**
+ * Drush Command Callback: Generate codes for a prize pool.
+ */
+function drush_pinapi_code_generate_dump($amount = NULL, $gid = NULL) {
+
+  // Insert Options.
+  $limit = 1000;
+
+  // File
+  $file = 'pinapi_code.sql';
+
+  // Ensure there is an amount set.
+  if ( is_null($amount) ) {
+    drush_die('No amount set. Aborting.');
+  }
+
+  // @TODO: Get group, make sure it is valid.
+  $gid = drush_pinapi_group_choice('Choose the group you would like to generate for.', $gid);
+  if ( !$gid ) {
+    drush_die('Invalid group.');
+  }
+
+  // Get code generator.
+  $type = drush_get_option('type') ? drush_get_option('type') : NULL;
+  $generator = pinapi_code_get_generator($type);
+  if ( !$generator ) {
+    drush_die('Invalid code generator.');
+  }
+
+  if ( drush_confirm(dt('Are you sure you want to create !amount codes?', array('!amount' => number_format($amount)))) ) {
+
+    // Calculate generating time.
+    timer_start('drush_pinapi_code_generate');
+
+    // Split up amount to improve SQL performance.
+    $chunks = floor($amount / $limit);
+    $leftover = $amount - ( $limit * $chunks );
+
+    if ( drush_get_option('length') ) {
+      $generator['options']['length'] = drush_get_option('length');
+    }
+
+    drush_print("Group: " . $gid);
+    drush_print('Amount: ' . $amount);
+    drush_print('Limit: ' . $limit);
+    drush_print('Chunks: ' . $chunks);
+    drush_print('Left Overs: ' . $leftover);
+
+    drush_print(dt('Generating !amount codes.', array('!amount' => number_format($amount))));
+
+    $output  = "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
+    $output .= "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
+    $output .= "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
+    $output .= "/*!40101 SET NAMES utf8 */;\n";
+    $output .= "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n";
+    $output .= "/*!40103 SET TIME_ZONE='+00:00' */;\n";
+    $output .= "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;\n";
+    $output .= "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n";
+    $output .= "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n";
+    $output .= "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\n";
+
+    file_put_contents($file, $output);
+    file_put_contents($file, "LOCK TABLES `pinapi_code` WRITE;\n", FILE_APPEND | LOCK_EX);
+    file_put_contents($file, "/*!40000 ALTER TABLE `pinapi_code` DISABLE KEYS */;\n", FILE_APPEND | LOCK_EX);
+
+    // Import codes in chunks to improve SQL performance.
+    if ( $amount >= $limit ) {
+      for ( $a = 1; $a <= $chunks; $a++ ) {
+
+        // Insert a chunks of codes using one insert sql query.
+        $sql = pinapi_code_generate_insert_sql($generator, $limit, $gid);
+        file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
+        drush_pinapi_code_generate_status($limit, $limit * $a);
+
+        // Insert leftover codes using one insert sql query after final chunk.
+        if ( $a == $chunks && $leftover > 0 ) {
+          $sql = pinapi_code_generate_insert_sql($generator, $leftover, $gid);
+          file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
+          drush_pinapi_code_generate_status($leftover, $amount);
+        }
+
+      }
+    }
+    // Amount is less then our limit, perform only one insert.
+    else {
+      $sql = pinapi_code_generate_insert_sql($generator, $amount, $gid);
+      file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
+      drush_pinapi_code_generate_status($amount, $amount);
+    }
+
+    file_put_contents($file, "/*!40000 ALTER TABLE `pinapi_code` ENABLE KEYS */;\n", FILE_APPEND | LOCK_EX);
+    file_put_contents($file, "UNLOCK TABLES;\n", FILE_APPEND | LOCK_EX);
+
+    // Stop the timer.
+    $time = timer_stop('drush_pinapi_code_generate');
+    $duration = $time['time'];
+
+    // Calculate group code counts.
+    //pinapi_group_cache_code_calculate(pinapi_group_load($gid));
 
     drush_log(dt('Successfully generated !amount codes in !duration.', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
   }

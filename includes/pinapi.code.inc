@@ -156,6 +156,27 @@ function pinapi_code_generate_insert($generator, $amount, $gid = 0) {
 }
 
 /**
+ * Return a INSERT sql query to mass generate codes.
+ *
+ * @param $generator
+ *   A generator.
+ * @param $amount
+ *   The amount of codes to insert.
+ * @return
+ *   An INSERT sql query as string
+ */
+function pinapi_code_generate_insert_sql($generator, $amount, $gid = 0) {
+  $sql = "INSERT INTO `pinapi_code` (gid, code) VALUES ";
+
+  for ( $i = 0; $i < $amount; $i++ ) {
+    $sql .= ( $i != 0 ) ? ', ' : '';
+    $sql .= "(" . $gid . ", '" . pinapi_code_generate($generator) . "')";
+  }
+
+  return $sql . ';';
+}
+
+/**
  * Clear codes from a group.
  */
 function pinapi_code_clear($gid) {
