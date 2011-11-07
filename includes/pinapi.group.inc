@@ -190,7 +190,9 @@ function pinapi_group_cache_get($group) {
   }
 
   // Calculate available.
-  $caches['available'] = $caches['total'] - $caches['used'];
+  if ( isset($caches['total']) ) {
+    $caches['available'] = $caches['total'] - $caches['used'];
+  }
 
   return $caches;
 }

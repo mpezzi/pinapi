@@ -41,8 +41,8 @@ function pinapi_ui_view_overview() {
     }
 
     $vars = array(
-      '!total' => number_format($group->info['total']),
-      '!available' => number_format($group->info['available']),
+      '!total' => isset($group->info['total']) ? number_format($group->info['total']) : 0,
+      '!available' => isset($group->info['available']) ? number_format($group->info['available']) : 0,
     );
 
     $rows[] = array(
