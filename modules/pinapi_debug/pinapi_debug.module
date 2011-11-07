@@ -46,7 +46,7 @@ function pinapi_debug_theme() {
  * Implements hook_form_alter().
  */
 function pinapi_debug_form_alter(&$form, &$form_state, $form_id) {
-  if ( $form_id == 'pinapi_redeem_form' && !isset($form['closed']) ) {
+  if ( $form_id == 'pinapi_redeem_form' && !isset($form['status']) ) {
     pinapi_debug_set_active($form['gid']['#value']);
 
     // Replace Pin API core debug method.

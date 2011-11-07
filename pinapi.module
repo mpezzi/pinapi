@@ -133,16 +133,6 @@ function pinapi_redeem_form(&$form_state, $group) {
       ),
     );
 
-    $form['gid'] = array(
-      '#type' => 'hidden',
-      '#value' => $group->gid,
-    );
-
-    $form['uid'] = array(
-      '#type' => 'hidden',
-      '#value' => $user->uid,
-    );
-
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Submit'),
@@ -154,6 +144,16 @@ function pinapi_redeem_form(&$form_state, $group) {
       '#value' => variable_get('pinapi_message_closed', 'The contest is currently unavailable.'),
     );
   }
+
+  $form['gid'] = array(
+    '#type' => 'hidden',
+    '#value' => $group->gid,
+  );
+
+  $form['uid'] = array(
+    '#type' => 'hidden',
+    '#value' => $user->uid,
+  );
 
   return $form;
 }
