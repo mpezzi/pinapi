@@ -47,6 +47,7 @@ function pinapi_drush_command() {
       'description' => 'Generate codes for a pool',
       'arguments' => array(
         'amount' => 'Amount of codes to generate.',
+        'gid' => 'The group id.',
       ),
       'options' => array(
         '--type' => 'The type of generator to use to create the codes.',
@@ -227,12 +228,8 @@ function drush_pinapi_code_generate($amount = NULL, $gid = NULL) {
  * Drush Command Callback: Generate codes for a prize pool.
  */
 function drush_pinapi_code_generate_dump($amount = NULL, $gid = NULL) {
-
   // Insert Options.
   $limit = 1000;
-
-  // File
-  $file = 'pinapi_code.sql';
 
   // Ensure there is an amount set.
   if ( is_null($amount) ) {
@@ -252,82 +249,57 @@ function drush_pinapi_code_generate_dump($amount = NULL, $gid = NULL) {
     drush_die('Invalid code generator.');
   }
 
-  if ( drush_confirm(dt('Are you sure you want to create !amount codes?', array('!amount' => number_format($amount)))) ) {
+  // Split up amount to improve SQL performance.
+  $chunks = floor($amount / $limit);
+  $leftover = $amount - ( $limit * $chunks );
 
-    // Calculate generating time.
-    timer_start('drush_pinapi_code_generate');
+  if ( drush_get_option('length') ) {
+    $generator['options']['length'] = drush_get_option('length');
+  }
 
-    // Split up amount to improve SQL performance.
-    $chunks = floor($amount / $limit);
-    $leftover = $amount - ( $limit * $chunks );
+  // Output MySQL Dump settings.
+  $output  = "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
+  $output .= "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
+  $output .= "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
+  $output .= "/*!40101 SET NAMES utf8 */;\n";
+  $output .= "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n";
+  $output .= "/*!40103 SET TIME_ZONE='+00:00' */;\n";
+  $output .= "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;\n";
+  $output .= "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n";
+  $output .= "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n";
+  $output .= "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\n";
 
-    if ( drush_get_option('length') ) {
-      $generator['options']['length'] = drush_get_option('length');
-    }
+  // Lock table.
+  $output .= "LOCK TABLES `pinapi_code` WRITE;\n";
+  $output .= "/*!40000 ALTER TABLE `pinapi_code` DISABLE KEYS */;\n";
+  echo $output;
 
-    drush_print("Group: " . $gid);
-    drush_print('Amount: ' . $amount);
-    drush_print('Limit: ' . $limit);
-    drush_print('Chunks: ' . $chunks);
-    drush_print('Left Overs: ' . $leftover);
+  // Import codes in chunks to improve SQL performance.
+  if ( $amount >= $limit ) {
+    for ( $a = 1; $a <= $chunks; $a++ ) {
 
-    drush_print(dt('Generating !amount codes.', array('!amount' => number_format($amount))));
+      // Insert a chunks of codes using one insert sql query.
+      $sql = pinapi_code_generate_insert_sql($generator, $limit, $gid);
+      echo $sql . "\n";
 
-    $output  = "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;\n";
-    $output .= "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;\n";
-    $output .= "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;\n";
-    $output .= "/*!40101 SET NAMES utf8 */;\n";
-    $output .= "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;\n";
-    $output .= "/*!40103 SET TIME_ZONE='+00:00' */;\n";
-    $output .= "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;\n";
-    $output .= "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;\n";
-    $output .= "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;\n";
-    $output .= "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;\n\n";
-
-    file_put_contents($file, $output);
-    file_put_contents($file, "LOCK TABLES `pinapi_code` WRITE;\n", FILE_APPEND | LOCK_EX);
-    file_put_contents($file, "/*!40000 ALTER TABLE `pinapi_code` DISABLE KEYS */;\n", FILE_APPEND | LOCK_EX);
-
-    // Import codes in chunks to improve SQL performance.
-    if ( $amount >= $limit ) {
-      for ( $a = 1; $a <= $chunks; $a++ ) {
-
-        // Insert a chunks of codes using one insert sql query.
-        $sql = pinapi_code_generate_insert_sql($generator, $limit, $gid);
-        file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
-        drush_pinapi_code_generate_status($limit, $limit * $a);
-
-        // Insert leftover codes using one insert sql query after final chunk.
-        if ( $a == $chunks && $leftover > 0 ) {
-          $sql = pinapi_code_generate_insert_sql($generator, $leftover, $gid);
-          file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
-          drush_pinapi_code_generate_status($leftover, $amount);
-        }
-
+      // Insert leftover codes using one insert sql query after final chunk.
+      if ( $a == $chunks && $leftover > 0 ) {
+        $sql = pinapi_code_generate_insert_sql($generator, $leftover, $gid);
+        echo $sql . "\n";
       }
+
     }
-    // Amount is less then our limit, perform only one insert.
-    else {
-      $sql = pinapi_code_generate_insert_sql($generator, $amount, $gid);
-      file_put_contents($file, $sql . "\n", FILE_APPEND | LOCK_EX);
-      drush_pinapi_code_generate_status($amount, $amount);
-    }
-
-    file_put_contents($file, "/*!40000 ALTER TABLE `pinapi_code` ENABLE KEYS */;\n", FILE_APPEND | LOCK_EX);
-    file_put_contents($file, "UNLOCK TABLES;\n", FILE_APPEND | LOCK_EX);
-
-    // Stop the timer.
-    $time = timer_stop('drush_pinapi_code_generate');
-    $duration = $time['time'];
-
-    // Calculate group code counts.
-    //pinapi_group_cache_code_calculate(pinapi_group_load($gid));
-
-    drush_log(dt('Successfully generated !amount codes in !duration.', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
   }
+  // Amount is less then our limit, perform only one insert.
   else {
-    drush_die('Aborting.');
+    $sql = pinapi_code_generate_insert_sql($generator, $amount, $gid);
+    echo $sql . "\n";
   }
+
+  // Unlock table.
+  $output  = "/*!40000 ALTER TABLE `pinapi_code` ENABLE KEYS */;\n";
+  $output .= "UNLOCK TABLES;\n";
+  echo $output;
 }
 
 /**
@@ -490,7 +462,9 @@ function drush_pinapi_group_choice($prompt, $gid = NULL) {
 
   if ( is_null($gid) ) {
     $gid = drush_choice($choices, $prompt, '!key');
+    return isset($choices[$gid]) ? $choices[$gid] : FALSE;
   }
-
-  return isset($choices[$gid]) ? $choices[$gid] : FALSE;
+  else {
+    return in_array($gid, $choices) ? $gid : FALSE;
+  }
 }
