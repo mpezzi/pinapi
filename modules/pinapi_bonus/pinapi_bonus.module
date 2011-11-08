@@ -6,3 +6,37 @@
  */
 
 require_once(dirname(__FILE__) . '/pinapi_bonus.inc');
+
+/**
+ * Implements hook_menu().
+ */
+function pinapi_bonus_menu() {
+  return array(
+    'pinapi/bonus/%pinapi_group' => array(
+      'title' => 'Bonus Code',
+      'page callback' => 'pinapi_bonus_redeem_view',
+      'page arguments' => array(2),
+      'access arguments' => array('redeem bonus codes'),
+      'type' => MENU_CALLBACK,
+    ),
+  );
+}
+
+/**
+ * Page Callback: PinAPI Bonus Codes redeem view.
+ */
+function pinapi_bonus_redeem_view($group) {
+  module_load_include('inc', 'webform', 'includes/webform.submissions');
+
+  // Ensure we have valid query strings.
+  if ( isset($_GET['sid']) && is_numeric($_GET['sid'])) {
+    $submissions = webform_get_submissions(array('sid' => $_GET['sid']));
+
+    if ( count($submissions) > 0 ) {
+      $submission = array_shift($submissions);
+      dpm($submission);
+    }
+  }
+  
+  return __FUNCTION__;
+}
