@@ -17,45 +17,45 @@ function pinapi_paypal_settings_form() {
   );
   $form['pinapi_paypal_business_email'] = array(
     '#type' => 'textfield',
-    '#title' => 'Business (Vendor) Email',
+    '#title' => t('Business (Vendor) Email'),
     '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_business_email', ''),
   );
   $form['pinapi_paypal_item_name'] = array(
     '#type' => 'textfield',
-    '#title' => 'Item Name (displayed in PayPal purchase)',
+    '#title' => t('Item Name (displayed in PayPal purchase)'),
     '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_item_name', ''),
   );
   $form['pinapi_paypal_item_amount'] = array(
     '#type' => 'textfield',
-    '#title' => 'Item Price (displayed in PayPal purchase)',
+    '#title' => t('Item Price (displayed in PayPal purchase)'),
     '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_item_amount', ''),
   );
   $form['pinapi_paypal_item_number'] = array(
     '#type' => 'textfield',
-    '#title' => 'Item ID Number (optional, displayed in PayPal purchase)',
+    '#title' => t('Item ID Number (optional, displayed in PayPal purchase)'),
     '#default_value' => variable_get('pinapi_paypal_item_number', ''),
   );
   $form['pinapi_paypal_shipping_rate'] = array(
     '#type' => 'textfield',
-    '#title' => 'Shipping Rate',
+    '#title' => t('Shipping Rate'),
     '#default_value' => variable_get('pinapi_paypal_shipping_rate', ''),
   );
   $form['pinapi_paypal_cancel_return_path'] = array(
     '#type' => 'textfield',
-    '#title' => 'Cancel Return Path',
+    '#title' => t('Cancel Return Path'),
     '#default_value' => variable_get('pinapi_paypal_cancel_return_path', ''),
   );
   $form['pinapi_paypal_return_path'] = array(
     '#type' => 'textfield',
-    '#title' => 'Return Path',
+    '#title' => t('Return Path'),
     '#default_value' => variable_get('pinapi_paypal_return_path', ''),
   );  
   $form['pinapi_paypal_notify_path'] = array(
     '#type' => 'textfield',
-    '#title' => 'Notify Path',
+    '#title' => t('Notify Path'),
     '#default_value' => variable_get('pinapi_paypal_notify_path', ''),
   );
   $form['pinapi_paypal_currency_code'] = array(

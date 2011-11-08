@@ -23,7 +23,7 @@ function pinapi_paypal_environments() {
 
 /**
  * Returns the current environment Pinapi PayPal is using.
- * @return 
+ * @return
  *   the current Pinapi PayPal environment if set, defaults to Development Environment
  */
 function pinapi_paypal_environment() {
@@ -71,24 +71,24 @@ function pinapi_paypal_currency_codes() {
  */
 function pinapi_paypal_language_codes() {
   return array(
-    'AU'	=> 'Australia',
-    'AT'	=> 'Austria',
-    'BE'	=> 'Belgium',
-    'CA'	=> 'Canada',
-    'CN'	=> 'China',
-    'FR'	=> 'France',
-    'DE'	=> 'Germany',
-    'HK'	=> 'Hong Kong',
-    'IT'	=> 'Italy',
-    'MX'	=> 'Mexico',
-    'NL'	=> 'Netherlands',
-    'NZ'	=> 'New Zealand',
-    'PL'	=> 'Poland',
-    'SG'	=> 'Singapore',
-    'ES'	=> 'Spain',
-    'SE'	=> 'Sweden',
-    'CH'	=> 'Switzerland',
-    'GB'	=> 'United Kingdom',
-    'US'	=> 'United States',
+    'AU'	=> t('Australia'),
+    'AT'	=> t('Austria'),
+    'BE'	=> t('Belgium'),
+    'CA'	=> t('Canada'),
+    'CN'	=> t('China'),
+    'FR'	=> t('France'),
+    'DE'	=> t('Germany'),
+    'HK'	=> t('Hong Kong'),
+    'IT'	=> t('Italy'),
+    'MX'	=> t('Mexico'),
+    'NL'	=> t('Netherlands'),
+    'NZ'	=> t('New Zealand'),
+    'PL'	=> t('Poland'),
+    'SG'	=> t('Singapore'),
+    'ES'	=> t('Spain'),
+    'SE'	=> t('Sweden'),
+    'CH'	=> t('Switzerland'),
+    'GB'	=> t('United Kingdom'),
+    'US'	=> t('United States'),
   );
 }
