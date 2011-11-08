@@ -66,6 +66,15 @@ function xpinapi_paypal_theme() {
 }
 
 /**
+ * Implements hook_user().
+ */
+function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
+  if ( $op == 'load' && user_access('redeem codes') ) {
+    $account->pinapi['paypal'] = (bool) db_result(db_query("SELECT status FROM {pinapi_paypal} WHERE uid = %d", $account->uid));
+  }
+}
+
+/**
  * Displays a 'buy-it-now' type form for PayPal
  */
 function pinapi_paypal_form() {
@@ -150,7 +159,7 @@ function pinapi_paypal_form() {
 function pinapi_paypal_notify() {
   watchdog('pinapi_paypal', json_encode($_POST));
   if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
-    db_query("INSERT INTO {pinapi_paypal} (uid, status) VALUES (%d, %d)", $_POST['custom'], 1);
+    db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], 1, serialize($_POST));
   }
   print '';  
 }

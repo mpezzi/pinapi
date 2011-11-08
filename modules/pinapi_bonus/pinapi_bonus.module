@@ -1,0 +1,8 @@
+<?php
+
+/**
+ * @file
+ * Provides Bonus PIN integration.
+ */
+
+require_once(dirname(__FILE__) . '/pinapi_bonus.inc');

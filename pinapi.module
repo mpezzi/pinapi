@@ -86,7 +86,7 @@ function pinapi_views_api() {
 function pinapi_user($op, &$edit, &$account) {
   // Load the number of codes redeemed for each group.
   if ( $op == 'load' && user_access('redeem codes') ) {
-    $account->pinapi = array();
+    $account->pinapi['redeemed'] = array();
     $result = db_query("SELECT * FROM {pinapi_code_redeemed_cache} WHERE uid = %d", $account->uid);
     while ( $cache = db_fetch_object($result) ) {
       $account->pinapi['redeemed'][$cache->gid] = $cache->value;
