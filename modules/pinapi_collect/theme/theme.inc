@@ -13,6 +13,8 @@ function template_preprocess_pinapi_collect_block(&$vars) {
   $account = $vars['account'];
   $group = $vars['group'];
 
+  dsm($account);
+
   // Get amount of redeemed codes from selected group.
   $redeemed = isset($account->pinapi['redeemed'][$group->gid]) ? $account->pinapi['redeemed'][$group->gid] : 0;
 
