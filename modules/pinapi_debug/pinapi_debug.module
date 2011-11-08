@@ -48,15 +48,17 @@ function pinapi_debug_theme() {
 function pinapi_debug_form_alter(&$form, &$form_state, $form_id) {
   if ( $form_id == 'pinapi_redeem_form' && !isset($form['status']) ) {
     pinapi_debug_set_active($form['gid']['#value']);
-
-    // Replace Pin API core debug method.
-    if ( variable_get('pinapi_debug_override', TRUE) && isset($form['debug']) ) {
-      unset($form['debug']);
-    }
   }
 
   if ( $form_id == 'pinapi_settings_form' ) {
-    $form['debug']['pinapi_debug_toolbar'] = array(
+    $form['pinapi_debug'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Debug'),
+      '#collapsed' => FALSE,
+      '#collapsible' => TRUE,
+      '#weight' => -1,
+    );
+    $form['pinapi_debug']['pinapi_debug_toolbar'] = array(
       '#type' => 'checkbox',
       '#title' => t('Toolbar Debug Mode'),
       '#description' => t('Enable debugging messages for users with "use pinapi debug toolbar".'),
