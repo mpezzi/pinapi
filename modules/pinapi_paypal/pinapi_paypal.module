@@ -66,7 +66,7 @@ function xpinapi_paypal_theme() {
 }
 
 /**
- * Displays a form for adding an item to a Paypal cart
+ * Displays a 'buy-it-now' type form for PayPal
  */
 function pinapi_paypal_form() {
   $environment = pinapi_paypal_environment();
