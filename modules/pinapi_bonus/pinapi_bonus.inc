@@ -10,16 +10,15 @@
  * @param
  *   the user object
  */
-function pinapi_bonus_assign_bonus_pin($user) {
-  // retrieve the first available bonus pin
-  $result = db_query("SELECT * FROM {pinapi_bonus} WHERE status = 1 LIMIT 1");
-  $bonus = db_fetch_object($result);
+function pinapi_bonus_redeem($group, $account) {
+  // Look for a bonus code.
+  $bonus = db_fetch_object(db_query("SELECT pb.* FROM {pinapi_bonus} pb LEFT JOIN {pinapi_code} pc ON pb.cid = pc.cid WHERE pc.gid = %d AND pc.status = 1 LIMIT 1", $group->gid));
 
-  $data = array(
-    'uid' => $user->uid,
-    'bid' => $bonus->bid,
-    'status' => '0',
-  );
+  if ( $bonus ) {
+    $bonus->uid = $account->uid;
+    $bonus->status = FALSE;
+    drupal_write_record('pinapi_bonus', $bonus, 'bid');
+  }
 
-  drupal_write_record('pinapi_bonus', $data, array('bid') );
+  return FALSE;
 }
