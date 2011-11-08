@@ -1,0 +1,7 @@
+name            = PinAPI Bonus
+description     = Provides Bonus PIN functionality
+core            = 6.x
+package         = PinAPI
+version         = 6.x-2.x
+
+dependencies[]  = pinapi
