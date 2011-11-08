@@ -19,7 +19,7 @@ function pinapi_bonus_schema() {
         'default' => NULL),
       'identifier' => array(
         'type' => 'int',
-        'default' => NULL),        
+        'default' => NULL),
       'status' => array(
         'type' => 'int',
         'not null' => TRUE,
@@ -27,6 +27,7 @@ function pinapi_bonus_schema() {
     ),
     'primary key' => array('bid'),
   );
+
   return $schema;
 }
 
