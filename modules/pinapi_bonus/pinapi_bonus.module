@@ -44,7 +44,7 @@ function pinapi_bonus_redeem_view($group) {
       if ( $bonus = pinapi_bonus_award($group, $account, $_GET['sid']) ) {
         pinapi_redeem($bonus->code, $group, $account);
         drupal_set_message(t('Congrats! You got a bonus entry!'));
-        drupal_goto('<front>')
+        drupal_goto('<front>');
       }
       else {
         drupal_goto('<front>');
