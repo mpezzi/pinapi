@@ -165,37 +165,27 @@ function pinapi_paypal_form() {
  * Responds to POSTed data from PayPal IPN, stores to db if verified
  */
 function pinapi_paypal_notify() {
-  // store data for later, call PayPal for verification
-  $posted = $_POST;
+  // loop through each POST var, concatenate to create a request
+  $request = 'cmd=_notify-validate';
+  foreach ($_POST as $key => $value) {
+    $value = urlencode(stripslashes($value));
+    $request .= "&$key=$value";
+  }
+
+  // send request to PayPal to verify transaction being referenced
   $environment = pinapi_paypal_environment();
-  $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $_POST, $retry = 3);
+  $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $request, $retry = 3);
 
-  watchdog('pinapi_paypal_notify', $response->data);
-
-  // only process this request if verified by paypal
+  // only process this POST if verified by paypal
   if ( $response->data == 'VERIFIED' ) {
-    // log this incoming notify post
-    watchdog('pinapi_paypal', json_encode($_POST));
-
-    if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
-      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $posted['custom'], 1, serialize($posted));
+    if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
+      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], 1, serialize($_POST));
     }
     print '';
   } else {
-    // log suspicious POSTs
-    watchdog('pinapi_paypal', json_encode($posted), WATCHDOG_ALERT);
+    // log this POST with a warning
+    watchdog('pinapi_paypal', json_encode($_POST), WATCHDOG_WARNING);
   }
-}
-
-function pinapi_paypal_verify() {
-  $item = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal} LIMIT 1"));
-  $repost = unserialize($item->data);
-  $environment = pinapi_paypal_environment();
-  $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $repost, $retry = 3);
-  echo "<pre>";
-  print_r($response);
-  echo "</pre>";
-  exit();
 }
 
 function xpinapi_paypal_form_submit($form, &$form_state) {
