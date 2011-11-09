@@ -171,6 +171,8 @@ function pinapi_paypal_form() {
  * Responds to POSTed data from PayPal IPN, stores to db if verified
  */
 function pinapi_paypal_notify() {
+  watchdog('pinapi_paypal', json_encode($_POST));
+
   // loop through each POST var, concatenate to create a request
   $request = 'cmd=_notify-validate';
   foreach ($_POST as $key => $value) {
