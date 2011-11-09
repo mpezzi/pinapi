@@ -48,6 +48,11 @@ function pinapi_paypal_menu() {
       'access arguments' => array('access content'),
       'type' => MENU_CALLBACK,
     ),
+    'pinapi/paypal/verify' => array(
+      'page callback' => 'pinapi_paypal_verify',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    ),
   );
 }
 
@@ -178,6 +183,17 @@ function pinapi_paypal_notify() {
     // log suspicious POSTs
     watchdog('pinapi_paypal', json_encode($data), WATCHDOG_ALERT);
   }
+}
+
+function pinapi_paypal_verify() {
+  $item = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal} LIMIT 1"));
+  $repost = unserialize($item->data);
+  $environment = pinapi_paypal_environment();
+  $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $repost, $retry = 3);
+  echo "<pre>";
+  print_r($response);
+  echo "</pre>";
+  exit();
 }
 
 function xpinapi_paypal_form_submit($form, &$form_state) {
