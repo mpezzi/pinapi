@@ -8,6 +8,13 @@
 require_once(dirname(__FILE__) . '/pinapi_bonus.inc');
 
 /**
+ * Implements hook_perm().
+ */
+function pinapi_bonus_perm() {
+  return array('redeem bonus codes');
+}
+
+/**
  * Implements hook_menu().
  */
 function pinapi_bonus_menu() {
@@ -28,15 +35,19 @@ function pinapi_bonus_menu() {
 function pinapi_bonus_redeem_view($group) {
   module_load_include('inc', 'webform', 'includes/webform.submissions');
 
-  // Ensure we have valid query strings.
-  if ( isset($_GET['sid']) && is_numeric($_GET['sid'])) {
+  // Ensure we have a valid identifier.
+  if ( isset($_GET['sid']) ) {
     $submissions = webform_get_submissions(array('sid' => $_GET['sid']));
-
     if ( count($submissions) > 0 ) {
-      $submission = array_shift($submissions);
-      dpm($submission);
+      // User was awarded a bonus code.
+      if ( $bonus = pinapi_bonus_award($group, $GLOBALS['user'], $_GET['sid']) ) {
+        return $bonus->code;
+      }
+      else {
+        return t('Nothing to award');
+      }
     }
   }
-  
-  return __FUNCTION__;
+
+  drupal_not_found();
 }
