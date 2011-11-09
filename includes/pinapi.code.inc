@@ -177,6 +177,23 @@ function pinapi_code_generate_insert_sql($generator, $amount, $gid = 0) {
 }
 
 /**
+ * Reset codes from a group.
+ */
+function pinapi_code_reset($gid) {
+  // Invoke module hook_pinapi_code_reset().
+  module_invoke_all('pinapi_code_reset', $gid);
+
+  // Reset codes.
+  db_query("UPDATE {pinapi_code} SET status = 1, quantity = 1 WHERE gid = %d", $gid);
+
+  // Remove all redeem code information.
+  db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
+  db_query("DELETE FROM {pinapi_code_redeemed_cache} WHERE gid = %d", $gid);
+
+  pinapi_group_cache_clear($gid);
+}
+
+/**
  * Clear codes from a group.
  */
 function pinapi_code_clear($gid) {

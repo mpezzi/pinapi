@@ -69,6 +69,13 @@ function pinapi_drush_command() {
       ),
       'aliases' => array('pce'),
     ),
+    'pinapi-code-reset' => array(
+      'description' => 'Reset group codes from the database.',
+      'arguments' => array(
+        'gid' => 'A group id.',
+      ),
+      'aliases' => array('pcr'),
+    ),
     'pinapi-code-clear' => array(
       'description' => 'Clear group codes from the database.',
       'arguments' => array(
@@ -412,6 +419,22 @@ function drush_pinapi_code_export() {
     $duration = $time['time'];
 
     drush_log(dt('Successfully exported !amount codes in !duration', array('!amount' => number_format($amount), '!duration' => $duration)), 'success');
+  }
+  else {
+    drush_die('Aborting.');
+  }
+}
+
+/**
+ * Drush Command Callback: Reset codes for a group.
+ */
+function drush_pinapi_code_reset($gid = NULL) {
+  if ( $gid = drush_pinapi_group_choice('Choose the group you would like to clear.', $gid) ) {
+    if ( drush_confirm(dt('Are you sure you want to reset this group?')) ) {
+      pinapi_code_reset($gid);
+      pinapi_group_cache_code_calculate(pinapi_group_load($gid));
+      drush_log(dt('Reset all group codes.'), 'success');
+    }
   }
   else {
     drush_die('Aborting.');
