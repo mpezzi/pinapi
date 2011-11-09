@@ -58,7 +58,10 @@ function pinapi_drush_command() {
     'pinapi-code-import' => array(
       'description' => 'Import codes from a file.',
       'arguments' => array(
-        'file' => 'A file to import the codes from.',
+        'gid' => 'A group id.',
+      ),
+      'options' => array(
+        '--file' => 'The file to import',
       ),
       'aliases' => array('pci'),
     ),
@@ -324,8 +327,36 @@ function drush_pinapi_code_generate_status($imported, $total) {
 /**
  * Drush Command Callback: Import codes for a group.
  */
-function drush_pinapi_code_import() {
-  // @TODO: import codes from a file, or series of files.
+function drush_pinapi_code_import($gid = NULL) {
+  $limit = 1000;
+
+  // @TODO: Get group, make sure it is valid.
+  $gid = drush_pinapi_group_choice('Choose the group you would like to export for.', $gid);
+  if ( !$gid ) {
+    drush_die('Invalid group.');
+  }
+
+  // Get file.
+  $filename = drush_get_option('file');
+  if ( $filename ) {
+    $fh = fopen($filename, "r");
+  }
+  else {
+    $fh = fopen("php://stdin", "r");
+  }
+
+  $codes = array();
+  if ( $fh ) {
+    db_query("LOCK TABLES {pinapi_code} WRITE");
+    while ( !feof($fh) ) {
+      $line = fgets($fh, 4096);
+      if ( !empty($line) ) {
+        db_query("INSERT INTO {pinapi_code} (gid, code) VALUES ($gid, '" . trim($line) . "')");
+      }
+    }
+    fclose($fh);
+    db_query("UNLOCK TABLES");
+  }
 }
 
 /**
