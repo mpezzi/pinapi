@@ -82,10 +82,10 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 1),
     ),
-    'primary key' => array('cid'),
     'indexes' => array(
-      'code_gid' => array('code', 'gid'),
+      'code' => array('code'),
     ),
+    'primary key' => array('cid'),
   );
 
   $schema['pinapi_code_redeemed'] = array(
