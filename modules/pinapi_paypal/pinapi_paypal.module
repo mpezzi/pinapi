@@ -156,12 +156,28 @@ function pinapi_paypal_form() {
   return $form;
 }
 
+/**
+ * Responds to POSTed data from PayPal IPN, stores to db if verified
+ */
 function pinapi_paypal_notify() {
-  watchdog('pinapi_paypal', json_encode($_POST));
-  if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
-    db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], 1, serialize($_POST));
+  // store data for later, call PayPal for verification
+  $posted = $_POST;
+  $environment = pinapi_paypal_environment();
+  $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $_POST, $retry = 3);
+
+  // only process this request if verified by paypal
+  if ( $response == 'VERIFIED' ) {
+    // log this incoming notify post
+    watchdog('pinapi_paypal', json_encode($_POST));
+
+    if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
+      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], 1, serialize($_POST));
+    }
+    print '';
+  } else {
+    // log suspicious POSTs
+    watchdog('pinapi_paypal', json_encode($data), WATCHDOG_ALERT);
   }
-  print '';  
 }
 
 function xpinapi_paypal_form_submit($form, &$form_state) {
