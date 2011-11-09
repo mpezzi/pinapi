@@ -170,7 +170,7 @@ function pinapi_paypal_notify() {
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $_POST, $retry = 3);
 
-  watchdog('pinapi_paypal', $response);
+  watchdog('pinapi_paypal_notify', $response->data);
 
   // only process this request if verified by paypal
   if ( $response->data == 'VERIFIED' ) {
