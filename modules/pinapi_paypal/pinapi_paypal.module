@@ -189,7 +189,7 @@ function pinapi_paypal_notify() {
     if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
       // check uid if this has been previously inserted into db
       // (ex. from a payment marked PENDING)
-      $user_exists = db_query('SELECT * FROM {pinapi_paypal} WHERE uid = %d', $_POST['custom']);
+      $user_exists = db_query("SELECT * FROM {pinapi_paypal} WHERE uid = %d", (int) $_POST['custom']);
       if ( !$user_exists ) {
         db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], PINAPI_PAYPAL_PAYMENT_COMPLETED, serialize($_POST));
       } else {
@@ -204,7 +204,7 @@ function pinapi_paypal_notify() {
       }
     } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
-      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], PINAPI_PAYPAL_PAYMENT_PENDING, serialize($_POST));
+      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", (int) $_POST['custom'], PINAPI_PAYPAL_PAYMENT_PENDING, serialize($_POST));
       watchdog('pinapi_paypal', "PayPal payment marked 'PENDING': " . json_encode($_POST), $variables = array(),  WATCHDOG_WARNING);
     }
     print '';
@@ -220,19 +220,45 @@ function pinapi_paypal_notify() {
 function pinapi_paypal_verify() {
   $result = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal}"));
   $item = unserialize($result->data);
-  $request = 'cmd=_notify-validate';
+  // loop through each POST var, concatenate to create a request
+  $request .= 'cmd=_notify-validate';
   foreach ($item as $key => $value) {
     $value = urlencode(stripslashes($value));
     $request .= "&$key=$value";
   }
 
+  // send request to PayPal to verify transaction being referenced
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], $headers = array(), $method = 'POST', $data = $request, $retry = 3);
 
-  echo "<pre>";
-  print_r($response);
-  echo "</pre>";
-  exit();
+  // only process this POST if verified by paypal
+  if ( $response->data == 'VERIFIED' ) {
+    if ( isset($item['payment_status']) && $item['payment_status'] == 'Completed' ) {
+      // check uid if this has been previously inserted into db
+      // (ex. from a payment marked PENDING)
+      $user_exists = db_query("SELECT * FROM {pinapi_paypal} WHERE uid = %d", (int) $item['custom']);
+      if ( !$user_exists ) {
+        db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $item['custom'], PINAPI_PAYPAL_PAYMENT_COMPLETED, serialize($item));
+      } else {
+        // update the user's record once payment is completed
+        $user = db_fetch_object($user_exists);
+        $update = array(
+          'uid' => $user->uid,
+          'status' => PINAPI_PAYPAL_PAYMENT_COMPLETED,
+          'data' => serialize($item),
+        );
+        drupal_write_record('pinapi_paypal', $update, 'uid');
+      }
+    } else if ( isset($item['payment_status']) && $item['payment_status'] == 'Pending' ) {
+      // handle successful payments marked as 'PENDING' (ex. e-cheque)
+      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", (int) $item['custom'], PINAPI_PAYPAL_PAYMENT_PENDING, serialize($item));
+      watchdog('pinapi_paypal', "PayPal payment marked 'PENDING': " . serialize($item), $variables = array(),  WATCHDOG_WARNING);
+    }
+    print '';
+  } else {
+    // log this POST with a warning
+    watchdog('pinapi_paypal', 'Suspicious PayPal submission flagged:' . serialize($item), $variables = array(), WATCHDOG_ALERT);
+  }
 }
 
 function xpinapi_paypal_form_submit($form, &$form_state) {
