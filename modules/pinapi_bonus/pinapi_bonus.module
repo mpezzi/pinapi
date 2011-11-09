@@ -44,7 +44,7 @@ function pinapi_bonus_redeem_view($group) {
         return $bonus->code;
       }
       else {
-        return t('Nothing to award');
+        drupal_goto('<front>');
       }
     }
   }
