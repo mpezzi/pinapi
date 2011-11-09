@@ -178,12 +178,12 @@ function pinapi_paypal_notify() {
     watchdog('pinapi_paypal', json_encode($_POST));
 
     if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
-      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $_POST['custom'], 1, serialize($_POST));
+      db_query("INSERT INTO {pinapi_paypal} (uid, status, data) VALUES (%d, %d, '%s')", $posted['custom'], 1, serialize($posted));
     }
     print '';
   } else {
     // log suspicious POSTs
-    watchdog('pinapi_paypal', json_encode($data), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', json_encode($posted), WATCHDOG_ALERT);
   }
 }
 
