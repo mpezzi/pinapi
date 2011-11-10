@@ -192,7 +192,7 @@ function pinapi_paypal_notify() {
     // check uid if this has been previously inserted into db
     // (ex. from a payment marked PENDING)
     $account = pinapi_paypal_load($_POST['custom']);
-    watchdog('pinapi_paypal', 'Processing verified transaction. Account data: ' . json_encode($account));
+    watchdog('pinapi_paypal', 'Processing verified transaction. Account data: ' . $account);
 
     if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
       if ( !$account ) {
