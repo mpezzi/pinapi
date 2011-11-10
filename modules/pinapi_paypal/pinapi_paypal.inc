@@ -115,11 +115,9 @@ function pinapi_paypal_load($uid, $reset = FALSE) {
  */
 function pinapi_paypal_save(&$paypal) {
   if ( isset($paypal->is_new) && $paypal->is_new ) {
-    watchdog('pinapi_paypal', 'Saving new record');
     drupal_write_record('pinapi_paypal', $paypal);
   }
   else {
-    watchdog('pinapi_paypal', 'Updating record for uid: ' . $paypal->uid);
     drupal_write_record('pinapi_paypal', $paypal, 'uid');
   }
 }
