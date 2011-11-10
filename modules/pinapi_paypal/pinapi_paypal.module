@@ -209,7 +209,7 @@ function pinapi_paypal_notify() {
       }
     } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
-      $account->uid = $_POST['uid'];
+      $account->uid = $_POST['custom'];
       $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
       $account->data = serialize($_POST);
       $account->is_new = TRUE;
