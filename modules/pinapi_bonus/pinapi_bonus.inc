@@ -46,7 +46,7 @@ function pinapi_bonus_award($group, $account, $identifier) {
   // Ensure identifier has not been used before.
   $sql  = "SELECT COUNT(*) FROM {pinapi_bonus} pb ";
   $sql .= "LEFT JOIN {pinapi_code} pc ON pb.cid = pc.cid ";
-  $sql .= "WHERE pc.gid = %d AND pb.identifier = '%s'";
+  $sql .= "WHERE pc.gid = %d AND pb.identifier = '%s' LIMIT 1";
   $used = (bool) db_result(db_query($sql, $group->gid, $identifier));
 
   dpm($used);
