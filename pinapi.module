@@ -89,7 +89,7 @@ function pinapi_user($op, &$edit, &$account) {
     $account->pinapi['redeemed'] = array();
     $result = db_query("SELECT * FROM {pinapi_code_redeemed_cache} WHERE uid = %d", $account->uid);
     while ( $cache = db_fetch_object($result) ) {
-      $account->pinapi['redeemed'][$cache->gid] = $cache->value;
+      $account->pinapi['redeemed'][$cache->gid][] = $cache->value;
     }
   }
 }
