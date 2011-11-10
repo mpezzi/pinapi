@@ -191,24 +191,28 @@ function pinapi_paypal_notify() {
     watchdog('pinapi_paypal', 'Received verified transaction.');
     // check uid if this has been previously inserted into db
     // (ex. from a payment marked PENDING)
-    $account = pinapi_paypal_load( (int) $_POST['custom'] );
-    watchdog('pinapi_paypal', 'Processing verified transaction. Account data: ' . $account);
+    $account = pinapi_paypal_load($_POST['custom']);
+    watchdog('pinapi_paypal', 'Processing verified transaction. Account data: ' . $account->uid);
 
     if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
       if ( !$account ) {
+        // create a new transaction record
+        $account->uid = $_POST['custom'];
+        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->data = serialize($_POST);
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', 'New transaction record saved.');
       } else {
         // update the user's record once payment is completed
-        $account->uid = (int) $_POST['custom'];
+        $account->uid = $_POST['custom'];
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
         $account->data = serialize($_POST);
         pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', 'Transaction record was updated.');
+        watchdog('pinapi_paypal', 'Transaction record was updated for' . $account->uid);
       }
     } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
-      $account->uid = (int) $_POST['uid'];
+      $account->uid = $_POST['uid'];
       $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
       $account->data = serialize($_POST);
       pinapi_paypal_save($account);
@@ -226,7 +230,6 @@ function pinapi_paypal_notify() {
  * A debugging function that simulates handling a PayPal IPN POST
  */
 function pinapi_paypal_verify() {
-
   // generate a simulated POST using previously POSTed paypal data
   $account = pinapi_paypal_load(1);
   $posted = json_decode($account->data, TRUE);
@@ -243,6 +246,10 @@ function pinapi_paypal_verify() {
   if ( $response->data == 'VERIFIED' ) {
     if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
       if ( !$account ) {
+        // create a new transaction record
+        $account->uid = $posted['custom'];
+        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->data = serialize($posted);
         pinapi_paypal_save($account);
       } else {
         // update the user's record once payment is completed
