@@ -183,9 +183,12 @@ function pinapi_paypal_notify() {
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], array(), 'POST', $data, 3);
 
+  watchdog('pinapi_paypal', 'Verification response received: %s', array($response->data));
+
   // only process this POST if verified by PayPal
   if ( $response->data == 'VERIFIED' ) {
 
+    watchdog('pinapi_paypal', 'Received verified transaction.');
     // check uid if this has been previously inserted into db
     // (ex. from a payment marked PENDING)
     $account = pinapi_paypal_load($_POST['custom']);
@@ -210,6 +213,7 @@ function pinapi_paypal_notify() {
     }
     print '';
   } else {
+    watchdog('pinapi_paypal', 'Received invalid transaction.');
     // log this POST with a warning
     watchdog('pinapi_paypal', 'Suspicious PayPal submission flagged: ' . serialize($_POST), array(), WATCHDOG_ALERT);
   }
