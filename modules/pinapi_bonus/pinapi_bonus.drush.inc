@@ -41,6 +41,9 @@ function drush_pinapi_bonus_generate($offset, $limit) {
     drush_die('Invalid group.');
   }
 
+  // start the timer
+  timer_start('drush_pinapi_bonus_generate');
+
   // Mark certain codes as bonus.
   $result = db_query_range("SELECT * FROM {pinapi_code} WHERE gid = %d AND status = 1", array($gid), $offset, $limit);
   while ( $code = db_fetch_object($result) ) {
@@ -48,5 +51,8 @@ function drush_pinapi_bonus_generate($offset, $limit) {
     pinapi_bonus_save($bonus);
   }
 
-  drush_log(dt('Successfully generated bonus codes from !from to !to.', array('!from' => $from, '!to' => $to)), 'success');
+  $time = timer_stop('drush_pinapi_bonus_generate');
+  $duration = $time['time'];
+
+  drush_log(dt('Successfully generated bonus codes from !from to !to in !duration.', array('!from' => $offset, '!to' => ($offset + $limit), '!duration' => $duration)), 'success');
 }
