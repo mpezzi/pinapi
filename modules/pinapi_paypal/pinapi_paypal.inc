@@ -114,8 +114,7 @@ function pinapi_paypal_load($uid, $reset = FALSE) {
  * Insert or update a PayPal transaction record.
  */
 function pinapi_paypal_save(&$paypal) {
-  $paypal->is_new = empty($paypal);
-  if ( $paypal->is_new ) {
+  if ( isset($paypal->is_new) && $paypal->is_new ) {
     watchdog('pinapi_paypal', 'Saving new record');
     drupal_write_record('pinapi_paypal', $paypal);
   }

@@ -200,6 +200,7 @@ function pinapi_paypal_notify() {
         $account->uid = $_POST['custom'];
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
         $account->data = serialize($_POST);
+        $account->is_new = TRUE;
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', 'New transaction record saved.');
       } else {
