@@ -197,6 +197,7 @@ function pinapi_paypal_notify() {
     if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
       if ( !$account ) {
         // create a new transaction record
+        $account->uid = $_POST['custom'];
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
         $account->data = serialize($_POST);
         pinapi_paypal_save($account);
