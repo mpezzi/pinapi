@@ -121,3 +121,55 @@ function pinapi_paypal_save(&$paypal) {
     drupal_write_record('pinapi_paypal', $paypal, 'uid');
   }
 }
+
+/**
+ * A debugging function that simulates handling a PayPal IPN POST
+ */
+function pinapi_paypal_verify() {
+  // generate a simulated POST using previously POSTed paypal data
+  $account = pinapi_paypal_load(1);
+  $posted = json_decode($account->data, TRUE);
+  $query = array();
+  $query['cmd'] = '_notify-validate';
+  $query = array_merge($query, $posted);
+  $data = drupal_query_string_encode($query);
+
+  // send request to PayPal to verify transaction being referenced
+  $environment = pinapi_paypal_environment();
+  $response = drupal_http_request($environment['action'], array(), 'POST', $data, 3);
+  watchdog('pinapi_paypal', t("Verification response received: '@data'"), array('@data' => $response->data));
+
+  // only process this POST if verified by PayPal
+  if ( $response->data == 'VERIFIED' ) {
+    watchdog('pinapi_paypal', t("Received verified transaction."));
+    if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
+      if ( !$account ) {
+        // create a new transaction record
+        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->data = serialize($posted);
+        pinapi_paypal_save($account);
+        watchdog('pinapi_paypal', t("New transaction record created."));
+      } else {
+        // update the user's record once payment is completed
+        $account->uid = $posted['custom'];
+        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->data = serialize($posted);
+        pinapi_paypal_save($account);
+        watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
+      }
+    } else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
+      // handle successful payments marked as 'PENDING' (ex. e-cheque)
+      $account->uid = $posted['uid'];
+      $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
+      $account->data = serialize($posted);
+      pinapi_paypal_save($account);
+      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
+    }
+    print '';
+  } else {
+    // log this POST with a warning
+    watchdog('pinapi_paypal', t("Received invalid transaction..."));
+    // log this POST with a warning
+    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($posted)), WATCHDOG_ALERT);
+  }
+}
