@@ -120,6 +120,6 @@ function pinapi_paypal_save(&$paypal) {
     drupal_write_record('pinapi_paypal', $paypal);
   }
   else {
-    drupal_write_record('pinapi_paypal', $paypal, 'bid');
+    drupal_write_record('pinapi_paypal', $paypal, 'uid');
   }
 }
