@@ -187,36 +187,48 @@ function pinapi_paypal_notify() {
   // only process this POST if verified by PayPal
   if ( $response->data == 'VERIFIED' ) {
     watchdog('pinapi_paypal', t("Received verified transaction."));
-    // check uid if this has been previously inserted into db
-    // (ex. from a payment marked PENDING)
-    $account = pinapi_paypal_load($_POST['custom']);
-    if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
-      if ( !$account ) {
-        // create a new transaction record
+
+    // validate this transaction against what we have on record and
+    // this site's pinapi_paypal module configuration details
+    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross']);
+
+    if ($valid_transaction) {
+      // attempt to load the info for this uid to check 
+      // a transaction has been previously inserted into db for this user
+      // (ex. from a payment marked PENDING)
+      $account = pinapi_paypal_load($_POST['custom']);
+      if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
+        if ( !$account ) {
+          // create a new transaction record
+          $account->uid = $_POST['custom'];
+          $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+          $account->data = serialize($_POST);
+          $account->is_new = TRUE;
+          pinapi_paypal_save($account);
+          watchdog('pinapi_paypal', t("New transaction record created."));
+        } else {
+          // check that this is an update to a previously 'pending' transaction
+          if ( $account->status == PINAPI_PAYPAL_PAYMENT_PENDING ) {
+            // update payment status to be 'Completed'
+            $account->uid = $_POST['custom'];
+            $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+            $account->data = serialize($_POST);
+            pinapi_paypal_save($account);
+            watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
+          }
+        }
+      } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
+        // handle successful payments marked as 'PENDING' (ex. e-cheque)
+        // log reason for pending status
         $account->uid = $_POST['custom'];
-        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
         $account->data = serialize($_POST);
         $account->is_new = TRUE;
         pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("New transaction record created."));
-      } else {
-        // update the user's record once payment is completed
-        $account->uid = $_POST['custom'];
-        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
-        $account->data = serialize($_POST);
-        pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
+        watchdog('pinapi_paypal', t("PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($_POST), '@reason' => $_POST['pending_reason']),  WATCHDOG_WARNING);
+      } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Denied' ) {
+        watchdog('pinapi_paypal', t("PayPal payment marked as DENIED because of '@reason': '@data'"), array('@data' => serialize($_POST), '@reason' => $_POST['pending_reason']),  WATCHDOG_WARNING);
       }
-    } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
-      // handle successful payments marked as 'PENDING' (ex. e-cheque)
-      $account->uid = $_POST['custom'];
-      $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
-      $account->data = serialize($_POST);
-      $account->is_new = TRUE;
-      pinapi_paypal_save($account);
-      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
-    } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Denied' ) {
-      watchdog('pinapi_paypal', t("PayPal payment marked as DENIED: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
     }
     print '';
   } else {

@@ -123,6 +123,34 @@ function pinapi_paypal_save(&$paypal) {
 }
 
 /**
+ * Checks the details of a transaction to verify its origin
+ * and details are truly from this site
+ *
+ * @param
+ *   the transaction ID from the transaction
+ * @param
+ *   the business email the transaction
+ * @param
+ *   the amount of the transaction
+ */
+function pinapi_verify_transaction($tid, $tbusiness, $tamount) {
+  $query = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal} WHERE tid = %d", $tid));
+  // check that this transaction id exists in the database
+  if ($query) {
+    // receiver's email/Business must match the registered merchant's email (receiver_email/business)
+    $real_email = variable_get('pinapi_paypal_business_email', null);
+    if ($real_email == $tbusiness) {
+      // verify transaction amount against amount registered in system
+      $real_amount = variable_get('pinapi_paypal_item_amount', null);
+      if ($real_amount == $tamount) {
+        return TRUE;
+      }
+    }
+  }
+  return FALSE;
+}
+
+/**
  * A debugging function that simulates handling a PayPal IPN POST
  */
 function pinapi_paypal_verify() {
@@ -163,7 +191,7 @@ function pinapi_paypal_verify() {
       $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
       $account->data = serialize($posted);
       pinapi_paypal_save($account);
-      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', t("Received PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
     }
     print '';
   } else {
