@@ -182,7 +182,7 @@ function pinapi_paypal_notify() {
   // send request to PayPal to verify transaction being referenced
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], array(), 'POST', $data, 3);
-  watchdog('pinapi_paypal', t("Verification response received: '%s'"), array($response->data));
+  watchdog('pinapi_paypal', t("Verification response received: '@data'"), array('@data' => $response->data));
 
   // only process this POST if verified by PayPal
   if ( $response->data == 'VERIFIED' ) {
@@ -205,7 +205,7 @@ function pinapi_paypal_notify() {
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
         $account->data = serialize($_POST);
         pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("Transaction record was updated for %d"), array($account->uid));
+        watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
       }
     } else if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
@@ -214,13 +214,13 @@ function pinapi_paypal_notify() {
       $account->data = serialize($_POST);
       $account->is_new = TRUE;
       pinapi_paypal_save($account);
-      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '%s'"), array( serialize($_POST) ),  WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
     }
     print '';
   } else {
     watchdog('pinapi_paypal', t("Received invalid transaction..."), array(), WATCHDOG );
     // log this POST with a warning
-    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '%s'"), array( serialize($_POST) ), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($_POST)), WATCHDOG_ALERT);
   }
 }
 
@@ -239,7 +239,7 @@ function pinapi_paypal_verify() {
   // send request to PayPal to verify transaction being referenced
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], array(), 'POST', $data, 3);
-  watchdog('pinapi_paypal', t("Verification response received: '%s'"), array($response->data));
+  watchdog('pinapi_paypal', t("Verification response received: '@data'"), array('@data' => $response->data));
 
   // only process this POST if verified by PayPal
   if ( $response->data == 'VERIFIED' ) {
@@ -257,7 +257,7 @@ function pinapi_paypal_verify() {
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
         $account->data = serialize($posted);
         pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("Transaction record was updated for %d"), array($account->uid));
+        watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
       }
     } else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
@@ -265,14 +265,14 @@ function pinapi_paypal_verify() {
       $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
       $account->data = serialize($posted);
       pinapi_paypal_save($account);
-      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '%s'"), array( serialize($posted) ),  WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', t("PayPal payment marked as PENDING: '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
     }
     print '';
   } else {
     // log this POST with a warning
     watchdog('pinapi_paypal', t("Received invalid transaction..."));
     // log this POST with a warning
-    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '%s'"), array( serialize($posted) ), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($posted)), WATCHDOG_ALERT);
   }
 }
 
