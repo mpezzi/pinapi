@@ -92,3 +92,34 @@ function pinapi_paypal_language_codes() {
     'US'	=> t('United States'),
   );
 }
+
+function pinapi_paypal_user_redeemed() {
+  dpm($GLOBALS['user']);
+}
+
+/**
+ * Load a user's PayPal transaction record.
+ */
+function pinapi_paypal_load($uid, $reset = FALSE) {
+  static $paypal;
+
+  if ( !isset($paypal[$uid]) || $reset ) {
+    $paypal[$uid] = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal} WHERE uid = %d", $uid));
+  }
+
+  return $paypal[$uid];
+}
+
+/**
+ * Insert or update a PayPal transaction.
+ */
+function pinapi_paypal_save(&$paypal) {
+  $paypal->is_new = empty($paypal->uid);
+
+  if ( $paypal->is_new ) {
+    drupal_write_record('pinapi_paypal', $paypal);
+  }
+  else {
+    drupal_write_record('pinapi_paypal', $paypal, 'bid');
+  }
+}
