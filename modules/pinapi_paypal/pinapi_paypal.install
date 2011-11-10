@@ -15,6 +15,10 @@ function pinapi_paypal_schema() {
       'status' => array(
         'type' => 'int', 
         'not null' => TRUE),
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE),
       'data' => array(
         'type' => 'text',
         'not null' => FALSE,
