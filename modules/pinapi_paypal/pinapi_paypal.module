@@ -195,16 +195,17 @@ function pinapi_paypal_notify() {
     if (!$account) {
       $account->is_new = TRUE;
     }
-    // set up transaction details to be potentially recorded
-    $account->uid = $_POST['custom'];
-    $account->tid = $_POST['txn_id'];
-    $account->data = serialize($_POST);
 
     // validate this transaction against the account we have on record and
     // this site's pinapi_paypal module configuration details
     $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $account);
 
     if ($valid_transaction) {
+      // set up transaction details to be recorded/updated
+      $account->uid = $_POST['custom'];
+      $account->tid = $_POST['txn_id'];
+      $account->data = serialize($_POST);
+
       if ( isset($_POST['payment_status']) && $_POST['payment_status'] == 'Completed' ) {
         if ( $account->is_new ) {
           // create a new transaction record
