@@ -242,7 +242,7 @@ function pinapi_paypal_notify() {
     else {
       // transaction was verified with paypal, but was not validated
       // according to this site's pinapi_paypal and db setup
-      watchdog('pinapi_paypal', t("PayPal transaction's details did not matched our records: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', t("PayPal transaction's details did not match our records: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
     }
     print '';
   }
