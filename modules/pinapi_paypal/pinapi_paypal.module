@@ -195,8 +195,7 @@ function pinapi_paypal_notify() {
     if (!$account) {
       $account->is_new = TRUE;
     }
-    // set up transaction details to be potentially
-    // recorded
+    // set up transaction details to be potentially recorded
     $account->uid = $_POST['custom'];
     $account->tid = $_POST['txn_id'];
     $account->data = serialize($_POST);
