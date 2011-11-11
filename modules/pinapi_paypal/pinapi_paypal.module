@@ -238,6 +238,11 @@ function pinapi_paypal_notify() {
         watchdog('pinapi_paypal', t("PayPal payment cannot be processed because of status '@status': '@data'"), array('@data' => serialize($_POST), '@status' => $_POST['status']),  WATCHDOG_WARNING);
       }
     }
+    else {
+      // transaction was verified with paypal, but was not validated
+      // according to this site's pinapi_paypal and db setup
+      watchdog('pinapi_paypal', t("PayPal transaction's details did not matched our records: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
+    }
     print '';
   }
   else {
