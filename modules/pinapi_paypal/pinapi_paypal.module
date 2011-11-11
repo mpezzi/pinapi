@@ -205,6 +205,7 @@ function pinapi_paypal_notify() {
         if ( $account->is_new ) {
           // create a new transaction record
           $account->uid = $_POST['custom'];
+          $account->tid = $_POST['txn_id'];
           $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
           $account->data = serialize($_POST);
           pinapi_paypal_save($account);
@@ -215,6 +216,7 @@ function pinapi_paypal_notify() {
           if ( $account->status == PINAPI_PAYPAL_PAYMENT_PENDING ) {
             // update payment status to be 'Completed'
             $account->uid = $_POST['custom'];
+            $account->tid = $_POST['txn_id'];
             $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
             $account->data = serialize($_POST);
             pinapi_paypal_save($account);
@@ -226,6 +228,7 @@ function pinapi_paypal_notify() {
         // handle successful payments marked as 'PENDING' (ex. e-cheque)
         // log reason for pending status
         $account->uid = $_POST['custom'];
+        $account->tid = $_POST['txn_id'];
         $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
         $account->data = serialize($_POST);
         pinapi_paypal_save($account);
