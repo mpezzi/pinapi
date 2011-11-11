@@ -6,7 +6,7 @@
  */
 
 /**
- * Returns an array containing the environments that Pinapi PayPal uses.
+ * Returns an array containing the environments that PINAPI PayPal uses.
  */
 function pinapi_paypal_environments() {
   return array(
@@ -22,9 +22,9 @@ function pinapi_paypal_environments() {
 }
 
 /**
- * Returns the current environment Pinapi PayPal is using.
+ * Returns the current environment PINAPI PayPal is using.
  * @return
- *   the current Pinapi PayPal environment if set, defaults to Development Environment
+ *   the current PINAPI PayPal environment if set, defaults to Development Environment
  */
 function pinapi_paypal_environment() {
   $environments = pinapi_paypal_environments();
@@ -32,7 +32,7 @@ function pinapi_paypal_environment() {
 }
 
 /**
- * Returns an array containing the names of Pinapi PayPal environments 
+ * Returns an array containing the names of PINAPI PayPal environments 
  */
 function pinapi_paypal_environment_options() {
   $options = array();
@@ -123,10 +123,11 @@ function pinapi_paypal_save(&$paypal) {
 }
 
 /**
- * Verifies a transaction's details match this site's pinapi_paypal configuration.
+ * Verifies an incoming IPN transaction's details.
  *
- * @note: pinapi_paypal_load must have been called previously before
- * running this function
+ * Compares incoming transaction against this site's database and 
+ * pinapi_paypal configuration. Must ensure that pinapi_paypal_load 
+ * was been called before this function is called.
  *
  * @param
  *   the transaction ID from the transaction
@@ -171,7 +172,9 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, &$paypal) 
 }
 
 /**
- * A debugging function that simulates handling a PayPal IPN POST
+ * Simulates handling a PayPal IPN POST.
+ *
+ * This is a debugging function only.
  */
 function pinapi_paypal_verify() {
   // generate a simulated POST using previously POSTed paypal data
