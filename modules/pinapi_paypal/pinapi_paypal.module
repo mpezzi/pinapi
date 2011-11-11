@@ -220,7 +220,7 @@ function pinapi_paypal_notify() {
             $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
             $account->data = serialize($_POST);
             pinapi_paypal_save($account);
-            watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
+            watchdog('pinapi_paypal', t("Transaction record was updated for uid: @uid"), array('@uid' => $account->uid));
           }
         }
       }
