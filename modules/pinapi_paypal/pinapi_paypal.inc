@@ -123,29 +123,49 @@ function pinapi_paypal_save(&$paypal) {
 }
 
 /**
- * Checks the details of a transaction to verify its origin
- * and details are truly from this site
+ * Verifies a transaction's details match this site's pinapi_paypal configuration.
+ *
+ * @note: pinapi_paypal_load must have been called previously before
+ * running this function
  *
  * @param
  *   the transaction ID from the transaction
  * @param
- *   the business email the transaction
+ *   the business email from the transaction
  * @param
- *   the amount of the transaction
+ *   the amount from the transaction
+ * @param
+ *   the PayPal transaction object from the database to verify against
+ *
+ * @return
+ *   TRUE if supplied transaction details match this site's pinapi_paypal
+ *   configuration, FALSE otherwise.
  */
-function pinapi_verify_transaction($tid, $tbusiness, $tamount) {
-  $query = db_fetch_object(db_query("SELECT * FROM {pinapi_paypal} WHERE tid = %d", $tid));
-  // check that this transaction id exists in the database
-  if ($query) {
-    // receiver's email/Business must match the registered merchant's email (receiver_email/business)
+function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, &$paypal) {
+  // check that this transaction id wasn't previously submitted in the database
+  // or if it was, verify that the transaction id matches the tid in the record
+  watchdog('pinapi_paypal', "Note tid: @tid, db_paypal_tid: @ptid", array('@tid' => $tid, '@ptid' => $paypal->tid));
+  if ( (isset($paypal->is_new) && $paypal->is_new) || (isset($paypal->tid) && $paypal->tid == $tid) ) {
+    // receiver's/business email must match merchant's email registered in config
     $real_email = variable_get('pinapi_paypal_business_email', null);
     if ($real_email == $tbusiness) {
-      // verify transaction amount against amount registered in system
+      watchdog('pinapi_paypal', "Valid business email detected.");
+      // verify transaction amount against amount registered in config
       $real_amount = variable_get('pinapi_paypal_item_amount', null);
       if ($real_amount == $tamount) {
+        watchdog('pinapi_paypal', "Valid amount detected.");
         return TRUE;
       }
+      else {
+        watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount));
+      }
     }
+    else {
+      watchdog('pinapi_paypal', "Invalid business email submitted, id: @tbusiness" , array('@tbusiness' => $tbusiness));
+    }
+  }
+  else {
+    watchdog('pinapi_paypal', "Duplicate or invalid transaction ID, id: @tid", array('@tid' => $tid));
   }
   return FALSE;
 }
@@ -177,7 +197,8 @@ function pinapi_paypal_verify() {
         $account->data = serialize($posted);
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', t("New transaction record created."));
-      } else {
+      }
+      else {
         // update the user's record once payment is completed
         $account->uid = $posted['custom'];
         $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
@@ -185,7 +206,8 @@ function pinapi_paypal_verify() {
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
       }
-    } else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
+    }
+    else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
       $account->uid = $posted['uid'];
       $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
@@ -194,7 +216,8 @@ function pinapi_paypal_verify() {
       watchdog('pinapi_paypal', t("Received PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
     }
     print '';
-  } else {
+  }
+  else {
     // log this POST with a warning
     watchdog('pinapi_paypal', t("Received invalid transaction..."));
     // log this POST with a warning
