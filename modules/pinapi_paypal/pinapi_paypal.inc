@@ -157,15 +157,15 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, &$paypal) 
         return TRUE;
       }
       else {
-        watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount));
+        watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount, WATCHDOG_ALERT));
       }
     }
     else {
-      watchdog('pinapi_paypal', "Invalid business email submitted, id: @tbusiness" , array('@tbusiness' => $tbusiness));
+      watchdog('pinapi_paypal', "Invalid business email submitted, business: @tbusiness" , array('@tbusiness' => $tbusiness, WATCHDOG_ALERT));
     }
   }
   else {
-    watchdog('pinapi_paypal', "Duplicate or invalid transaction ID, id: @tid", array('@tid' => $tid));
+    watchdog('pinapi_paypal', "Duplicate or invalid transaction ID, id: @tid", array('@tid' => $tid), WATCHDOG_ALERT);
   }
   return FALSE;
 }
