@@ -127,7 +127,7 @@ function pinapi_paypal_save(&$paypal) {
  *
  * Compares incoming transaction against this site's database and 
  * pinapi_paypal configuration. Must ensure that pinapi_paypal_load 
- * was been called before this function is called.
+ * has been called before this function is called.
  *
  * @param
  *   the transaction ID from the transaction
