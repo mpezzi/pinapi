@@ -46,16 +46,19 @@ function pinapi_paypal_settings_form() {
   $form['pinapi_paypal_cancel_return_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Cancel Return Path'),
+    '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_cancel_return_path', ''),
   );
   $form['pinapi_paypal_return_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Return Path'),
+    '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_return_path', ''),
   );  
   $form['pinapi_paypal_notify_path'] = array(
     '#type' => 'textfield',
     '#title' => t('Notify Path'),
+    '#required' => TRUE,
     '#default_value' => variable_get('pinapi_paypal_notify_path', ''),
   );
   $form['pinapi_paypal_currency_code'] = array(
