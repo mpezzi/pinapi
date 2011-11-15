@@ -196,7 +196,7 @@ function pinapi_paypal_verify() {
     if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
       if ( !$account ) {
         // create a new transaction record
-        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->status = PINAPI_PAYPAL_COMPLETED;
         $account->data = serialize($posted);
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', t("New transaction record created."));
@@ -204,7 +204,7 @@ function pinapi_paypal_verify() {
       else {
         // update the user's record once payment is completed
         $account->uid = $posted['custom'];
-        $account->status = PINAPI_PAYPAL_PAYMENT_COMPLETED;
+        $account->status = PINAPI_PAYPAL_COMPLETED;
         $account->data = serialize($posted);
         pinapi_paypal_save($account);
         watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
@@ -213,7 +213,7 @@ function pinapi_paypal_verify() {
     else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
       // handle successful payments marked as 'PENDING' (ex. e-cheque)
       $account->uid = $posted['uid'];
-      $account->status = PINAPI_PAYPAL_PAYMENT_PENDING;
+      $account->status = PINAPI_PAYPAL_PENDING;
       $account->data = serialize($posted);
       pinapi_paypal_save($account);
       watchdog('pinapi_paypal', t("Received PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
