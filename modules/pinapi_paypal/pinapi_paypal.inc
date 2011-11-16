@@ -147,11 +147,18 @@ function pinapi_paypal_load($uid, $reset = FALSE) {
  * Insert or update a PayPal transaction record.
  */
 function pinapi_paypal_save(&$paypal) {
+  $transaction = object();
+  $transaction->tid = $paypal->tid;
+  $transaction->uid = $paypal->uid;
+  $transaction->timestamp = time();
+
   if ( isset($paypal->is_new) && $paypal->is_new ) {
     drupal_write_record('pinapi_paypal', $paypal);
+    drupal_write_record('pinapi_paypal_transactions', $transaction);
   }
   else {
     drupal_write_record('pinapi_paypal', $paypal, 'uid');
+    drupal_write_record('pinapi_paypal_transactions', $transaction);
   }
 }
 
@@ -177,48 +184,66 @@ function pinapi_paypal_save(&$paypal) {
  *   TRUE if supplied transaction details match this site's pinapi_paypal
  *   configuration, FALSE otherwise.
  */
-function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency, &$paypal) {
-  // check that this transaction id wasn't previously submitted in the database
-  // or if it was, verify that the transaction id matches the tid in the record
-  watchdog('pinapi_paypal', "Note tid: @tid, db_paypal_tid: @ptid", array('@tid' => $tid, '@ptid' => $paypal->tid));
-  if ( (isset($paypal->is_new) && $paypal->is_new) || (isset($paypal->tid) && $paypal->tid == $tid) ) {
-    // receiver's/business email must match merchant's email registered in config
-    $real_email = variable_get('pinapi_paypal_business_email', null);
-    if ($real_email == $tbusiness) {
-      watchdog('pinapi_paypal', "Valid business email detected.");
-      // verify transaction amount against amount registered in config
-      $real_amount = variable_get('pinapi_paypal_item_amount', null);
-      if ($real_amount == $tamount) {
-        watchdog('pinapi_paypal', "Valid amount detected.");
-        // verify transaction currency against currency code registered in config
-        $real_currency = variable_get('pinapi_paypal_currency_code', null);
-        if ($real_currency == $tcurrency) {
-          watchdog('pinapi_paypal', "Valid currency code detected.");
-          return TRUE;
-        }
-        else {
-          watchdog('pinapi_paypal', "Invalid currency code detected, code: @tcurrency", array('@tcurrency' => $tcurrency, WATCHDOG_ALERT));
-        }
-      }
-      else {
-        watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount, WATCHDOG_ALERT));
-      }
+function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency, $tstatus, &$paypal, $postdata) {
+
+  $valid_config = FALSE;
+
+  // @TODO: Verify that the following logic conditions are sufficient...
+  // Cases/Conditiions for a transaction to be considered VERIFIED
+  // 1.  Completely new transaction: new user, new tid, config matches
+  // 2.  Existing User Update A:  user exists in db, already has a tid in db, payment config matches, supplied tid matches
+  // 3.  Existing User Update B:  user exists in db, already has a tid in db, payment config matches but supplied tid is new (ex. failed payment + new payment)
+  // Note:  cases 2 and 3 are really dependent only on matching config
+  //        and user's tid's existence in the database
+
+  // Note: In all cases, transaction matching site configis a MUST, so check that first
+  $real_email = variable_get('pinapi_paypal_business_email', null);
+  $real_amount = variable_get('pinapi_paypal_item_amount', null);
+  $real_currency = variable_get('pinapi_paypal_currency_code', null);
+
+  // is submitted user id a valid user id?
+  $user_exists = (bool) user_load($_POST['custom']);
+  $valid_config = ($real_email == $tbusiness) && ($real_amount == $tamount) && ($real_currency == $tcurrency);
+
+  if (!$user_exists) {
+    watchdog('pinapi_paypal', "Invalid User ID submitted from PayPal IPN, uid: @uid" , array('@uid' => $postdata['custom']), WATCHDOG_ALERT);
+    return FALSE;
+  }
+
+  if ($valid_config) {
+    // handle case 1: new user
+    if ( isset($paypal->is_new) && $paypal->is_new ) {
+      return TRUE;
     }
-    else {
-      watchdog('pinapi_paypal', "Invalid business email submitted, business: @tbusiness" , array('@tbusiness' => $tbusiness, WATCHDOG_ALERT));
+    // handle case 2: registered user tid update and case 3: registered user new tid
+    // @TODO: check this further
+    elseif ( isset($paypal->tid) ) {
+      // ensure that the status actually changes
+      if ($paypal->status_detail != pinapi_paypal_status_detail_code($tstatus)) {
+        return TRUE;
+      }
     }
   }
   else {
-    watchdog('pinapi_paypal', "Duplicate or invalid transaction ID, id: @tid", array('@tid' => $tid), WATCHDOG_ALERT);
+    // log which transaction detail was invalid
+    if ($real_email != $tbusiness) {
+      watchdog('pinapi_paypal', "Invalid business email submitted, business: @tbusiness" , array('@tbusiness' => $tbusiness, WATCHDOG_ALERT));
+    }
+    if ($real_amount != $tamount) {
+      watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount, WATCHDOG_ALERT));
+    }
+    if ($real_currency != $tcurrency) {
+      watchdog('pinapi_paypal', "Invalid currency code detected, code: @tcurrency", array('@tcurrency' => $tcurrency, WATCHDOG_ALERT));
+    }
+    return FALSE;
   }
-  return FALSE;
 }
 
 /**
  * Responds to POSTed data from PayPal IPN, stores to db if verified
  */
 function pinapi_paypal_notify() {
-  watchdog('pinapi_paypal', json_encode($_POST));
+  watchdog('pinapi_paypal', "PayPal IPN Received: @data", array('@data' => json_encode($_POST)));
 
   // create a request query string using POST vars
   $query = array();
@@ -243,12 +268,9 @@ function pinapi_paypal_notify() {
       $account->is_new = TRUE;
     }
 
-    // is submitted user id a valid user id?
-    $user_exists = (bool) user_load($_POST['custom']);
-
     // validate this transaction against the account we have on record and
     // this site's pinapi_paypal module configuration details
-    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $_POST['mc_currency'], $account);
+    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $_POST['mc_currency'], $_POST['payment_status'], $account, $_POST);
 
     if ($user_exists && $valid_transaction) {
       // set up transaction details to be recorded/updated
@@ -423,7 +445,61 @@ function pinapi_paypal_status_name($s) {
   return FALSE;
 }
 
+/**
+* Returns the status detail code for a supplied PayPal payment_status
+*/
+function pinapi_paypal_status_detail_code($status) {
+  switch($status) {
+    case 'Completed':
+      $code = PINAPI_PAYPAL_STATUS_COMPLETED;
+      break;
 
+    case 'Pending':
+      $code = PINAPI_PAYPAL_STATUS_PENDING;
+      break;
+
+    case 'Processed':
+      $code = PINAPI_PAYPAL_STATUS_PROCESSED;
+      break;
+
+    case 'Created':
+      $code = PINAPI_PAYPAL_STATUS_CREATED;
+      break;
+
+    case 'Canceled_Reversal':
+      $code = PINAPI_PAYPAL_STATUS_CANCELED_REVERSAL;
+      break;
+
+    case 'Failed':
+      $code = PINAPI_PAYPAL_STATUS_FAILED;
+      break;
+
+    case 'Denied':
+      $code = PINAPI_PAYPAL_STATUS_DENIED;
+      break;
+
+    case 'Expired':
+      $code = PINAPI_PAYPAL_STATUS_EXPIRED;
+      break;
+
+    case 'Refunded':
+      $code = PINAPI_PAYPAL_STATUS_REFUNDED;
+      break;
+
+    case 'Reversed':
+      $code = PINAPI_PAYPAL_STATUS_REVERSED;
+      break;
+
+    case 'Voided':
+      $code = PINAPI_PAYPAL_STATUS_VOIDED;
+      break;
+
+    default:
+      $code = FALSE;
+      break;
+  }
+  return $code;
+}
 
 /**
  * Simulates handling a PayPal IPN POST.
