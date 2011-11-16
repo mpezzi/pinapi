@@ -282,10 +282,6 @@ function pinapi_paypal_notify() {
                     watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
 
-                  case PINAPI_PAYPAL_PENDING:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
-                    break;
-
                   default:
                     watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
