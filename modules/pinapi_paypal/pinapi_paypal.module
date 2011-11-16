@@ -348,10 +348,13 @@ function pinapi_paypal_notify() {
         }
       }
     }
+    elseif (!$user_exists) {
+      watchdog('pinapi_paypal', t("User did not match any on database records. Submitted transaction data: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
+    }
     else {
       // transaction was verified with paypal, but was not validated
       // according to this site's pinapi_paypal and db setup
-      watchdog('pinapi_paypal', t("PayPal transaction's details did not match db records. User Exists? @user_exists. Submitted transaction data: '@data'"), array('@data' => serialize($_POST), '@user_exists' => $user_exists == 1 ? "TRUE" : "FALSE"),  WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', t("PayPal transaction's details did not match db records or site configuration. User Exists? @user_exists. Submitted transaction data: '@data'"), array('@data' => serialize($_POST), '@user_exists' => $user_exists == 1 ? "TRUE" : "FALSE"),  WATCHDOG_WARNING);
     }
     print '';
   }
