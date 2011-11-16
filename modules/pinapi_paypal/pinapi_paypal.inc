@@ -159,7 +159,7 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency
         watchdog('pinapi_paypal', "Valid amount detected.");
         // verify transaction currency against currency code registered in config
         $real_currency = variable_get('pinapi_paypal_currency_code', null);
-        if ($real_currency) {
+        if ($real_currency == $tcurrency) {
           watchdog('pinapi_paypal', "Valid currency code detected.");
           return TRUE;
         }
