@@ -7,3 +7,5 @@ php_value post_max_size 50M
 php_value max_input_time 300
 php_value max_execution_time 300
 
+Importing codes from file:
+LOAD DATA LOCAL INFILE '/home/ubuntu/codes/500.txt' INTO TABLE pinapi_code FIELDS TERMINATED BY '\s' LINES TERMINATED BY '\r\n' (code) SET gid = 1;
