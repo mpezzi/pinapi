@@ -6,6 +6,39 @@
  */
 
 /**
+ * PINAPI Paypal user's PayPal payment status constants
+ * Simplified categories for the above PayPal status constants
+ */
+define('PINAPI_PAYPAL_INCOMPLETE', 0);  // user has not initiated any PayPal payment
+define('PINAPI_PAYPAL_COMPLETE', 1);    // user has completed a PayPal payment
+define('PINAPI_PAYPAL_PENDING', 2);     // user has a pending PayPal payment
+define('PINAPI_PAYPAL_FAILED', 3);      // user's PayPal transaction returned status such as 'Denied', 'Failed', 'Expired', etc.
+define('PINAPI_PAYPAL_MISC', 4);        // user's PayPal status returned unusual statuses 'Created' and 'Canceled_Reversal'
+
+/**
+ * PayPal Payment status constants
+ *
+ * Provides more detail about the type of PinAPI status for a particular transaction
+ *
+ * @see IPN Reference for all PayPal payment_status constants and their meanings
+ * https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_admin_IPNReference
+ */
+define('PINAPI_PAYPAL_STATUS_COMPLETED', 100);
+
+define('PINAPI_PAYPAL_STATUS_PENDING', 200);
+define('PINAPI_PAYPAL_STATUS_PROCESSED', 201);
+
+define('PINAPI_PAYPAL_STATUS_FAILED', 300);
+define('PINAPI_PAYPAL_STATUS_DENIED', 301);
+define('PINAPI_PAYPAL_STATUS_EXPIRED', 302);
+define('PINAPI_PAYPAL_STATUS_REFUNDED', 303);
+define('PINAPI_PAYPAL_STATUS_REVERSED', 304);
+define('PINAPI_PAYPAL_STATUS_VOIDED', 305);
+
+define('PINAPI_PAYPAL_STATUS_CREATED', 400);    // status is used only by German ELV payments
+define('PINAPI_PAYPAL_STATUS_CANCELED_REVERSAL', 401);
+
+/**
  * Returns an array containing the environments that PINAPI PayPal uses.
  */
 function pinapi_paypal_environments() {
