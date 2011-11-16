@@ -136,13 +136,15 @@ function pinapi_paypal_save(&$paypal) {
  * @param
  *   the amount from the transaction
  * @param
+ *   the currency code from the transaction
+ * @param
  *   the PayPal transaction object from the database to verify against
  *
  * @return
  *   TRUE if supplied transaction details match this site's pinapi_paypal
  *   configuration, FALSE otherwise.
  */
-function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, &$paypal) {
+function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency, &$paypal) {
   // check that this transaction id wasn't previously submitted in the database
   // or if it was, verify that the transaction id matches the tid in the record
   watchdog('pinapi_paypal', "Note tid: @tid, db_paypal_tid: @ptid", array('@tid' => $tid, '@ptid' => $paypal->tid));
@@ -155,7 +157,15 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, &$paypal) 
       $real_amount = variable_get('pinapi_paypal_item_amount', null);
       if ($real_amount == $tamount) {
         watchdog('pinapi_paypal', "Valid amount detected.");
-        return TRUE;
+        // verify transaction currency against currency code registered in config
+        $real_currency = variable_get('pinapi_paypal_currency_code', null);
+        if ($real_currency) {
+          watchdog('pinapi_paypal', "Valid currency code detected.");
+          return TRUE;
+        }
+        else {
+          watchdog('pinapi_paypal', "Invalid currency code detected, code: @tcurrency", array('@tcurrency' => $tcurrency, WATCHDOG_ALERT));
+        }
       }
       else {
         watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount, WATCHDOG_ALERT));

@@ -232,7 +232,7 @@ function pinapi_paypal_notify() {
 
     // validate this transaction against the account we have on record and
     // this site's pinapi_paypal module configuration details
-    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $account);
+    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $_POST['mc_currency'], $account);
 
     if ($valid_transaction) {
       // set up transaction details to be recorded/updated
