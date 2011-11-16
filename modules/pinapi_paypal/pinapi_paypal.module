@@ -230,14 +230,14 @@ function pinapi_paypal_notify() {
       $account->is_new = TRUE;
     }
 
+    // is submitted user id a valid user id?
+    $user_exists = (bool) user_load($_POST['custom']);
+
     // validate this transaction against the account we have on record and
     // this site's pinapi_paypal module configuration details
     $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $_POST['mc_currency'], $account);
 
-    // validate submitted user id
-    $user_exists = (bool) user_load($_POST['custom']);
-
-    if ($valid_transaction && $user_exists) {
+    if ($user_exists && $valid_transaction) {
       // set up transaction details to be recorded/updated
       $account->uid = $_POST['custom'];
       $account->tid = $_POST['txn_id'];
@@ -346,7 +346,7 @@ function pinapi_paypal_notify() {
   else {
     watchdog('pinapi_paypal', t("Received INVALID transaction..."), array(), WATCHDOG );
     // log this POST with a warning
-    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($_POST)), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: User Exists? @user_exists AND submitted data: '@data'"), array('@data' => serialize($_POST), '@user_exists' => $user_exists), WATCHDOG_ALERT);
   }
 }
 
