@@ -259,40 +259,40 @@ function pinapi_paypal_notify() {
       if ( isset($_POST['payment_status']) ) {
         switch ($_POST['payment_status']) {
           case 'Completed':
-            // determine if this is a new transaction or an update
             if ( $account->is_new ) {
-              // create a new transaction record
+              // set the to-be-written transaction status to 'Completed'
               $account->status = PINAPI_PAYPAL_COMPLETED;
               $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
-              watchdog('pinapi_paypal', t("New transaction record created."));
+              watchdog('pinapi_paypal', t("New transaction record created. User ID: @uid, data: @data"), array('@uid' => $_POST['custom'], '@data' => serialize($_POST)));
             }
             else {
               // check if this is an update to a previously 'pending' or 'failed' transaction
               // log the status update and update transaction to be 'Completed'
               if ($account->status != PINAPI_PAYPAL_COMPLETED) {
+                // set the to-be-written transaction status to 'Completed'
                 $account->status = PINAPI_PAYPAL_COMPLETED;
                 $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
 
                 // log what status it was previously
                 switch ($account->status) {
                   case PINAPI_PAYPAL_INCOMPLETE:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Incomplete' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
 
                   case PINAPI_PAYPAL_PENDING:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
 
                   case PINAPI_PAYPAL_FAILED:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
 
                   case PINAPI_PAYPAL_PENDING:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
 
                   default:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
                 }
               }
@@ -371,6 +371,7 @@ function pinapi_paypal_notify() {
             watchdog('pinapi_paypal', t("PayPal payment cannot be processed because of status '@status': '@data'"), array('@data' => serialize($_POST), '@status' => $_POST['status']),  WATCHDOG_WARNING);
             break;
         }
+
         // save the data only if a status update was set
         if ( isset($account->status) ) {
           pinapi_paypal_save($account);
