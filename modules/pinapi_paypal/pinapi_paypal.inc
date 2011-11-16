@@ -252,7 +252,7 @@ function pinapi_paypal_notify() {
               else {
                 // a duplicate 'Completed' payment submission was detected
                 // @TODO : should the old transaction data in db be updated to this new transaction?
-                watchdog('pinapi_paypal', t("Duplicate 'Complete' payment detected. New Transaction ID: @tid, uid: @uid"), array('@tid' => $_POST['txn_id'], '@uid' => $account->uid), WATCHDOG_WARNING);
+                watchdog('pinapi_paypal', t("Duplicate 'Complete' payment detected. New Transaction ID: @tid, uid: @uid, data: @data"), array('@tid' => $_POST['txn_id'], '@uid' => $account->uid, '@data' => serialize($_POST) ), WATCHDOG_WARNING);
               }
             }
             break;
