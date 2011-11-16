@@ -5,7 +5,7 @@
  */
 function pinapi_paypal_schema() {
   $schema['pinapi_paypal'] = array(
-    'description' => t('Stores Paypal information.'),
+    'description' => t('Stores PayPal information.'),
     'fields' => array(
       'uid' => array(
         'type' => 'int',
@@ -30,6 +30,25 @@ function pinapi_paypal_schema() {
       ),
     ),
     'primary key' => array('uid'),
+  );
+  $schema['pinapi_paypal_transactions'] = array(
+    'description' => t("Stores Users' PayPal transactions."),
+    'fields' => array(
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'timestamp' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      ),
+    'primary_key' => array('tid'),
   );
   return $schema;
 }
