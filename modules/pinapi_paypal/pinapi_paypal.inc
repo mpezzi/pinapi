@@ -309,61 +309,51 @@ function pinapi_paypal_notify() {
             // log reason for pending status
             $account->status = PINAPI_PAYPAL_PENDING;
             $account->status_detail = PINAPI_PAYPAL_STATUS_PENDING;
-            watchdog('pinapi_paypal', t("PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($_POST), '@reason' => $_POST['pending_reason']),  WATCHDOG_WARNING);
             break;
 
           case 'Processed':
             $account->status = PINAPI_PAYPAL_PENDING;
             $account->status_detail = PINAPI_PAYPAL_STATUS_PROCESSED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as PENDING because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Created':
             $account->status = PINAPI_PAYPAL_MISC;
             $account->status_detail = PINAPI_PAYPAL_STATUS_CREATED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as MISC because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Canceled_Reversal':
             $account->status = PINAPI_PAYPAL_MISC;
             $account->status_detail = PINAPI_PAYPAL_STATUS_CANCELED_REVERSAL;
-            watchdog('pinapi_paypal', t("PayPal payment marked as MISC because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Failed':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_FAILED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Denied':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_DENIED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Expired':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_EXPIRED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Refunded':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_REFUNDED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           case 'Reversed':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_REVERSED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status' for reason of '@reasoncode': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status'], '@reasoncode' => $_POST['reason_code']),  WATCHDOG_WARNING);
             break;
 
           case 'Voided':
             $account->status = PINAPI_PAYPAL_FAILED;
             $account->status_detail = PINAPI_PAYPAL_STATUS_VOIDED;
-            watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
             break;
 
           default:
@@ -371,9 +361,23 @@ function pinapi_paypal_notify() {
             watchdog('pinapi_paypal', t("PayPal payment cannot be processed because of status '@status': '@data'"), array('@data' => serialize($_POST), '@status' => $_POST['status']),  WATCHDOG_WARNING);
             break;
         }
-
         // save the data only if a status update was set
+        // and log the status to be written to the db
         if ( isset($account->status) ) {
+          // log the status update
+          $status_name = pinapi_paypal_status_name($account->status_detail);
+          if ($account->status !== 'COMPLETED') {
+            // identify in the log special PayPal payment statuses with extra variables: 'Pending' and 'Reversed'
+            if ($account->status == PINAPI_PAYPAL_PENDING) {
+              watchdog('pinapi_paypal', t("PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($_POST), '@reason' => $_POST['pending_reason']),  WATCHDOG_WARNING);
+            }
+            elseif ($account->status == FAILED && $account->status_detail == PINAPI_PAYPAL_STATUS_REVERSED) {
+              watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status' for reason of '@reasoncode': @data"), array('@data' => serialize($_POST), '@status' => $_POST['payment_status'], '@reasoncode' => $_POST['reason_code']),  WATCHDOG_WARNING);
+            }
+            else {
+              watchdog('pinapi_paypal', t("PayPal payment marked as @statusname because PayPal returned status of '@status': @data"), array('@data' => serialize($_POST), '@statusname' => $status_name, '@status' => $_POST['payment_status']),  WATCHDOG_WARNING);
+            }
+          }
           pinapi_paypal_save($account);
         }
       }
@@ -396,40 +400,36 @@ function pinapi_paypal_notify() {
 }
 
 /**
- * Returns the status category for a particular detailed status
+ * Returns the status category name for a particular detailed status
  *
  * @param
- *   The status category object containing the code and its name
+ *   The status code
  * @return
- *   The status category the supplied status code falls under
+ *   The status category name the supplied status code falls under
  *   or FALSE in case of an unrecognized status
  */
-function pinapi_paypal_status_category($s) {
+function pinapi_paypal_status_name($s) {
 
-  $category = object();
-  if ($s >= 400) {
-    $category->code = PINAPI_PAYPAL_MISC;
-    $category->name = "MISC";
-    return $category;
+  if ($s >= 400 && $s < 500) {
+    return "MISC";
   }
   elseif ($s >= 300) {
-    $category->code = PINAPI_PAYPAL_FAILED;
-    $category->name = "FAILED";
-    return $category;
+    return "FAILED";
   }
   elseif ($s >= 200) {
-    $category->code = PINAPI_PAYPAL_PENDING;
-    $category->name = "PENDING";
-    return $category;
+    return "PENDING";
   }
   elseif ($s >= 100) {
-    $category->code = PINAPI_PAYPAL_COMPLETED;
-    $category->name = "COMPLETED";
-    return $category;
+    return "COMPLETED";
+  }
+  elseif ($s == 0) {
+    return "INCOMPLETE";
   }
 
   return FALSE;
 }
+
+
 
 /**
  * Simulates handling a PayPal IPN POST.
