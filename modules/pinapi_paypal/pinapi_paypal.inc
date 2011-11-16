@@ -351,24 +351,33 @@ function pinapi_paypal_notify() {
  * Returns the status category for a particular detailed status
  *
  * @param
- *   The detailed status code
+ *   The status category object containing the code and its name
  * @return
  *   The status category the supplied status code falls under
  *   or FALSE in case of an unrecognized status
  */
 function pinapi_paypal_status_category($s) {
 
+  $category = object();
   if ($s >= 400) {
-    return PINAPI_PAYPAL_MISC;
+    $category->code = PINAPI_PAYPAL_MISC;
+    $category->name = "MISC";
+    return $category;
   }
   elseif ($s >= 300) {
-    return PINAPI_PAYPAL_FAILED;
+    $category->code = PINAPI_PAYPAL_FAILED;
+    $category->name = "FAILED";
+    return $category;
   }
   elseif ($s >= 200) {
-    return PINAPI_PAYPAL_PENDING;
+    $category->code = PINAPI_PAYPAL_PENDING;
+    $category->name = "PENDING";
+    return $category;
   }
   elseif ($s >= 100) {
-    return PINAPI_PAYPAL_COMPLETED;
+    $category->code = PINAPI_PAYPAL_COMPLETED;
+    $category->name = "COMPLETED";
+    return $category;
   }
 
   return FALSE;
