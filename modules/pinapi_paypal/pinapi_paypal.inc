@@ -270,17 +270,31 @@ function pinapi_paypal_notify() {
               // check if this is an update to a previously 'pending' or 'failed' transaction
               // log the status update and update transaction to be 'Completed'
               if ($account->status != PINAPI_PAYPAL_COMPLETED) {
-                if ( $account->status == PINAPI_PAYPAL_PENDING ) {
-                  watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
-                }
-                elseif ( $account->status == PINAPI_PAYPAL_FAILED ) {
-                  watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
-                }
-                else {
-                  watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
-                }
                 $account->status = PINAPI_PAYPAL_COMPLETED;
                 $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
+
+                // log what status it was previously
+                switch ($account->status) {
+                  case PINAPI_PAYPAL_INCOMPLETE:
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    break;
+
+                  case PINAPI_PAYPAL_PENDING:
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    break;
+
+                  case PINAPI_PAYPAL_FAILED:
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    break;
+
+                  case PINAPI_PAYPAL_PENDING:
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    break;
+
+                  default:
+                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid"), array('@uid' => $account->uid));
+                    break;
+                }
               }
               else {
                 // a duplicate 'Completed' payment submission was detected
