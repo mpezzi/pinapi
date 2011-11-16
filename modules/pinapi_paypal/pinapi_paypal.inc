@@ -266,14 +266,9 @@ function pinapi_paypal_notify() {
               watchdog('pinapi_paypal', t("New transaction record created. User ID: @uid, data: @data"), array('@uid' => $_POST['custom'], '@data' => serialize($_POST)));
             }
             else {
-              // check if this is an update to a previously 'pending' or 'failed' transaction
-              // log the status update and update transaction to be 'Completed'
+              // check if this is an update to a previously 'pending', 'failed', etc. transaction
               if ($account->status != PINAPI_PAYPAL_COMPLETED) {
-                // set the to-be-written transaction status to 'Completed'
-                $account->status = PINAPI_PAYPAL_COMPLETED;
-                $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
-
-                // log what status it was previously
+                // log what user's payment status was previously
                 switch ($account->status) {
                   case PINAPI_PAYPAL_INCOMPLETE:
                     watchdog('pinapi_paypal', t("Transaction record status was updated from 'Incomplete' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
@@ -295,6 +290,9 @@ function pinapi_paypal_notify() {
                     watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
                     break;
                 }
+                // set the to-be-written transaction status to 'Completed'
+                $account->status = PINAPI_PAYPAL_COMPLETED;
+                $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
               }
               else {
                 // a duplicate 'Completed' payment submission was detected
