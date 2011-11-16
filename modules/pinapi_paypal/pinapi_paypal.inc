@@ -148,7 +148,7 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency
   // check that this transaction id wasn't previously submitted in the database
   // or if it was, verify that the transaction id matches the tid in the record
   watchdog('pinapi_paypal', "Note tid: @tid, db_paypal_tid: @ptid", array('@tid' => $tid, '@ptid' => $paypal->tid));
-  if ( (isset($paypal->is_new) && $paypal->is_new) || (isset($paypal->tid) && $paypal->tid == $tid) ) {
+  if ( isset($paypal->is_new) && ($paypal->is_new || $paypal->tid == $tid) ) {
     // receiver's/business email must match merchant's email registered in config
     $real_email = variable_get('pinapi_paypal_business_email', null);
     if ($real_email == $tbusiness) {
