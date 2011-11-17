@@ -305,8 +305,8 @@ function pinapi_paypal_notify() {
               // check if this is an update to a previously 'pending', 'failed', etc. transaction
               if ($account->status != PINAPI_PAYPAL_COMPLETED) {
                 // log what user's payment status was previously
-                $prev_status = pinapi_paypal_status_name($account->status);
-                watchdog('pinapi_paypal', t("Transaction record status was updated from '@prevstatus' to 'Complete' for uid: @uid. Data: @data"), array('@prevstatus' => $prev_status, '@data' => serialize($_POST)));
+                $prev_status = pinapi_paypal_status_name($account->status_detail);
+                watchdog('pinapi_paypal', t("Transaction record status was updated from '@prevstatus' to 'COMPLETE' for uid: @uid. Data: @data"), array('@prevstatus' => $prev_status, '@uid' => $account->uid, '@data' => serialize($_POST)));
                 // set the to-be-written transaction status to 'Completed'
                 $account->status = PINAPI_PAYPAL_COMPLETED;
                 $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
