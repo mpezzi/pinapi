@@ -299,7 +299,7 @@ function pinapi_paypal_notify() {
               // set the to-be-written transaction status to 'Completed'
               $account->status = PINAPI_PAYPAL_COMPLETE;
               $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
-              watchdog('pinapi_paypal', t("New transaction record created. User ID: @uid, data: @data"), array('@uid' => $_POST['custom'], '@data' => serialize($_POST)));
+              watchdog('pinapi_paypal', t("New transaction record created. User ID: @uid, data: @data"), array('@uid' => $_POST['custom'], '@data' => serialize($_POST)), WATCHDOG_WARNING);
             }
             else {
               // check if this is an update to a previously 'pending', 'failed', etc. transaction
