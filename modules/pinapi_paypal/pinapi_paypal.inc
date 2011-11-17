@@ -170,13 +170,7 @@ function pinapi_paypal_save(&$paypal) {
  * has been called before this function is called.
  *
  * @param
- *   the transaction ID from the transaction
- * @param
- *   the business email from the transaction
- * @param
- *   the amount from the transaction
- * @param
- *   the currency code from the transaction
+ *   the transaction IPN transaction POST data array
  * @param
  *   the PayPal transaction object from the database to verify against
  *
@@ -184,8 +178,7 @@ function pinapi_paypal_save(&$paypal) {
  *   TRUE if supplied transaction details match this site's pinapi_paypal
  *   configuration, FALSE otherwise.
  */
-function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency, $tstatus, &$paypal, $postdata) {
-
+function pinapi_paypal_verify_transaction($transaction, &$paypal) {
   $valid_config = FALSE;
 
   // @TODO: Verify that the following logic conditions are sufficient...
@@ -196,44 +189,66 @@ function pinapi_paypal_verify_transaction($tid, $tbusiness, $tamount, $tcurrency
   // Note:  cases 2 and 3 are really dependent only on matching config
   //        and user's tid's existence in the database
 
-  // Note: In all cases, transaction matching site configis a MUST, so check that first
+  // Note: In all cases, transaction matching site config is a MUST, so check that first
   $real_email = variable_get('pinapi_paypal_business_email', null);
   $real_amount = variable_get('pinapi_paypal_item_amount', null);
   $real_currency = variable_get('pinapi_paypal_currency_code', null);
 
-  // is submitted user id a valid user id?
+  // is submitted user id a valid user id in the database?
   $user_exists = (bool) user_load($_POST['custom']);
-  $valid_config = ($real_email == $tbusiness) && ($real_amount == $tamount) && ($real_currency == $tcurrency);
+  $valid_config = ($real_email == $transaction['receiver_email']) && ($real_amount == $transaction['mc_gross']) && ($real_currency == $transaction['mc_currency']);
 
   if (!$user_exists) {
-    watchdog('pinapi_paypal', "Invalid User ID submitted from PayPal IPN, uid: @uid" , array('@uid' => $postdata['custom']), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', "Invalid User ID submitted from PayPal IPN, uid: @uid" , array('@uid' => $transaction['custom']), WATCHDOG_ALERT);
     return FALSE;
   }
 
-  if ($valid_config) {
-    // handle case 1: new user
+  if ($valid_config & $user_exists) {
+    // handle new users
     if ( isset($paypal->is_new) && $paypal->is_new ) {
       return TRUE;
     }
-    // handle case 2: registered user tid update and case 3: registered user new tid
-    // @TODO: check this further
-    elseif ( isset($paypal->tid) ) {
-      // ensure that the status actually changes
-      if ($paypal->status_detail != pinapi_paypal_status_detail_code($tstatus)) {
-        return TRUE;
+    // handle existing users
+    else {
+      if ( isset($paypal->tid) ) {
+        // identify what status this transaction from db has
+        $prev_status_name = pinapi_paypal_status_name($paypal->status_detail);
+        if ($paypal->tid == $transaction['txn_id']) {
+          // don't allow duplicate completed IPNs: i.e. matching tid's and statuses are both "Completed"
+          if ( $transaction['payment_status'] == 'Completed' && $paypal->status == PINAPI_PAYPAL_COMPLETED ) {
+            watchdog('pinapi_paypal', "Duplicate 'Completed' IPN notification detected, Transaction ID: @tid" , array('@tid' => $transaction['txn_id']), WATCHDOG_ALERT);
+            return FALSE;
+          }
+          // log and disallow duplicate IPNs of any other type
+          elseif ($transaction['payment_status'] == $prev_status_name) {
+            watchdog('pinapi_paypal', "Duplicate '@statusname' IPN notification detected, Transaction ID: @tid" , array('@tid' => $transaction['txn_id'], '@statusname' => $prev_status_name), WATCHDOG_ALERT);
+            return FALSE;
+          }
+          // allow transaction updates: i.e. same tid, different status
+          else {
+            return TRUE;
+          }
+        }
+        else {
+          // otherwise, this transaction's details are valid
+          // should cover cases where tid's differ but
+          // transaction status changes have occurred
+          // ex. first transaction failed, new transaction submitted complete
+          return TRUE;
+        }
       }
     }
   }
   else {
     // log which transaction detail was invalid
-    if ($real_email != $tbusiness) {
-      watchdog('pinapi_paypal', "Invalid business email submitted, business: @tbusiness" , array('@tbusiness' => $tbusiness, WATCHDOG_ALERT));
+    if ($real_email != $transaction['business']) {
+      watchdog('pinapi_paypal', "Invalid business email submitted, business: @tbusiness", array('@tbusiness' => $transaction['business']), WATCHDOG_ALERT);
     }
-    if ($real_amount != $tamount) {
-      watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $tamount, WATCHDOG_ALERT));
+    if ($real_amount != $transaction['mc_gross']) {
+      watchdog('pinapi_paypal', "Invalid transaction amount detected, amount: @tamount", array('@tamount' => $transaction['mc_gross']), WATCHDOG_ALERT);
     }
-    if ($real_currency != $tcurrency) {
-      watchdog('pinapi_paypal', "Invalid currency code detected, code: @tcurrency", array('@tcurrency' => $tcurrency, WATCHDOG_ALERT));
+    if ($real_currency != $transaction['mc_currency']) {
+      watchdog('pinapi_paypal', "Invalid currency code detected, code: @tcurrency", array('@tcurrency' => $transaction['mc_currency']), WATCHDOG_ALERT);
     }
     return FALSE;
   }
@@ -270,9 +285,9 @@ function pinapi_paypal_notify() {
 
     // validate this transaction against the account we have on record and
     // this site's pinapi_paypal module configuration details
-    $valid_transaction = pinapi_paypal_verify_transaction($_POST['txn_id'], $_POST['business'], $_POST['mc_gross'], $_POST['mc_currency'], $_POST['payment_status'], $account, $_POST);
+    $valid_transaction = pinapi_paypal_verify_transaction($_POST, $account);
 
-    if ($user_exists && $valid_transaction) {
+    if ($valid_transaction) {
       // set up transaction details to be recorded/updated
       $account->uid = $_POST['custom'];
       $account->tid = $_POST['txn_id'];
@@ -291,23 +306,8 @@ function pinapi_paypal_notify() {
               // check if this is an update to a previously 'pending', 'failed', etc. transaction
               if ($account->status != PINAPI_PAYPAL_COMPLETED) {
                 // log what user's payment status was previously
-                switch ($account->status) {
-                  case PINAPI_PAYPAL_INCOMPLETE:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Incomplete' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
-                    break;
-
-                  case PINAPI_PAYPAL_PENDING:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Pending' to 'Complete' for uid: @uid. Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
-                    break;
-
-                  case PINAPI_PAYPAL_FAILED:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Failed' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
-                    break;
-
-                  default:
-                    watchdog('pinapi_paypal', t("Transaction record status was updated from 'Misc' to 'Complete' for uid: @uid.  Data: @data"), array('@uid' => $account->uid, '@data' => serialize($_POST)));
-                    break;
-                }
+                $prev_status = pinapi_paypal_status_name($account->status);
+                watchdog('pinapi_paypal', t("Transaction record status was updated from '@prevstatus' to 'Complete' for uid: @uid. Data: @data"), array('@prevstatus' => $prev_status, '@data' => serialize($_POST)));
                 // set the to-be-written transaction status to 'Completed'
                 $account->status = PINAPI_PAYPAL_COMPLETED;
                 $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
@@ -398,18 +398,10 @@ function pinapi_paypal_notify() {
         }
       }
     }
-    elseif (!$user_exists) {
-      watchdog('pinapi_paypal', t("User did not match any on database records. Submitted transaction data: '@data'"), array('@data' => serialize($_POST)),  WATCHDOG_WARNING);
-    }
-    else {
-      // transaction was verified with paypal, but was not validated
-      // according to this site's pinapi_paypal and db setup
-      watchdog('pinapi_paypal', t("PayPal transaction's details did not match db records or site configuration. User Exists? @user_exists. Submitted transaction data: '@data'"), array('@data' => serialize($_POST), '@user_exists' => $user_exists == 1 ? "TRUE" : "FALSE"),  WATCHDOG_WARNING);
-    }
     print '';
   }
   else {
-    watchdog('pinapi_paypal', t("Received INVALID transaction..."), array(), WATCHDOG );
+    watchdog('pinapi_paypal', t("Received INVALID transaction..."), array(), WATCHDOG_ALERT );
     // log this POST with a warning
     watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($_POST)), WATCHDOG_ALERT);
   }
