@@ -439,6 +439,14 @@ function pinapi_paypal_status_name($s) {
 
 /**
 * Returns the status detail code for a supplied PayPal payment_status
+*
+* @param
+*   the payment_status string from a PayPal IPN notification
+*
+* @return
+*   a status detail code
+*
+* @see also pinapi_paypal_status_detail_name which does the reverse of this function
 */
 function pinapi_paypal_status_detail_code($status) {
   switch($status) {
@@ -491,6 +499,70 @@ function pinapi_paypal_status_detail_code($status) {
       break;
   }
   return $code;
+}
+
+/**
+* Returns the status detail name for a supplied status_detail code
+*
+* @param
+*   a status_detail code
+*
+* @return
+*   a status detail name corresponding to the suppied status_detail code
+*
+* @see also pinapi_paypal_status_detail_code which does the reverse of this function
+*/
+function pinapi_paypal_status_detail_name($detail_code) {
+  switch($detail_code) {
+    case PINAPI_PAYPAL_STATUS_COMPLETED:
+      $status = 'Completed';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_PENDING:
+      $status = 'Pending';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_PROCESSED:
+      $status = 'Processed';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_CREATED:
+      $status = 'Created';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_CANCELED_REVERSAL:
+      $status = 'Canceled_Reversal';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_FAILED:
+      $status = 'Failed';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_DENIED:
+      $status = 'Denied';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_EXPIRED:
+      $status = 'Expired';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_REFUNDED:
+      $status = 'Refunded';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_REVERSED:
+      $status = 'Reversed';
+      break;
+
+    case PINAPI_PAYPAL_STATUS_VOIDED:
+      $status = 'Voided';
+      break;
+
+    default:
+      $status = FALSE;
+      break;
+  }
+  return $status;
 }
 
 /**
