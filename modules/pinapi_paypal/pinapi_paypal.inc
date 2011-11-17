@@ -194,7 +194,7 @@ function pinapi_paypal_verify_transaction($transaction, &$paypal) {
   $real_currency = variable_get('pinapi_paypal_currency_code', null);
 
   // is submitted user id a valid user id in the database?
-  $user_exists = (bool) user_load($_POST['custom']);
+  $user_exists = (bool) user_load($transaction['custom']);
   $valid_config = ($real_email == $transaction['receiver_email']) && ($real_amount == $transaction['mc_gross']) && ($real_currency == $transaction['mc_currency']);
 
   if (!$user_exists) {
@@ -572,51 +572,149 @@ function pinapi_paypal_status_detail_name($detail_code) {
 function pinapi_paypal_verify() {
   // generate a simulated POST using previously POSTed paypal data
   $account = pinapi_paypal_load(1);
-  $posted = json_decode($account->data, TRUE);
+  $transaction = json_decode($account->data, TRUE);
   $query = array();
   $query['cmd'] = '_notify-validate';
-  $query = array_merge($query, $posted);
+  $query = array_merge($query, $transaction);
   $data = drupal_query_string_encode($query);
 
   // send request to PayPal to verify transaction being referenced
   $environment = pinapi_paypal_environment();
   $response = drupal_http_request($environment['action'], array(), 'POST', $data, 3);
-  watchdog('pinapi_paypal', t("Verification response received: '@data'"), array('@data' => $response->data));
+  watchdog('pinapi_paypal', t("PayPal verification response received: '@data'"), array('@data' => $response->data));
 
   // only process this POST if verified by PayPal
   if ( $response->data == 'VERIFIED' ) {
-    watchdog('pinapi_paypal', t("Received verified transaction."));
-    if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Completed' ) {
-      if ( !$account ) {
-        // create a new transaction record
-        $account->status = PINAPI_PAYPAL_COMPLETED;
-        $account->data = serialize($posted);
-        pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("New transaction record created."));
-      }
-      else {
-        // update the user's record once payment is completed
-        $account->uid = $posted['custom'];
-        $account->status = PINAPI_PAYPAL_COMPLETED;
-        $account->data = serialize($posted);
-        pinapi_paypal_save($account);
-        watchdog('pinapi_paypal', t("Transaction record was updated for @uid"), array('@uid' => $account->uid));
-      }
+    watchdog('pinapi_paypal', t("Received VERIFIED transaction."));
+
+    // attempt to load the transaction details for this uid.
+    // Check if a transaction has been previously inserted into db for this user
+    // (ex. from a payment marked PENDING)
+    $account = pinapi_paypal_load($transaction['custom']);
+    if (!$account) {
+      $account->is_new = TRUE;
     }
-    else if ( isset($posted['payment_status']) && $posted['payment_status'] == 'Pending' ) {
-      // handle successful payments marked as 'PENDING' (ex. e-cheque)
-      $account->uid = $posted['uid'];
-      $account->status = PINAPI_PAYPAL_PENDING;
-      $account->data = serialize($posted);
-      pinapi_paypal_save($account);
-      watchdog('pinapi_paypal', t("Received PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($posted)),  WATCHDOG_WARNING);
+
+    // validate this transaction against the account we have on record and
+    // this site's pinapi_paypal module configuration details
+    $valid_transaction = pinapi_paypal_verify_transaction($transaction, $account);
+
+    if ($valid_transaction) {
+      // set up transaction details to be recorded/updated
+      $account->uid = $transaction['custom'];
+      $account->tid = $transaction['txn_id'];
+      $account->data = serialize($transaction);
+
+      if ( isset($transaction['payment_status']) ) {
+        switch ($transaction['payment_status']) {
+          case 'Completed':
+            if ( $account->is_new ) {
+              // set the to-be-written transaction status to 'Completed'
+              $account->status = PINAPI_PAYPAL_COMPLETED;
+              $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
+              watchdog('pinapi_paypal', t("New transaction record created. User ID: @uid, data: @data"), array('@uid' => $transaction['custom'], '@data' => serialize($transaction)));
+            }
+            else {
+              // check if this is an update to a previously 'pending', 'failed', etc. transaction
+              if ($account->status != PINAPI_PAYPAL_COMPLETED) {
+                // log what user's payment status was previously
+                $prev_status = pinapi_paypal_status_name($account->status);
+                watchdog('pinapi_paypal', t("Transaction record status was updated from '@prevstatus' to 'Complete' for uid: @uid. Data: @data"), array('@prevstatus' => $prev_status, '@data' => serialize($transaction)));
+                // set the to-be-written transaction status to 'Completed'
+                $account->status = PINAPI_PAYPAL_COMPLETED;
+                $account->status_detail = PINAPI_PAYPAL_STATUS_COMPLETED;
+              }
+              else {
+                // a duplicate 'Completed' payment submission was detected
+                // @TODO : should the old transaction data in db be updated to this new transaction?
+                watchdog('pinapi_paypal', t("Duplicate 'Complete' payment detected. New Transaction ID: @tid, uid: @uid, data: @data"), array('@tid' => $transaction['txn_id'], '@uid' => $account->uid, '@data' => serialize($transaction) ), WATCHDOG_WARNING);
+              }
+            }
+            break;
+
+          case 'Pending':
+            // handle successful payments marked as 'PENDING' (ex. e-cheque)
+            // log reason for pending status
+            $account->status = PINAPI_PAYPAL_PENDING;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_PENDING;
+            break;
+
+          case 'Processed':
+            $account->status = PINAPI_PAYPAL_PENDING;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_PROCESSED;
+            break;
+
+          case 'Created':
+            $account->status = PINAPI_PAYPAL_MISC;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_CREATED;
+            break;
+
+          case 'Canceled_Reversal':
+            $account->status = PINAPI_PAYPAL_MISC;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_CANCELED_REVERSAL;
+            break;
+
+          case 'Failed':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_FAILED;
+            break;
+
+          case 'Denied':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_DENIED;
+            break;
+
+          case 'Expired':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_EXPIRED;
+            break;
+
+          case 'Refunded':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_REFUNDED;
+            break;
+
+          case 'Reversed':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_REVERSED;
+            break;
+
+          case 'Voided':
+            $account->status = PINAPI_PAYPAL_FAILED;
+            $account->status_detail = PINAPI_PAYPAL_STATUS_VOIDED;
+            break;
+
+          default:
+            // handle any other cases where payment status was none of the above
+            watchdog('pinapi_paypal', t("PayPal payment cannot be processed because of status '@status': '@data'"), array('@data' => serialize($transaction), '@status' => $transaction['status']),  WATCHDOG_WARNING);
+            break;
+        }
+        // save the data only if a status update was set
+        // and log the status to be written to the db
+        if ( isset($account->status) ) {
+          // log the status update
+          $status_name = pinapi_paypal_status_name($account->status_detail);
+          if ($account->status !== 'COMPLETED') {
+            // identify in the log special PayPal payment statuses with extra variables: 'Pending' and 'Reversed'
+            if ($account->status == PINAPI_PAYPAL_PENDING) {
+              watchdog('pinapi_paypal', t("PayPal payment marked as PENDING because of '@reason': '@data'"), array('@data' => serialize($transaction), '@reason' => $transaction['pending_reason']),  WATCHDOG_WARNING);
+            }
+            elseif ($account->status == FAILED && $account->status_detail == PINAPI_PAYPAL_STATUS_REVERSED) {
+              watchdog('pinapi_paypal', t("PayPal payment marked as FAILED because PayPal returned status of '@status' for reason of '@reasoncode': @data"), array('@data' => serialize($transaction), '@status' => $transaction['payment_status'], '@reasoncode' => $transaction['reason_code']),  WATCHDOG_WARNING);
+            }
+            else {
+              watchdog('pinapi_paypal', t("PayPal payment marked as @statusname because PayPal returned status of '@status': @data"), array('@data' => serialize($transaction), '@statusname' => $status_name, '@status' => $transaction['payment_status']),  WATCHDOG_WARNING);
+            }
+          }
+          pinapi_paypal_save($account);
+        }
+      }
     }
     print '';
   }
   else {
+    watchdog('pinapi_paypal', t("Received INVALID transaction..."), array(), WATCHDOG_ALERT );
     // log this POST with a warning
-    watchdog('pinapi_paypal', t("Received invalid transaction..."));
-    // log this POST with a warning
-    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($posted)), WATCHDOG_ALERT);
+    watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($_POST)), WATCHDOG_ALERT);
   }
 }
