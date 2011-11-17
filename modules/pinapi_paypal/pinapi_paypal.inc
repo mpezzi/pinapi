@@ -427,7 +427,7 @@ function pinapi_paypal_status_name($s) {
     return "PENDING";
   }
   elseif ($s >= 100) {
-    return "COMPLETED";
+    return "COMPLETE";
   }
   elseif ($s == 0) {
     return "INCOMPLETE";
