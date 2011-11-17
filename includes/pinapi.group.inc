@@ -164,7 +164,7 @@ function pinapi_group_cache_code_calculate(&$group) {
  */
 function pinapi_group_cache_code_redeem($group) {
   if ( !isset($group->info['total']) ) {
-    pinapi_group_code_calculate($group);
+    pinapi_group_cache_code_calculate($group);
   }
 
   if ( !empty($group->info['total']) && $group->info['total'] > $group->info['used'] ) {
