@@ -17,7 +17,8 @@ function template_preprocess_pinapi_collect_block(&$vars) {
   $redeemed = isset($account->pinapi['redeemed'][$group->gid]) ? $account->pinapi['redeemed'][$group->gid] : 0;
 
   // Display status of how many codes were redeemed and how many are needed.
-  $vars['content'] = $redeemed . '/' . variable_get('pinapi_collect_block_required', 15);
+  //$vars['content'] = $redeemed . '/' . variable_get('pinapi_collect_block_required', 15);
+  $vars['content'] = '';
 
   // If we have enough pins, display a Yay! messages! Hurray!
   // @TODO: Invoke hook to allow modules to add to this, or we can modify this using a preprocess hook.
