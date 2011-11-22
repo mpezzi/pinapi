@@ -11,9 +11,9 @@
  */
 function pinapi_collect_theme() {
   return array(
-    'pinapi_collect_block' => array(
-      'arguments' => array('account' => NULL, 'group' => NULL),
-      'template' => 'block-pinapi-collect',
+    'pinapi_collect' => array(
+      'arguments' => array('group' => NULL, 'account' => NULL),
+      'template' => 'pinapi-collect',
       'path' => drupal_get_path('module', 'pinapi_collect') . '/theme',
       'file' => 'theme.inc',
     ),
@@ -27,47 +27,39 @@ function pinapi_collect_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
 
     case 'list':
-      return array(
-        array('info' => t('Pin API Collect')),
-      );
+      $blocks = array();
+      foreach ( pinapi_group_get_groups() as $group ) {
+        $blocks[$group->gid] = array(
+          'info' => t('Pin API Collect - !name', array('!name' => $group->name)),
+        );
+      }
+      return $blocks;
 
     case 'configure':
       if ( user_access('administer pin api') ) {
-        $groups = array('' => t('- None -'));
-        foreach ( pinapi_group_get_groups() as $group ) {
-          $groups[$group->gid] = $group->name;
-        }
-        $form['pinapi_collect_gid'] = array(
-          '#type' => 'select',
-          '#title' => t('Group'),
-          '#options' => $groups,
-          '#default_value' => variable_get('pinapi_collect_gid', ''),
-        );
-        $form['pinapi_collect_block_required'] = array(
+        $form['pinapi_collect_' . $delta . '_codes_needed'] = array(
           '#type' => 'textfield',
-          '#title' => t('Required number of PINs'),
-          '#description' => t('Number of PINs required before user is able to order a prize.'),
+          '#title' => t('Required number of codes'),
+          '#description' => t('Number of codes required.'),
           '#size' => 40,
           '#maxlength' => 3,
-          '#default_value' => variable_get('pinapi_collect_block_required', 15),
+          '#default_value' => variable_get('pinapi_collect_' . $delta . '_codes_needed', 15),
         );
       }
       return $form;
 
     case 'save':
-      if ( $delta == 0 ) {
-        variable_set('pinapi_collect_gid', $edit['pinapi_collect_gid']);
-        variable_set('pinapi_collect_block_required', $edit['pinapi_collect_block_required']);
+      if ( user_access('administer pin api') ) {
+        variable_set('pinapi_collect_' . $delta . '_codes_needed', $edit['pinapi_collect_' . $delta . '_codes_needed']);
       }
       break;
 
     case 'view':
       $block = array();
-      if ( $delta == 0 && user_access('redeem codes') && variable_get('pinapi_collect_gid', '') ) {
-        $group = pinapi_group_load(variable_get('pinapi_collect_gid', 0));
-        $user = user_load($GLOBALS['user']->uid);
+      if ( user_access('redeem codes') && $group = pinapi_group_load($delta) ) {
+        $account = user_load($GLOBALS['user']->uid);
         $block['subject'] = t('Pin API Collect');
-        $block['content'] = theme('pinapi_collect_block', $user, $group);
+        $block['content'] = theme('pinapi_collect', $group, $account);
       }
       return $block;
   }
