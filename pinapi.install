@@ -83,7 +83,7 @@ function pinapi_schema() {
         'default' => 1),
     ),
     'indexes' => array(
-      'code' => array('code'),
+      'code_gid_status' => array('code', 'gid', 'status'),
     ),
     'primary key' => array('cid'),
   );

@@ -184,7 +184,7 @@ function pinapi_code_reset($gid) {
   module_invoke_all('pinapi_code_reset', $gid);
 
   // Reset codes.
-  db_query("UPDATE {pinapi_code} SET status = 1, quantity = 1 WHERE gid = %d", $gid);
+  db_query("UPDATE {pinapi_code} SET status = 1, quantity = 1 WHERE gid = %d AND status = 0", $gid);
 
   // Remove all redeem code information.
   db_query("DELETE FROM {pinapi_code_redeemed} WHERE gid = %d", $gid);
