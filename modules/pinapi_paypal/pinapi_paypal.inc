@@ -190,7 +190,26 @@ function pinapi_paypal_verify_transaction($transaction, &$paypal) {
 
   // Note: In all cases, transaction matching site config is a MUST, so check that first
   $real_email = variable_get('pinapi_paypal_business_email', null);
-  $real_amount = variable_get('pinapi_paypal_item_amount', null);
+
+  // determine what the correct amount is based on the site's current offer
+  $all_items = variable_get('pinapi_paypal_items');
+  $offer = variable_get('pinapi_paypal_offer', 1);
+  switch($offer) {
+    case PINAPI_PAYPAL_FREE_TOASTER:
+      $items = array_slice($all_items, 0, 1);
+      break;
+    case PINAPI_PAYPAL_ALTERNATE_OFFER:
+      $items = array_slice($all_items, 0, 2);
+      break;
+  }
+
+  // calculate total cost
+  $real_amount = 0;
+  foreach ($items as $item) {
+    $real_amount += (int)$item['amount'];
+  }
+
+  //$real_amount = variable_get('pinapi_paypal_item_amount', null);
   $real_currency = variable_get('pinapi_paypal_currency_code', null);
 
   // is submitted user id a valid user id in the database?
@@ -717,4 +736,55 @@ function pinapi_paypal_verify() {
     // log this POST with a warning
     watchdog('pinapi_paypal', t("Flagged suspicious PayPal submission: '@data'"), array('@data' => serialize($_POST)), WATCHDOG_ALERT);
   }
+}
+
+/**
+ * Sets values for items in the system
+ */
+function pinapi_paypal_set_items() {
+  $items = array(
+    array(
+      'name' => 'Toaster',
+      'amount' => '30.00',
+      'quantity' => '1',
+    ),
+    array(
+      'name' => 'Shipping',
+      'amount' => '20.00',
+      'quantity' => '1',
+    )
+  );
+  variable_set('pinapi_paypal_items', $items);
+}
+
+/**
+ * Generates PayPal payment form elements from an array of items
+ *
+ * @param
+ *   an array of items
+ * @param
+ *   the PayPal form to which elements need to be added
+ * @param
+ *   the number of items to return
+ *
+ * @return
+ *   the PayPal form with item elements added
+ */
+function pinapi_paypal_generate_form_items($items, &$form, $limit = null) {
+  $count = $limit || count($items);
+  for ($i = 0; $i < count($items); $i++)  {
+    $form['item_name_' . ($i+1)] = array(
+      '#type' => 'hidden',
+      '#value' => $items[$i]['name'],
+    );
+    $form['amount_' . ($i+1)] = array(
+      '#type' => 'hidden',
+      '#value' => $items[$i]['amount'],
+    );
+    $form['quantity_' . ($i+1)] = array(
+      '#type' => 'hidden',
+      '#value' => $items[$i]['quantity'],
+    );
+  }
+  return $form;
 }

@@ -90,10 +90,10 @@ function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
  * Displays a 'buy-it-now' type form for PayPal
  */
 function pinapi_paypal_form() {
+  define('PINAPI_PAYPAL_FREE_TOASTER', '1');
+  define('PINAPI_PAYPAL_ALTERNATIVE_OFFER', '2');
   $environment = pinapi_paypal_environment();
-  $free_toaster = FALSE;
-  $shipping_cost = "20.00";
-  $toaster_cost = "30.00";
+  $offer = variable_get('pinapi_paypal_offer', PINAPI_PAYPAL_FREE_TOASTER);
   
   $form['#action'] = $environment['action'];
   $form['#method'] = 'get';
@@ -110,46 +110,19 @@ function pinapi_paypal_form() {
     '#value' => variable_get('pinapi_paypal_business_email', ''),
   );
 
-  if ($free_toaster) {
-    $form['item_name_1'] = array(
-      '#type' => 'hidden',
-      '#value' => 'Shipping'
-    );
-    $form['amount_1'] = array(
-      '#type' => 'hidden',
-      '#value' => $shipping_cost,
-    );
-    $form['quantity_1'] = array(
-      '#type' => 'hidden',
-      '#value' => '1',
-    );
+  // determine how many items need to be added to the form
+  // based on the current offer set in pinapi paypal
+  // get the names/costs of the items from the database
+  $all_items = variable_get('pinapi_paypal_items', null);
+  if ($offer == PINAPI_PAYPAL_FREE_TOASTER) {
+    $items = array_slice($all_items, 0, 1);
+    pinapi_paypal_generate_form_items($items, $form);
   }
   else {
-    $form['item_name_1'] = array(
-      '#type' => 'hidden',
-      '#value' => 'Toaster',
-    );
-    $form['amount_1'] = array(
-      '#type' => 'hidden',
-      '#value' => $toaster_cost,
-    );
-    $form['quantity_1'] = array(
-      '#type' => 'hidden',
-      '#value' => '1',
-    );
-    $form['item_name_2'] = array(
-      '#type' => 'hidden',
-      '#value' => 'Shipping',
-    );
-    $form['amount_2'] = array(
-      '#type' => 'hidden',
-      '#value' => $shipping_cost,
-    );
-    $form['quantity_2'] = array(
-      '#type' => 'hidden',
-      '#value' => '1',
-    );
+    $items = array_slice($all_items, 0, 2);
+    pinapi_paypal_generate_form_items($items, $form);
   }
+
   $form['shipping'] = array(
     '#type' => 'hidden',
     '#value' => variable_get('pinapi_paypal_shipping_rate', ''),
