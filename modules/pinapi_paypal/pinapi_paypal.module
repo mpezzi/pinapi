@@ -91,33 +91,63 @@ function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
  */
 function pinapi_paypal_form() {
   $environment = pinapi_paypal_environment();
+  $free_toaster = FALSE;
+  $shipping_cost = "20.00";
+  $toaster_cost = "30.00";
   
   $form['#action'] = $environment['action'];
   $form['#method'] = 'get';
   $form['cmd'] = array(
     '#type' => 'hidden',
-    '#value' => '_xclick',
+    '#value' => '_cart',
+  );
+  $form['upload'] = array(
+    '#type' => 'hidden',
+    '#value' => '1',
   );
   $form['business'] = array(
     '#type' => 'hidden',
     '#value' => variable_get('pinapi_paypal_business_email', ''),
-  );  
-  $form['item_name'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_item_name', ''),
   );
-  $item_amount = variable_get('pinapi_paypal_item_amount', null);
-  if ($item_amount) {
-    $form['amount'] = array(
+
+  if ($free_toaster) {
+    $form['item_name_1'] = array(
       '#type' => 'hidden',
-      '#value' => $item_amount,
+      '#value' => 'Shipping'
+    );
+    $form['amount_1'] = array(
+      '#type' => 'hidden',
+      '#value' => $shipping_cost,
+    );
+    $form['quantity_1'] = array(
+      '#type' => 'hidden',
+      '#value' => '1',
     );
   }
-  $item_number = variable_get('pinapi_paypal_item_number', null);
-  if ($item_number) {
-    $form['item_number'] = array(
+  else {
+    $form['item_name_1'] = array(
       '#type' => 'hidden',
-      '#value' => $item_number,
+      '#value' => 'Toaster',
+    );
+    $form['amount_1'] = array(
+      '#type' => 'hidden',
+      '#value' => $toaster_cost,
+    );
+    $form['quantity_1'] = array(
+      '#type' => 'hidden',
+      '#value' => '1',
+    );
+    $form['item_name_2'] = array(
+      '#type' => 'hidden',
+      '#value' => 'Shipping',
+    );
+    $form['amount_2'] = array(
+      '#type' => 'hidden',
+      '#value' => $shipping_cost,
+    );
+    $form['quantity_2'] = array(
+      '#type' => 'hidden',
+      '#value' => '1',
     );
   }
   $form['shipping'] = array(
