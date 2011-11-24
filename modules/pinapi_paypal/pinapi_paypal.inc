@@ -192,7 +192,7 @@ function pinapi_paypal_verify_transaction($transaction, &$paypal) {
   $real_email = variable_get('pinapi_paypal_business_email', null);
 
   // determine what the correct amount is based on the site's current offer
-  $all_items = variable_get('pinapi_paypal_items');
+  $all_items = variable_get('pinapi_paypal_items', null);
   $offer = variable_get('pinapi_paypal_offer', 1);
   switch($offer) {
     case PINAPI_PAYPAL_FREE_TOASTER:
@@ -206,7 +206,7 @@ function pinapi_paypal_verify_transaction($transaction, &$paypal) {
   // calculate total cost
   $real_amount = 0;
   foreach ($items as $item) {
-    $real_amount += (int)$item['amount'];
+    $real_amount += $item['amount'];
   }
 
   //$real_amount = variable_get('pinapi_paypal_item_amount', null);
@@ -745,13 +745,13 @@ function pinapi_paypal_set_items() {
   $items = array(
     array(
       'name' => 'Toaster',
-      'amount' => '30.00',
-      'quantity' => '1',
+      'amount' => 30.00,
+      'quantity' => 1,
     ),
     array(
       'name' => 'Shipping',
-      'amount' => '20.00',
-      'quantity' => '1',
+      'amount' => 20.00,
+      'quantity' => 1,
     )
   );
   variable_set('pinapi_paypal_items', $items);

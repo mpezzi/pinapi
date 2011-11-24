@@ -17,6 +17,12 @@ define('PINAPI_PAYPAL_ENV_PRODUCTION', 2);
  */
 define('PINAPI_PAYPAL_SHIPPING_REQUIRED', 2);   
 
+/**
+ * Constants used for tracking offers
+ */
+define('PINAPI_PAYPAL_FREE_TOASTER', 1);
+define('PINAPI_PAYPAL_ALTERNATIVE_OFFER', 2);
+
 // include required functions for populating the pinapi paypal form
 require_once(dirname(__FILE__) . '/pinapi_paypal.inc');
 
@@ -90,8 +96,6 @@ function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
  * Displays a 'buy-it-now' type form for PayPal
  */
 function pinapi_paypal_form() {
-  define('PINAPI_PAYPAL_FREE_TOASTER', '1');
-  define('PINAPI_PAYPAL_ALTERNATIVE_OFFER', '2');
   $environment = pinapi_paypal_environment();
   $offer = variable_get('pinapi_paypal_offer', PINAPI_PAYPAL_FREE_TOASTER);
   
