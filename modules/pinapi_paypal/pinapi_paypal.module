@@ -31,13 +31,18 @@ function pinapi_paypal_menu() {
  */
 function pinapi_paypal_view() {
   // Extra markup or form elements.
-  $form['markup'] = array(
+  $form['test'] = array(
+    '#type' => 'item',
     '#value' => 'test',
   );
 
   // PayPal hidden keys and values.
   $data = array(
-    'test' => 'yes',
+    'items' => array(
+      array('name' => 'test', 'amount' => 9.25, 'quantity' => 1),
+      array('name' => 'test2', 'amount' => 18.25, 'quantity' => 1),
+    ),
+    'setting' => 'value',
   );
 
   return drupal_get_form('pinapi_paypal_payment_form', $form, $data);
