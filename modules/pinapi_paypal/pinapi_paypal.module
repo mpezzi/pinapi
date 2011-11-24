@@ -3,6 +3,8 @@
 /**
  * @file
  * Provides simple PayPal integration.
+ * @see http://www.micahcarrick.com/paypal-ipn-with-php.html
+ * @see https://github.com/Quixotix/PHP-PayPal-IPN
  */
 
 require_once dirname(__FILE__) . '/pinapi_paypal.inc';
