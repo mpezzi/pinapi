@@ -49,16 +49,19 @@ function pinapi_paypal_view() {
 function pinapi_paypal_ipn() {
   module_load_include('php', 'pinapi_paypal', 'lib/ipnlistener');
 
+  // Get our post data.
+  $data = $_POST;
+
   // Load PHP-Paypal-IPN library.
   $ipn = new IpnListener();
   $ipn->use_sandbox = variable_get('pinapi_paypal_sandbox', TRUE);
 
-  // Debug IPN.
+  // Debug the data being processed.
   if ( variable_get('pinapi_paypal_debug', FALSE) ) {
-    watchdog('pinapi_paypal', 'IPN Debug ' . json_encode($_POST));
+    watchdog('pinapi_paypal', 'IPN Debug ' . json_encode($data));
   }
 
-  // Try to verify the IPN and catch and log errors.
+  // Try to verify the IPN, catch and log errors.
   try {
     $ipn->requirePostMethod();
     $verified = $ipn->processIpn();
@@ -69,39 +72,44 @@ function pinapi_paypal_ipn() {
   // IPN is verified, continue with data checks.
   if ( $verified ) {
 
-    // Load current transaction if it already exists.
-    $order = pinapi_paypal_order_load($_POST['txn_id']);
+    // Load current order transaction, will be set to FALSE if it doesn't already exist.
+    $order = pinapi_paypal_order_load($data['txn_id']);
 
     // Check for fraudulent transaction attempts.
-    $errors = array();
+    $ftas = array();
 
-    // Ensure receiver email is ours.
-    if ( $_POST['receiver_email'] != variable_get('pinapi_paypal_receiver_email', '') ) {
-      $error['receiver_email'] = t('Merchant account is not same as systems.');
+    // Fraudulent transaction attempt: Ensure receiver email is ours.
+    if ( $data['receiver_email'] != variable_get('pinapi_paypal_receiver_email', '') ) {
+      $ftas['receiver_email'] = t('Merchant account is not same as systems.');
     }
 
-    if ( count($errors) == 0 ) {
+    // If there are no fraudulent transaction attempts save or update this order.
+    if ( count($ftas) == 0 ) {
 
-      // Order doesn't exists yet set default settings.
+      // Order doesn't exists yet, set some initial fields.
       if ( !$order ) {
         $order = (object) array(
-          'txnid' => $_POST['txn_id'],
+          'txnid' => $data['txn_id'],
           'uid' => 1,
-          'payer_email' => $_POST['payer_email'],
-          'mc_gross' => $_POST['mc_gross'],
+          'payer_email' => $data['payer_email'],
+          'mc_gross' => $data['mc_gross'],
         );
       }
 
       // Update payment status and save order.
-      $order->payment_status = $_POST['payment_status'];
+      $order->payment_status = $data['payment_status'];
+
+      // Save this order transaction.
       pinapi_paypal_order_save($order);
 
       watchdog('pinapi_paypal', 'IPN Verified ' . $ipn->getTextReport());
     }
+    // Fraudulent activity has been detected. Log as critical.
     else {
-      watchdog('pinapi_paypal', 'IPN Error ' . implode(', ', $errors), array(), WATCHDOG_WARNING);
+      watchdog('pinapi_paypal', 'IPN Fraudulent Activity Detected (' . implode(', ', $ftas) . ')', array(), WATCHDOG_CRITICAL);
     }
   }
+  // IPN is invalid.
   else {
     watchdog('pinapi_paypal', 'IPN Invalid ' . $ipn->getTextReport(), array(), WATCHDOG_WARNING);
   }
