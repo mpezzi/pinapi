@@ -56,8 +56,41 @@ function pinapi_paypal_ipn() {
     watchdog('pinapi_paypal', 'IPN Error ' . $e->getMessage(), array(), WATCHDOG_ERROR);
   }
 
+  // IPN is verified, continue with data checks.
   if ( $verified ) {
-    watchdog('pinapi_paypal', 'IPN Verified ' . $ipn->getTextReport());
+
+    // Load current transaction if it already exists.
+    $order = pinapi_paypal_order_load($_POST['txn_id']);
+
+    // Check for fraudulent transaction attempts.
+    $errors = array();
+
+    // Ensure receiver email is ours.
+    if ( $_POST['receiver_email'] != variable_get('pinapi_paypal_receiver_email', '') ) {
+      $error['receiver_email'] = t('Merchant account is not same as systems.');
+    }
+
+    if ( count($errors) == 0 ) {
+
+      // Order doesn't exists yet set default settings.
+      if ( !$order ) {
+        $order = (object) array(
+          'txnid' => $_POST['txn_id'],
+          'uid' => 1,
+          'payer_email' => $_POST['payer_email'],
+          'mc_gross' => $_POST['mc_gross'],
+        );
+      }
+
+      // Update payment status and save order.
+      $order->payment_status = $_POST['payment_status'];
+      pinapi_paypal_order_save($order);
+
+      watchdog('pinapi_paypal', 'IPN Verified ' . $ipn->getTextReport());
+    }
+    else {
+      watchdog('pinapi_paypal', 'IPN Error ' . implode(', ', $errors), array(), WATCHDOG_WARNING);
+    }
   }
   else {
     watchdog('pinapi_paypal', 'IPN Invalid ' . $ipn->getTextReport(), array(), WATCHDOG_WARNING);
