@@ -104,7 +104,7 @@ function pinapi_paypal_payment_form($form_state, $form = array(), $data = array(
  */
 function pinapi_paypal_status_code($status) {
   switch ( $status ) {
-    case 'Complete':
+    case 'Completed':
     case 'Processed':
     case 'Canceled_Reversal':
       return PINAPI_PAYPAL_COMPLETE;
