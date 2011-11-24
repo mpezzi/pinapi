@@ -1,55 +1,46 @@
-<?php 
+<?php
+
+/**
+ * @file
+ * Provides database schema for pinapi_paypal.module
+ */
+
 
 /**
  * Implements hook_schema().
  */
 function pinapi_paypal_schema() {
-  $schema['pinapi_paypal'] = array(
-    'description' => t('Stores PayPal information.'),
+  $schema['pinapi_paypal_order'] = array(
+    'description' => t('Stores PayPal Order information.'),
     'fields' => array(
+      'oid' => array(
+        'type' => 'serial',
+        'not null' => TRUE),
+      'txnid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE),
       'uid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0),
-      'status' => array(
-        'type' => 'int', 
-        'not null' => TRUE),
-      'status_detail' => array(
-        'type' => 'int',
-        'not null' => FALSE),
-      'tid' => array(
+      'payer_email' => array(
         'type' => 'varchar',
-        'length' => '32',
+        'length' => '72',
         'not null' => TRUE),
-      'data' => array(
-        'type' => 'text',
-        'not null' => FALSE,
-        'size' => 'big',
-        'description' => 'A serialized array of PayPal transaction notification data',
-      ),
+      'mc_gross' => array(
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0),
     ),
-    'primary key' => array('uid'),
+    'primary key' => array('oid'),
+    'indexes' => array(
+      'txnid' => array('txnid'),
+      'uid' => array('uid'),
+    ),
   );
-  $schema['pinapi_paypal_transactions'] = array(
-    'description' => t("Stores Users' PayPal transactions."),
-    'fields' => array(
-      'tid' => array(
-        'type' => 'varchar',
-        'length' => '32',
-        'not null' => TRUE),
-      'uid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE),
-      'timestamp' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      ),
-    'primary_key' => array('tid'),
-  );
+
   return $schema;
 }
 
@@ -72,5 +63,5 @@ function pinapi_paypal_uninstall() {
     variable_del($row->name);
   }
 
-  drupal_set_message(t('PinAPI Paypal has been uninstalled.'));
+  drupal_set_message(t('PinAPI PayPal has been uninstalled.'));
 }
