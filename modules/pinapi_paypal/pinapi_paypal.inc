@@ -36,14 +36,20 @@ function pinapi_paypal_order_save($order) {
  * Builds a PayPal payment form.
  */
 function pinapi_paypal_payment_form($form_state, $form = array(), $data = array()) {
+  global $user;
+
   // Set form attributes required by PayPal.
   $form['#method'] = 'get';
   $form['#action'] = variable_get('pinapi_paypal_sandbox', TRUE) ?
     'https://www.sandbox.paypal.com/cgi-bin/webscr' :
     'https://www.paypal.com/cgi-bin/webscr';
 
+  $invoice = db_result(db_query("SELECT COUNT(*) FROM {pinapi_paypal_order}"));
+  $invoice += 1000;
+
   // Set any default settings if they were not set already.
   $data += array(
+    'invoice' => $invoice . '-' . $user->uid,
     'business' => variable_get('pinapi_paypal_receiver_email', ''),
     'currency_code' => variable_get('pinapi_paypal_currency_code', ''),
     'lc' => pinapi_paypal_lc(),
