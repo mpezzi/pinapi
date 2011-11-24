@@ -46,7 +46,7 @@ function pinapi_paypal_payment_form($form_state, $form = array(), $data = array(
   $data += array(
     'business' => variable_get('pinapi_paypal_receiver_email', ''),
     'currency_code' => variable_get('pinapi_paypal_currency_code', ''),
-    'lc' => variable_get('pinapi_paypal_language', ''),
+    'lc' => pinapi_paypal_lc(),
     'cancel_return' => url('<front>', array('absolute' => TRUE)),
     'notify_url' => url('pinapi/paypal/ipn', array('absolute' => TRUE)),
     'return' => url('<front>', array('absolute' => TRUE)),
@@ -115,4 +115,24 @@ function pinapi_paypal_status_code($status) {
     default:
       return PINAPI_PAYPAL_FAILED;
   }
+}
+
+/**
+ * Define a PayPal locale
+ */
+function pinapi_paypal_lc($lang = NULL) {
+  global $language;
+
+  // if a language was not sent, use current language
+  if ( is_null($lang) ) {
+    $lang = $language->language;
+  }
+
+  $paypal_lc = array(
+    'en' => 'CA',
+    'fr' => 'FR',
+  );
+
+  // if paypal locale exists, return it, otherwise return English as default
+  return isset($paypal_lc[$lang]) ? $paypal_lc[$lang] : $paypal_lc['en'];
 }
