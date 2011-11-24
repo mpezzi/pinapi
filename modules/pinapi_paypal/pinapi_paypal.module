@@ -30,7 +30,17 @@ function pinapi_paypal_menu() {
  * Page Callback: Paypal View.
  */
 function pinapi_paypal_view() {
-  
+  // Extra markup or form elements.
+  $form['markup'] = array(
+    '#value' => 'test',
+  );
+
+  // PayPal hidden keys and values.
+  $data = array(
+    'test' => 'yes',
+  );
+
+  return drupal_get_form('pinapi_paypal_payment_form', $form, $data);
 }
 
 /**
