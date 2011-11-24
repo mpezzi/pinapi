@@ -25,6 +25,16 @@ function pinapi_paypal_menu() {
       'access arguments' => array('access content'),
       'type' => MENU_CALLBACK,
     ),
+    'admin/settings/pinapi/paypal' => array(
+      'title' => 'Paypal',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('pinapi_paypal_settings_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer pin api'),
+      'file' => 'pinapi_paypal.admin.inc',
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 15,
+    ),
   );
 }
 
@@ -103,8 +113,9 @@ function pinapi_paypal_ipn() {
         );
       }
 
-      // Update payment status and save order.
-      $order->payment_status = $data['payment_status'];
+      // Update payment status and time 'updated' and save order.
+      $order->payment_status = pinapi_paypal_status_code($data['payment_status']);
+      $order->updated = time();
 
       // Save this order transaction.
       pinapi_paypal_order_save($order);

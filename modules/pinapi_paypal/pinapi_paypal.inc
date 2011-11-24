@@ -5,6 +5,13 @@
  * Provide internal functions for pinapi_paypal.module
  */
 
+/**
+ * Simplified PINAPI Paypal user PayPal payment status constants
+ */
+define('PINAPI_PAYPAL_INCOMPLETE', 0);  // user has not initiated any PayPal payment
+define('PINAPI_PAYPAL_COMPLETE', 1);    // user has completed a PayPal payment
+define('PINAPI_PAYPAL_PENDING', 2);     // user has a pending PayPal payment
+define('PINAPI_PAYPAL_FAILED', 3);      // user's PayPal transaction returned status such as 'Denied', 'Failed', 'Expired', etc.
 
 /**
  * Load a PayPal Order.
@@ -84,4 +91,28 @@ function pinapi_paypal_payment_form($form_state, $form = array(), $data = array(
   );
 
   return $form;
+}
+
+/**
+ * Returns a status code based on a supplied PayPal payment status
+ *
+ * @param
+ *   a payment_status string from a PayPal IPN
+ *
+ * @return
+ *  a status code
+ */
+function pinapi_paypal_status_code($status) {
+  switch ( $status ) {
+    case 'Complete':
+    case 'Processed':
+    case 'Canceled_Reversal':
+      return PINAPI_PAYPAL_COMPLETE;
+
+    case 'Pending':
+      return PINAPI_PAYPAL_PENDING;
+
+    default:
+      return PINAPI_PAYPAL_FAILED;
+  }
 }
