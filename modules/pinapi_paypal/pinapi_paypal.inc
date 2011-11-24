@@ -51,15 +51,17 @@ function pinapi_paypal_payment_form($form_state, $form = array(), $data = array(
 
   // Process shopping cart items and remove from data array.
   foreach ( $data['items'] as $key => $item ) {
-    $form['pinapi_paypal']['item_name_' . $key] = array(
+    $i = $key + 1;
+
+    $form['pinapi_paypal']['item_name_' . $i] = array(
       '#type' => 'hidden',
       '#value' => $item['name'],
     );
-    $form['pinapi_paypal']['amount_' . $key] = array(
+    $form['pinapi_paypal']['amount_' . $i] = array(
       '#type' => 'hidden',
       '#value' => $item['amount'],
     );
-    $form['pinapi_paypal']['quantity_' . $key] = array(
+    $form['pinapi_paypal']['quantity_' . $i] = array(
       '#type' => 'hidden',
       '#value' => $item['quantity'],
     );
