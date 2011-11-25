@@ -1,0 +1,76 @@
+<?php 
+
+/**
+ * Implements hook_schema().
+ */
+function pinapi_paypal_schema() {
+  $schema['pinapi_paypal'] = array(
+    'description' => t('Stores PayPal information.'),
+    'fields' => array(
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'status' => array(
+        'type' => 'int', 
+        'not null' => TRUE),
+      'status_detail' => array(
+        'type' => 'int',
+        'not null' => FALSE),
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE),
+      'data' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'A serialized array of PayPal transaction notification data',
+      ),
+    ),
+    'primary key' => array('uid'),
+  );
+  $schema['pinapi_paypal_transactions'] = array(
+    'description' => t("Stores Users' PayPal transactions."),
+    'fields' => array(
+      'tid' => array(
+        'type' => 'varchar',
+        'length' => '32',
+        'not null' => TRUE),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE),
+      'timestamp' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      ),
+    'primary_key' => array('tid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function pinapi_paypal_install() {
+  drupal_install_schema('pinapi_paypal');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pinapi_paypal_uninstall() {
+  drupal_uninstall_schema('pinapi_paypal');
+
+  // Remove pinapi variables.
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'pinapi_paypal_%'");
+  while ( $row = db_fetch_object($result) ) {
+    variable_del($row->name);
+  }
+
+  drupal_set_message(t('PinAPI Paypal has been uninstalled.'));
+}
