@@ -3,28 +3,28 @@
 /**
  * @file
  * Provides simple PayPal integration.
+ * @see http://www.micahcarrick.com/paypal-ipn-with-php.html
+ * @see https://github.com/Quixotix/PHP-PayPal-IPN
  */
 
-/**
- * PinAPI PayPal environment constants
- */
-define('PINAPI_PAYPAL_ENV_DEVELOPMENT', 1);
-define('PINAPI_PAYPAL_ENV_PRODUCTION', 2);
+require_once dirname(__FILE__) . '/pinapi_paypal.inc';
 
 /**
- * Pinapi PayPal constants required by PayPal
- * @see https://merchant.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_html_Appx_websitestandard_htmlvariables
- */
-define('PINAPI_PAYPAL_SHIPPING_REQUIRED', 2);   
-
-// include required functions for populating the pinapi paypal form
-require_once(dirname(__FILE__) . '/pinapi_paypal.inc');
-
-/**
- * Implements hook_menu()
+ * Implements hook_menu().
  */
 function pinapi_paypal_menu() {
   return array(
+    'pinapi/paypal' => array(
+      'title' => 'Pinapi Paypal',
+      'page callback' => 'pinapi_paypal_view',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    ),
+    'pinapi/paypal/ipn' => array(
+      'page callback' => 'pinapi_paypal_ipn',
+      'access arguments' => array('access content'),
+      'type' => MENU_CALLBACK,
+    ),
     'admin/settings/pinapi/paypal' => array(
       'title' => 'Paypal',
       'page callback' => 'drupal_get_form',
@@ -35,38 +35,6 @@ function pinapi_paypal_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 15,
     ),
-    'pinapi/paypal' => array(
-      'title' => 'Pinapi Paypal',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('pinapi_paypal_form'),
-      'access callback' => 'user_access',
-      'access arguments' => array('access content'),
-      'type' => MENU_CALLBACK,
-    ),
-    'pinapi/paypal/notify' => array(
-      'page callback' => 'pinapi_paypal_notify',
-      'access arguments' => array('access content'),
-      'type' => MENU_CALLBACK,
-    ),
-    'pinapi/paypal/verify' => array(
-      'page callback' => 'pinapi_paypal_verify',
-      'access arguments' => array('access content'),
-      'type' => MENU_CALLBACK,
-    ),
-  );
-}
-
-/**
- * Implements hook_theme().
- */
-function xpinapi_paypal_theme() {
-  return array(
-    'pinapi_paypal' => array(
-      'arguments' => array('paypal' => NULL),
-      'template' => 'pinapi-paypal',
-      'path' => drupal_get_path('module', 'pinapi_paypal') . '/theme',
-      'file' => 'theme.inc',
-    ),
   );
 }
 
@@ -74,100 +42,110 @@ function xpinapi_paypal_theme() {
  * Implements hook_user().
  */
 function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
+  // retrieve this user's most recent paypal payment_status
   if ( $op == 'load' && user_access('redeem codes') ) {
-    $paypal_status = db_result(db_query("SELECT status FROM {pinapi_paypal} WHERE uid = %d", $account->uid));
-
-    if (!$paypal_status) {
-      $account->pinapi['paypal'] = PINAPI_PAYPAL_INCOMPLETE;
-    }
-    else {
-      $account->pinapi['paypal'] = $paypal_status;
-    }
+    $account->pinapi['paypal'] = db_result(db_query("SELECT payment_status FROM {pinapi_paypal_order} WHERE uid = %d ORDER BY updated DESC LIMIT 1", $account->uid));
   }
 }
 
 /**
- * Displays a 'buy-it-now' type form for PayPal
+ * Page Callback: Paypal View.
  */
-function pinapi_paypal_form() {
-  $environment = pinapi_paypal_environment();
-  
-  $form['#action'] = $environment['action'];
-  $form['#method'] = 'get';
-  $form['cmd'] = array(
-    '#type' => 'hidden',
-    '#value' => '_xclick',
-  );
-  $form['business'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_business_email', ''),
-  );  
-  $form['item_name'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_item_name', ''),
-  );
-  $item_amount = variable_get('pinapi_paypal_item_amount', null);
-  if ($item_amount) {
-    $form['amount'] = array(
-      '#type' => 'hidden',
-      '#value' => $item_amount,
-    );
-  }
-  $item_number = variable_get('pinapi_paypal_item_number', null);
-  if ($item_number) {
-    $form['item_number'] = array(
-      '#type' => 'hidden',
-      '#value' => $item_number,
-    );
-  }
-  $form['shipping'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_shipping_rate', ''),
-  );
-  $form['page_style'] = array(
-    '#type' => 'hidden',
-    '#value' => 'PayPal',
-  );
-  $form['no_shipping'] = array(
-    '#type' => 'hidden',
-    '#value' => PINAPI_PAYPAL_SHIPPING_REQUIRED,
-  );
-  $form['cancel_return'] = array(
-    '#type' => 'hidden',
-    '#value' => url(variable_get('pinapi_paypal_cancel_return_path', ''), array('absolute' => TRUE)),
-  );
-  $form['notify_url'] = array(
-    '#type' => 'hidden',
-    '#value' => url(variable_get('pinapi_paypal_notify_path', ''), array('absolute' => TRUE)),
-  );
-  $form['return'] = array(
-    '#type' => 'hidden',
-    '#value' => url(variable_get('pinapi_paypal_return_path', ''), array('absolute' => TRUE)),
-  );
-  $form['currency_code'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_currency_code', ''),
-  );
-  $form['lc'] = array(
-    '#type' => 'hidden',
-    '#value' => variable_get('pinapi_paypal_language_code', ''),
-  );
-  $form['bn'] = array(
-    '#type' => 'hidden',
-    '#value' => 'BuyNow',
-  );
-  $form['custom'] = array(
-    '#type' => 'hidden',
-    '#value' => $GLOBALS['user']->uid,
-  );
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => 'Submit',
+function pinapi_paypal_view() {
+  // Extra markup or form elements.
+  $form['test'] = array(
+    '#type' => 'item',
+    '#value' => 'test',
   );
 
-  return $form;
+  // PayPal hidden keys and values.
+  $data = array(
+    'items' => array(
+      array('name' => 'test', 'amount' => 9.25, 'quantity' => 1),
+      array('name' => 'test2', 'amount' => 18.25, 'quantity' => 1),
+    ),
+    'setting' => 'value',
+  );
+
+  return drupal_get_form('pinapi_paypal_payment_form', $form, $data);
 }
 
-function xpinapi_paypal_form_submit($form, &$form_state) {
-  dsm($form_state);
+/**
+ * Page Callback: Paypal Instant Payment Notification.
+ */
+function pinapi_paypal_ipn() {
+  module_load_include('php', 'pinapi_paypal', 'lib/ipnlistener');
+
+  // Get our post data.
+  $data = $_POST;
+
+  // Load PHP-Paypal-IPN library.
+  $ipn = new IpnListener();
+  $ipn->use_sandbox = variable_get('pinapi_paypal_sandbox', TRUE);
+
+  // Debug the data being processed.
+  if ( variable_get('pinapi_paypal_debug', FALSE) ) {
+    watchdog('pinapi_paypal', 'IPN Debug ' . json_encode($data));
+  }
+
+  // Try to verify the IPN, catch and log errors.
+  try {
+    $ipn->requirePostMethod();
+    $verified = $ipn->processIpn();
+  } catch ( Exception $e ) {
+    watchdog('pinapi_paypal', 'IPN Error ' . $e->getMessage(), array(), WATCHDOG_ERROR);
+  }
+
+  // IPN is verified, continue with data checks.
+  if ( $verified ) {
+    // retrieve invoice number and user account
+    list($invoice, $uid) = explode('-', $data['invoice']);
+
+    if ( $account = user_load($uid) ) {
+      // Load current order transaction, will be set to FALSE if it doesn't already exist.
+      $order = pinapi_paypal_order_load($data['txn_id']);
+
+      // Check for fraudulent transaction attempts.
+      $ftas = array();
+
+      // Fraudulent transaction attempt: Ensure receiver email is ours.
+      if ( $data['receiver_email'] != variable_get('pinapi_paypal_receiver_email', '') ) {
+        $ftas['receiver_email'] = t('Merchant account is not same as systems.');
+      }
+
+      // If there are no fraudulent transaction attempts save or update this order.
+      if ( count($ftas) == 0 ) {
+
+        // Order doesn't exists yet, set some initial fields.
+        if ( !$order ) {
+          $order = (object) array(
+            'txnid' => $data['txn_id'],
+            'uid' => $account->uid,
+            'payer_email' => $data['payer_email'],
+            'mc_gross' => $data['mc_gross'],
+          );
+        }
+
+        // Update payment status and time 'updated' and save order.
+        $order->payment_status = pinapi_paypal_status_code($data['payment_status']);
+        $order->updated = time();
+
+        // Save this order transaction.
+        pinapi_paypal_order_save($order);
+
+        watchdog('pinapi_paypal', 'IPN Verified ' . $ipn->getTextReport());
+      }
+      // Fraudulent activity has been detected. Log as critical.
+      else {
+        watchdog('pinapi_paypal', 'IPN Fraudulent Activity Detected (' . implode(', ', $ftas) . ')', array(), WATCHDOG_CRITICAL);
+      }
+    }
+    else {
+      watchdog('pinapi_paypal', 'IPN Error Unknown User', array(), WATCHDOG_WARNING);
+    }
+  }
+  // IPN is invalid.
+  else {
+    watchdog('pinapi_paypal', 'IPN Invalid ' . $ipn->getTextReport(), array(), WATCHDOG_WARNING);
+  }
 }
