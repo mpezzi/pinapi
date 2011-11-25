@@ -52,12 +52,6 @@ function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
  * Page Callback: Paypal View.
  */
 function pinapi_paypal_view() {
-  // Extra markup or form elements.
-  $form['test'] = array(
-    '#type' => 'item',
-    '#value' => 'test',
-  );
-
   // PayPal hidden keys and values.
   $data = array(
     'items' => array(
