@@ -39,6 +39,16 @@ function pinapi_paypal_menu() {
 }
 
 /**
+ * Implements hook_user().
+ */
+function pinapi_paypal_user($op, &$edit, &$account, $category = NULL) {
+  // retrieve this user's most recent paypal payment_status
+  if ( $op == 'load' && user_access('redeem codes') ) {
+    $account->pinapi['paypal'] = db_result(db_query("SELECT payment_status FROM {pinapi_paypal_order} WHERE uid = %d ORDER BY updated DESC LIMIT 1", $account->uid));
+  }
+}
+
+/**
  * Page Callback: Paypal View.
  */
 function pinapi_paypal_view() {
