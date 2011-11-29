@@ -96,6 +96,10 @@ function pinapi_paypal_payment_form($form_state, $form = array(), $data = array(
     '#value' => t('Submit'),
   );
 
+  if ( module_exists('devel') && variable_get('pinapi_paypal_debug', FALSE) ) {
+    dpm($form['pinapi_paypal']);
+  }
+
   return $form;
 }
 
