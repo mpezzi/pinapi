@@ -87,6 +87,12 @@ function pinapi_user($op, &$edit, &$account) {
   // Load the number of codes redeemed for each group.
   if ( $op == 'load' && user_access('redeem codes') ) {
     $account->pinapi['redeemed'] = array();
+
+    // Initialize group redeem counts.
+    foreach ( pinapi_group_get_groups() as $group ) {
+      $account->pinapi['redeemed'][$group->gid] = 0;
+    }
+
     $result = db_query("SELECT * FROM {pinapi_code_redeemed_cache} WHERE uid = %d", $account->uid);
     while ( $cache = db_fetch_object($result) ) {
       $account->pinapi['redeemed'][$cache->gid] = $cache->value;
