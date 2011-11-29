@@ -14,12 +14,12 @@ require_once dirname(__FILE__) . '/pinapi_paypal.inc';
  */
 function pinapi_paypal_menu() {
   return array(
-    'pinapi/paypal' => array(
-      'title' => 'Pinapi Paypal',
-      'page callback' => 'pinapi_paypal_view',
-      'access arguments' => array('access content'),
-      'type' => MENU_CALLBACK,
-    ),
+    //'pinapi/paypal' => array(
+    //  'title' => 'Pinapi Paypal',
+    //  'page callback' => 'pinapi_paypal_view',
+    //  'access arguments' => array('access content'),
+    //  'type' => MENU_CALLBACK,
+    //),
     'pinapi/paypal/ipn' => array(
       'page callback' => 'pinapi_paypal_ipn',
       'access arguments' => array('access content'),
