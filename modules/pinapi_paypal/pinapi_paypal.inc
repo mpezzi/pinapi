@@ -5,13 +5,6 @@
  * Provide internal functions for pinapi_paypal.module
  */
 
-/**
- * Simplified PINAPI Paypal user PayPal payment status constants
- */
-define('PINAPI_PAYPAL_INCOMPLETE', 0);  // user has not initiated any PayPal payment
-define('PINAPI_PAYPAL_COMPLETE', 1);    // user has completed a PayPal payment
-define('PINAPI_PAYPAL_PENDING', 2);     // user has a pending PayPal payment
-define('PINAPI_PAYPAL_FAILED', 3);      // user's PayPal transaction returned status such as 'Denied', 'Failed', 'Expired', etc.
 
 /**
  * Load a PayPal Order.

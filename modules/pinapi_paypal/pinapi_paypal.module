@@ -7,6 +7,15 @@
  * @see https://github.com/Quixotix/PHP-PayPal-IPN
  */
 
+/**
+* Simplified PINAPI Paypal user PayPal payment status constants
+*/
+define('PINAPI_PAYPAL_INCOMPLETE', 0);  // user has not initiated any PayPal payment
+define('PINAPI_PAYPAL_COMPLETE', 1);    // user has completed a PayPal payment
+define('PINAPI_PAYPAL_PENDING', 2);     // user has a pending PayPal payment
+define('PINAPI_PAYPAL_FAILED', 3);      // user's PayPal transaction returned status such as 'Denied', 'Failed', 'Expired', etc.
+
+
 require_once dirname(__FILE__) . '/pinapi_paypal.inc';
 
 /**
@@ -35,6 +44,16 @@ function pinapi_paypal_menu() {
       'type' => MENU_LOCAL_TASK,
       'weight' => 15,
     ),
+  );
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function pinapi_paypal_views_api() {
+  return array(
+    'api' => 2,
+    'path' => drupal_get_path('module', 'pinapi_paypal') . '/views',
   );
 }
 
