@@ -1,8 +1,0 @@
-name            = PinAPI WebSaver
-description     = Provides WebSaver functionality to PinAPI
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi
-dependencies[]  = websaver

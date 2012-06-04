@@ -1,7 +1,0 @@
-name            = PinAPI Debug
-description     = Provides a Debug UI for PinAPI module.
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi

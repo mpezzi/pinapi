@@ -1,7 +1,0 @@
-name            = PinAPI Node
-description     = Exposes the Pin API system as nodes.
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi

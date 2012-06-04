@@ -1,7 +1,0 @@
-name            = PinAPI UI
-description     = Provides an administrative ui for Pin API.
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi

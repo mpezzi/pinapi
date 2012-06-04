@@ -1,5 +1,0 @@
-name            = PinAPI
-description     = Provides an API for Pin functionality.
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x

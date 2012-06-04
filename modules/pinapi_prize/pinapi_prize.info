@@ -1,7 +1,0 @@
-name            = PinAPI Prize
-description     = Provides a prize to redeemed codes.
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi

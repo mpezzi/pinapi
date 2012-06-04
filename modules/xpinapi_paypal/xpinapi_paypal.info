@@ -1,7 +1,0 @@
-name            = PinAPI PayPal
-description     = Provides simple PayPal integration
-core            = 6.x
-package         = PinAPI
-version         = 6.x-2.x
-
-dependencies[]  = pinapi
