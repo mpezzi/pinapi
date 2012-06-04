@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Tests for pinapi.module
+ */
+
+
+class PinAPITestCase extends DrupalWebTestCase {
+  function setUp() {
+    parent::setUp('pinapi');
+    $privledged_user = $this->drupalCreateUser(array('administer pin api'));
+    $this->drupalLogin($privledged_user);
+  }
+
+
+}

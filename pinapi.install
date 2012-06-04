@@ -1,0 +1,232 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for pin api.
+ */
+
+
+/**
+ * Implements hook_schema().
+ */
+function pinapi_schema() {
+  $schema['pinapi_collection'] = array(
+    'description' => t('Stores collection information.'),
+    'fields' => array(
+      'cid' => array(
+        'descriptipn' => 'Collection ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Name',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
+      'entity_type' => array(
+        'description' => 'Entity type',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
+      'entity_id' => array(
+        'description' => 'Entity ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'description' => 'Status',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'entity' => array('entity_type', 'entity_id'),
+    ),
+    'primary key' => array('cid'),
+  );
+
+  $schema['pinapi_collection_cache'] = array(
+    'description' => t('Stores collection total information.'),
+    'fields' => array(
+      'collection_cache_id' => array(
+        'description' => 'Collection Cache ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'description' => 'Collection ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'value_type' => array(
+        'description' => 'Value Type',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
+      'value' => array(
+        'description' => 'Value',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'cid_value_type' => array('cid', 'value_type'),
+    ),
+    'primary key' => array('collection_cache_id'),
+  );
+
+  $schema['pinapi_pin'] = array(
+    'description' => t('Stores pin information for pin api.'),
+    'fields' => array(
+      'pid' => array(
+        'description' => 'Pin ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'cid' => array(
+        'description' => 'Collection ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'pin' => array(
+        'description' => 'Pin',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
+      'quantity' => array(
+        'description' => 'Quantity',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+      'status' => array(
+        'description' => 'Status',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'pin_cid_status' => array('pin', 'cid', 'status'),
+    ),
+    'primary key' => array('pid'),
+  );
+
+  $schema['pinapi_pin_txn'] = array(
+    'description' => t('Stores pin transaction information for pin api.'),
+    'fields' => array(
+      'txn_id' => array(
+        'description' => 'Transaction ID',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'pid' => array(
+        'description' => 'Pin ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => 'User ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'Timestamp',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'Changed',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'hostname' => array(
+        'description' => 'Hostname of the user who redeemed the pin.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'status' => array(
+        'description' => 'Status',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'pid' => array('pid'),
+      'uid' => array('uid'),
+    ),
+    'primary key' => array('txn_id'),
+  );
+
+  $schema['pinapi_pin_txn_cache'] = array(
+    'description' => t('Stores totals for pin transactions.'),
+    'fields' => array(
+      'pin_txn_cache_id' => array(
+        'description' => 'Pin Transaction Cache ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'cid' => array(
+        'description' => 'Collection ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'uid' => array(
+        'description' => 'User ID',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'timestamp' => array(
+        'description' => 'Timestamp',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'value_type' => array(
+        'description' => 'Value Type',
+        'type' => 'varchar',
+        'length' => 128,
+      ),
+      'value' => array(
+        'description' => 'Value',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'indexes' => array(
+      'cid_uid_value_type' => array('cid', 'uid', 'value_type'),
+    ),
+    'primary key' => array('pin_txn_cache_id'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pinapi_uninstall() {
+  db_delete('variable')
+    ->condition('name', 'pinapi_%', 'LIKE')
+    ->execute();
+}

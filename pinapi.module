@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * Provides an API for Pin functionality.
+ */
+
+require_once dirname(__FILE__) . '/includes/collection.inc';
+require_once dirname(__FILE__) . '/includes/pin.inc';
+
+/**
+ * Implements hook_permission().
+ */
+function pinapi_permission() {
+  return array(
+    'administer pins' => array(
+      'title' => t('Administer pins'),
+      'description' => t('Access the pin administration pages.')
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function pinapi_menu() {
+  $items['admin/structure/pinapi'] = array(
+    'title' => 'Pins',
+    'description' => 'Manage pins and collections.',
+    'page callback' => 'pinapi_admin_overview',
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/structure/pinapi/collection/add'] = array(
+    'title' => 'Add collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection'),
+    'access arguments' => array('administer pins'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/structure/pinapi/collection/edit/%pinapi_collection'] = array(
+    'title' => 'Edit collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection', 5),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/structure/pinapi/collection/delete/%pinapi_collection'] = array(
+    'title' => 'Delete collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection_delete', 5),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/structure/pinapi/collection/update/%pinapi_collection'] = array(
+    'title' => 'Update collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection_update', 5),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function xpinapi_theme() {
+
+}
+

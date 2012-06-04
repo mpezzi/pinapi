@@ -1,0 +1,4 @@
+name = Pin API
+description = Provides an API for Pin functionality.
+core = 7.x
+package = Pin API
