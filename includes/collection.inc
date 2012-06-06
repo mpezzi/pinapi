@@ -17,12 +17,22 @@ function pinapi_collection_load($cid = NULL) {
 }
 
 /**
+ * Load a collection object by machine name from the database.
+ */
+function pinapi_collection_load_machine_name($name) {
+  return db_query('SELECT * FROM {pinapi_collection} WHERE machine_name = :name', array('name' => $name))->fetchObject();
+}
+
+/**
  * Save changes to a collection or a new collection.
  */
 function pinapi_collection_save($collection) {
   $transaction = db_transaction();
   try {
     $collection->is_new = empty($collection->cid);
+
+    // Allow other modules to act when a collection is being saved.
+    module_invoke_all('pinapi_collection_presave', $collection);
 
     if ( $collection->is_new ) {
       $result = drupal_write_record('pinapi_collection', $collection);
@@ -31,7 +41,12 @@ function pinapi_collection_save($collection) {
       $result = drupal_write_record('pinapi_collection', $collection, 'cid');
     }
 
+    // Clear caches.
     pinapi_collection_static_reset();
+    cache_clear_all();
+
+    // Allow other modules to act when a collection is being saved.
+    module_invoke_all('pinapi_collection_save', $collection);
 
     // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
     db_ignore_slave();
@@ -40,7 +55,7 @@ function pinapi_collection_save($collection) {
   }
   catch ( Exception $e ) {
     $transaction->rollback();
-    watchlog_exception('seed', $e);
+    watchlog_exception('pinapi', $e);
     throw $e;
   }
 }
@@ -52,6 +67,9 @@ function pinapi_collection_delete($cid) {
   if ( $collection = pinapi_collection_load($cid) ) {
     $transaction = db_transaction();
     try {
+      // Allow other modules to act on a collection being deleted.
+      module_invoke_all('pinapi_collection_delete', $collection);
+
       db_delete('pinapi_collection')
         ->condition('cid', $collection->cid)
         ->execute();
@@ -59,6 +77,9 @@ function pinapi_collection_delete($cid) {
       // Clear caches.
       pinapi_collection_static_reset();
       cache_clear_all();
+
+      // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
+      db_ignore_slave();
 
       return SAVED_DELETED;
     }

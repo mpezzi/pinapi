@@ -7,11 +7,80 @@
 
 
 class PinAPITestCase extends DrupalWebTestCase {
-  function setUp() {
-    parent::setUp('pinapi');
-    $privledged_user = $this->drupalCreateUser(array('administer pin api'));
-    $this->drupalLogin($privledged_user);
+
+  /**
+   * Returns a new collection with random properties.
+   */
+  function createCollection() {
+    // Create a collection.
+    $collection = new stdClass();
+    $collection->name = $this->randomName();
+    $collection->machine_name = drupal_strtolower($this->randomName());
+    $collection->description = $this->randomName();
+    $collection->status = TRUE;
+    pinapi_collection_save($collection);
+    return $collection;
   }
 
+}
+
+/**
+ * Tests for the pinapi collection interface.
+ */
+class PinAPICollectionFunctionalTest extends PinAPITestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Pin API Collection Interface',
+      'description' => 'Test the pin collection interface.',
+      'group' => 'Pin API',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('pinapi');
+    $this->admin_user = $this->drupalCreateUser(array('administer pins'));
+    $this->drupalLogin($this->admin_user);
+    $this->collection = $this->createCollection();
+  }
+
+  /**
+   * Create, edit and delete a collection via the user inferface.
+   */
+  function testCollectionInterface() {
+    // Visit the pin overview page.
+    $this->drupalGet('admin/structure/pinapi');
+
+    // Create a new collection.
+    $this->clickLink(t('Add collection'));
+    $edit = array();
+    $machine_name = drupal_strtolower($this->randomName());
+    $edit['name'] = $this->randomName();
+    $edit['machine_name'] = $machine_name;
+    $edit['description'] = $this->randomName();
+    $edit['status'] = TRUE;
+    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->assertRaw(t('Created new collection %name.', array('%name' => $edit['name'])), t('Collection created successfully'));
+
+    // Edit the collection.
+    $this->drupalGet('admin/structure/pinapi');
+    $this->assertText($edit['name'], t('Collection found in the collection overview listing.'));
+    $this->clickLink(t('edit collection'));
+    $edit = array();
+    $edit['name'] = $this->randomName();
+    $this->drupalPost(NULL, $edit, t('Save'));
+    $this->drupalGet('admin/structure/pinapi');
+    $this->assertText($edit['name'], t('Collection found in the collection overview listing.'));
+
+    // Try to submit a collection with a duplicate machine name.
+    $edit['machine_name'] = $machine_name;
+    $this->drupalPost('admin/structure/pinapi/collection/add', $edit, t('Save'));
+    $this->assertText(t('The machine-readable name is already in use. It must be unique.'));
+
+    // Try to submit an invalid machine name.
+    $edit['machine_name'] = '!&^%';
+    $this->drupalPost('admin/structure/pinapi/collection/add', $edit, t('Save'));
+    $this->assertText(t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
+  }
 
 }

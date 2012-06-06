@@ -19,9 +19,26 @@ function pinapi_schema() {
         'not null' => TRUE,
       ),
       'name' => array(
-        'description' => 'Name',
         'type' => 'varchar',
-        'length' => 128,
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'Name of the collection.',
+        'translatable' => TRUE,
+      ),
+      'machine_name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The collection machine name.',
+      ),
+      'description' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'big',
+        'description' => 'Description of the collection.',
+        'translatable' => TRUE,
       ),
       'entity_type' => array(
         'description' => 'Entity type',

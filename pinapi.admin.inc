@@ -29,9 +29,9 @@ function pinapi_view() {
   foreach ( $result as $collection ) {
     $rows[] = array(
       $collection->name,
-      l(t('update'), "admin/structure/pinapi/collection/update/$collection->cid"),
-      l(t('edit'), "admin/structure/pinapi/collection/edit/$collection->cid"),
-      l(t('delete'), "admin/structure/pinapi/collection/delete/$collection->cid"),
+      l(t('update collection'), "admin/structure/pinapi/collection/update/$collection->cid"),
+      l(t('edit collection'), "admin/structure/pinapi/collection/edit/$collection->cid"),
+      l(t('delete collection'), "admin/structure/pinapi/collection/delete/$collection->cid"),
     );
   }
 
@@ -48,14 +48,31 @@ function pinapi_form_collection($form, &$form_state, $collection = NULL) {
     '#type' => 'textfield',
     '#title' => t('Name'),
     '#default_value' => isset($collection->name) ? $collection->name : '',
-    '#maxlength' => 128,
+    '#maxlength' => 255,
     '#required' => TRUE,
+  );
+  $form['machine_name'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => isset($collection->machine_name) ? $collection->machine_name : '',
+    '#maxlength' => 255,
+    '#machine_name' => array(
+      'exists' => 'pinapi_collection_load_machine_name',
+    ),
+  );
+  $form['old_machine_name'] = array(
+    '#type' => 'value',
+    '#value' => isset($collection->machine_name) ? $collection->machine_name : '',
+  );
+  $form['description'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Description'),
+    '#default_value' => isset($collection->description) ? $collection->description : '',
   );
   $form['entity_type'] = array(
     '#type' => 'textfield',
     '#title' => t('Entity Type'),
     '#default_value' => isset($collection->entity_type) ? $collection->entity_type : '',
-    '#maxlength' => 128,
+    '#maxlength' => 255,
   );
   $form['entity_id'] = array(
     '#type' => 'textfield',
@@ -93,11 +110,11 @@ function pinapi_form_collection_submit($form, &$form_state) {
     pinapi_collection_save((object) $form_state['values']);
 
     if ( isset($form_values['cid']) ) {
-      drupal_set_message(t('The collection %name has been updated.', array('%name' => $form_state['values']['name'])));
+      drupal_set_message(t('Updated collection %name.', array('%name' => $form_state['values']['name'])));
     }
     else {
       watchdog('pinapi', 'Collection %name has been added.', array('%name' => $form_state['values']['name']));
-      drupal_set_message(t('The collection %name has been added.', array('%name' => $form_state['values']['name'])));
+      drupal_set_message(t('Created new collection %name.', array('%name' => $form_state['values']['name'])));
     }
 
     $form_state['redirect'] = 'admin/structure/pinapi';
