@@ -16,14 +16,14 @@ define('PINAPI_STATUS_AVAILABLE', 1);
 define('PINAPI_STATUS_UNAVAILABLE', 2);
 
 /**
- * Pin was not found.
- */
-define('PINAPI_STATUS_NOT_FOUND', 3);
-
-/**
  * Pin collection is closed.
  */
-define('PINAPI_STATUS_CLOSED', 4);
+define('PINAPI_STATUS_CLOSED', 3);
+
+/**
+ * Pin was not found.
+ */
+define('PINAPI_STATUS_NOT_FOUND', 4);
 
 /**
  * Returns a Pin API Request Object.
