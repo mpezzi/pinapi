@@ -112,8 +112,8 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'pin' => array(
-        'description' => 'Pin',
+      'code' => array(
+        'description' => 'Code',
         'type' => 'varchar',
         'length' => 128,
       ),
@@ -132,7 +132,7 @@ function pinapi_schema() {
       ),
     ),
     'indexes' => array(
-      'pin_cid_status' => array('pin', 'cid', 'status'),
+      'cid_code_status' => array('cid', 'code', 'status'),
     ),
     'primary key' => array('pid'),
   );

@@ -5,8 +5,10 @@
  * Provides an API for Pin functionality.
  */
 
-require_once dirname(__FILE__) . '/includes/collection.inc';
+require_once dirname(__FILE__) . '/includes/core.inc';
 require_once dirname(__FILE__) . '/includes/pin.inc';
+require_once dirname(__FILE__) . '/includes/collection.inc';
+
 
 /**
  * Implements hook_permission().
