@@ -95,13 +95,6 @@ function pinapi_pin_status($pin, $account = NULL) {
 }
 
 /**
- * Clear pins.
- */
-function pinapi_pin_clear($cid) {
-
-}
-
-/**
  * Reset pins.
  */
 function pinapi_pin_reset() {

@@ -25,53 +25,6 @@ define('PINAPI_STATUS_CLOSED', 3);
  */
 define('PINAPI_STATUS_NOT_FOUND', 4);
 
-/**
- * Returns a Pin API Request Object.
- */
-function pinapi_request($code, $cid, $uid = NULL) {
-  global $user;
-
-  $request = new stdClass();
-  $request->collection = pinapi_collection_load($cid);
-  $request->pin = pinapi_pin_load(array('code' => $code, 'cid' => $cid));
-
-  // Append requesting account.
-  if ( !is_null($uid) ) {
-    $request->account = user_load($uid);
-  }
-  else {
-    $request->account = user_load($user->uid);
-  }
-
-  // Determine request status.
-  if ( $request->collection && $request->collection->status ) {
-    if ( $request->pin && $request->pin->status ) {
-      $request->status = PINAPI_STATUS_AVAILABLE;
-    }
-    else if ( $request->pin && !$request->pin->status ) {
-      $request->status = PINAPI_STATUS_UNAVAILABLE;
-    }
-    else {
-      $request->status = PINAPI_STATUS_NOT_FOUND;
-    }
-  }
-  else if ( $request->collection && !$request->collection->status ) {
-    $request->status = PINAPI_STATUS_CLOSED;
-  }
-  else {
-    $request->status = PINAPI_STATUS_NOT_FOUND;
-  }
-
-  // Invoke load hook in other modules.
-  pinapi_invoke('pinapi', 'load', $request);
-
-  // Set as redeemable by default.
-  if ( !isset($request->redeemable) ) {
-    $request->redeemable = TRUE;
-  }
-
-  return $request;
-}
 
 /**
  * Invoke hook_pinapi operation in all modules.
@@ -91,4 +44,26 @@ function pinapi_invoke($hook, $op, &$object) {
   }
 
   return $return;
+}
+
+/**
+ * Generate Test Object.
+ */
+function pinapi_test_generate() {
+  $collection = (object) array(
+    'name' => t('Test'),
+    'machine_name' => 'test',
+    'status' => 1,
+  );
+  pinapi_collection_save($collection);
+
+  for ( $i = 0; $i < 5; $i++ ) {
+    $pin = (object) array(
+      'code' => 'test' . $i,
+      'cid' => $collection->cid,
+      'quantity' => 1,
+      'status' => 1,
+    );
+    pinapi_pin_save($pin);
+  }
 }

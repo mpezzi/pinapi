@@ -137,8 +137,8 @@ function pinapi_schema() {
     'primary key' => array('pid'),
   );
 
-  $schema['pinapi_pin_txn'] = array(
-    'description' => t('Stores pin transaction information for pin api.'),
+  $schema['pinapi_txn'] = array(
+    'description' => t('Stores transaction information for pin api.'),
     'fields' => array(
       'txn_id' => array(
         'description' => 'Transaction ID',
@@ -191,14 +191,13 @@ function pinapi_schema() {
     'primary key' => array('txn_id'),
   );
 
-  $schema['pinapi_pin_txn_cache'] = array(
-    'description' => t('Stores totals for pin transactions.'),
+  $schema['pinapi_txn_cache'] = array(
+    'description' => t('Stores totals for transactions.'),
     'fields' => array(
-      'pin_txn_cache_id' => array(
-        'description' => 'Pin Transaction Cache ID',
-        'type' => 'int',
+      'txn_cache_id' => array(
+        'description' => 'Transaction Cache ID',
+        'type' => 'serial',
         'not null' => TRUE,
-        'default' => 0,
       ),
       'cid' => array(
         'description' => 'Collection ID',
@@ -218,7 +217,7 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'value_type' => array(
+      'name' => array(
         'description' => 'Value Type',
         'type' => 'varchar',
         'length' => 128,
@@ -231,9 +230,9 @@ function pinapi_schema() {
       ),
     ),
     'indexes' => array(
-      'cid_uid_value_type' => array('cid', 'uid', 'value_type'),
+      'cid_uid_name' => array('cid', 'uid', 'name'),
     ),
-    'primary key' => array('pin_txn_cache_id'),
+    'primary key' => array('txn_cache_id'),
   );
 
   return $schema;

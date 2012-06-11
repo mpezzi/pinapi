@@ -55,7 +55,7 @@ function pinapi_collection_save($collection) {
   }
   catch ( Exception $e ) {
     $transaction->rollback();
-    watchlog_exception('pinapi', $e);
+    watchdog_exception('pinapi', $e);
     throw $e;
   }
 }
@@ -69,6 +69,9 @@ function pinapi_collection_delete($cid) {
     try {
       // Allow other modules to act on a collection being deleted.
       module_invoke_all('pinapi_collection_delete', $collection);
+
+      // Delete all pins and transactions for collection.
+      pinapi_collection_clear($collection->cid);
 
       db_delete('pinapi_collection')
         ->condition('cid', $collection->cid)
@@ -85,9 +88,27 @@ function pinapi_collection_delete($cid) {
     }
     catch ( Exception $e ) {
       $transaction->rollback();
-      watchlog_exception('pinapi', $e);
+      watchdog_exception('pinapi', $e);
       throw $e;
     }
+  }
+}
+
+
+/**
+ * Clear pins.
+ */
+function pinapi_collection_clear($cid) {
+  if ( $collection = pinapi_collection_load($cid) ) {
+    module_invoke_all('pinapi_code_clear', $cid);
+
+    db_query("DELETE pt.* FROM {pinapi_txn} pt INNER JOIN {pinapi_pin} pp ON pt.pid = pp.pid WHERE pp.cid = :cid", array(':cid' => $collection->cid));
+    db_query("DELETE FROM {pinapi_pin} WHERE cid = :cid", array(':cid' => $collection->cid));
+    db_query("DELETE FROM {pinapi_txn_cache} WHERE cid = :cid", array(':cid' => $collection->cid));
+    db_query("DELETE FROM {pinapi_collection_cache} WHERE cid = :cid", array(':cid' => $collection->cid));
+
+    pinapi_collection_static_reset();
+    pinapi_pin_static_reset();
   }
 }
 
