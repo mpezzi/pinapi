@@ -78,6 +78,13 @@ function xpinapi_theme() {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function pinapi_views_api() {
+  return array('api' => 3.0);
+}
+
+/**
  * Implements hook_block_info().
  */
 function pinapi_block_info() {
