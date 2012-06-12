@@ -17,6 +17,17 @@ function pinapi_collection_load($cid = NULL) {
 }
 
 /**
+ * Load all collection objects from the database.
+ */
+function pinapi_collection_load_all() {
+  $collections = array();
+  foreach ( db_query("SELECT cid FROM {pinapi_collection}") as $collection ) {
+    $collections[$collection->cid] = pinapi_collection_load($collection->cid);
+  }
+  return $collections;
+}
+
+/**
  * Load a collection object by machine name from the database.
  */
 function pinapi_collection_load_machine_name($name) {
