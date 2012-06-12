@@ -156,27 +156,60 @@ function pinapi_txn_redeem(&$txn) {
  * Update Transaction Statistics.
  */
 function pinapi_txn_stats_update($txn) {
-  pinapi_txn_stats_set($txn, 'total');
+  pinapi_txn_stats_inc($txn, 'total');
 
   // Invoke hook_pinapi_txn() w/ 'stat update' operation.
   pinapi_invoke('pinapi_txn', 'stats update', $txn);
 }
 
 /**
- * Updated collection information.
+ * Set / Replace a Transaction Statistic.
+ *
+ * @param $txn
+ *   A transaction object.
+ * @param $name
+ *   The name of the variable to set.
+ * @param $value
+ *   (int) The value to set.
  */
 function pinapi_txn_stats_set($txn, $name, $value = 1) {
   $query = db_merge('pinapi_txn_stats')
     ->key(array('uid' => $txn->uid, 'cid' => $txn->cid, 'name' => $name))
     ->fields(array('timestamp' => time(), 'value' => $value))
-    ->expression('value', 'value + :inc', array(':inc' => 1))
     ->execute();
 
   return $query;
 }
 
 /**
- * Return Transaction Statistic.
+ * Increment a Transaction Statistic.
+ *
+ * @param $txn
+ *   A transaction object.
+ * @param $name
+ *   The name of the variable to set.
+ * @param $value
+ *   (int) The value to set.
+ */
+function pinapi_txn_stats_inc($txn, $name, $value = 1) {
+  $query = db_merge('pinapi_txn_stats')
+    ->key(array('uid' => $txn->uid, 'cid' => $txn->cid, 'name' => $name))
+    ->fields(array('timestamp' => time(), 'value' => $value))
+    ->expression('value', 'value + :inc', array(':inc' => $value))
+    ->execute();
+
+  return $query;
+}
+
+/**
+ * Return a Transaction Statistic.
+ *
+ * @param $txn
+ *   A transaction object.
+ * @param $name
+ *   The name of the variable to set.
+ * @param $default
+ *   The default value to use if this variable has never been set.
  */
 function pinapi_txn_stats_get($txn, $name, $default = NULL) {
   $result = db_select('pinapi_txn_stats', 's')
@@ -191,7 +224,12 @@ function pinapi_txn_stats_get($txn, $name, $default = NULL) {
 }
 
 /**
- * Increment Transaction Statistic.
+ * Delete a Transaction Statistic.
+ *
+ * @param $txn
+ *   A transaction object.
+ * @param $name
+ *   The name of the variable to set.
  */
 function pinapi_txn_stats_del($txn, $name) {
   $query = db_delete('pinapi_txn_stats')
