@@ -20,6 +20,10 @@ function pinapi_permission() {
       'title' => t('Administer pins'),
       'description' => t('Access the pin administration pages.')
     ),
+    'redeem pins' => array(
+      'title' => t('Redeem pins'),
+      'description' => t('Access to redeem pins.'),
+    ),
   );
 }
 
