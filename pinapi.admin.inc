@@ -153,3 +153,60 @@ function pinapi_form_collection_delete_submit($form, &$form_state) {
   pinapi_collection_delete($form_state['values']['collection']->cid);
   $form_state['redirect'] = 'admin/structure/pin';
 }
+
+/**
+ * Form constructor to add/edit/delete transactions.
+ */
+function pinapi_form_transaction($form, &$form_state, $txn = NULL) {
+  $form['uid'] = array(
+    '#type' => 'textfield',
+    '#title' => t('User'),
+    '#default_value' => isset($txn->uid) ? $txn->uid : NULL,
+  );
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Published'),
+    '#default_value' => isset($txn->status) ? $txn->status : FALSE,
+  );
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  if ( isset($txn->txn_id) ) {
+    $form['actions']['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
+    $form['txn_id'] = array('#type' => 'hidden', '#value' => $txn->txn_id);
+  }
+
+  return $form;
+}
+
+/**
+ * Form validation handler for pinapi_form_transaction().
+ */
+function pinapi_form_transaction_validate($form, &$form_state) {
+  // @TODO: Check for unique name.
+}
+
+/**
+ * Form submit handler form pinapi_form_transaction().
+ */
+function pinapi_form_transaction_submit($form, &$form_state) {
+  if ( $form_state['values']['op'] == t('Save') ) {
+    $txn = (object) $form_state['values'];
+    pinapi_txn_save($txn);
+
+    if ( isset($form_values['txn_id']) ) {
+      drupal_set_message(t('Updated transaction.'));
+    }
+    else {
+      watchdog('pinapi', 'Transaction has been created.');
+      drupal_set_message(t('Created new transaction.'));
+    }
+
+    $form_state['redirect'] = 'admin/structure/pin';
+  }
+  else if ( $form_state['values']['op'] == t('Delete') ) {
+    pinapi_txn_delete($form_state['values']['txn_id']);
+    watchdog('pinapi', 'Transaction has been deleted.');
+    drupal_set_message(t('The transaction has been deleted.'));
+    $form_state['redirect'] = 'admin/structure/pin';
+  }
+}
