@@ -22,7 +22,7 @@ function pinapi_collection_load($cid = NULL) {
 function pinapi_collection_load_all() {
   $collections = array();
   foreach ( db_query("SELECT cid FROM {pinapi_collection}") as $collection ) {
-    $collections[$collection->cid] = pinapi_collection_load($collection->cid);
+    $collections[] = pinapi_collection_load($collection->cid);
   }
   return $collections;
 }
