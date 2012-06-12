@@ -75,7 +75,7 @@ function pinapi_txn($code, $cid, $uid = NULL) {
   $txn->user = is_null($uid) ? user_load($GLOBALS['user']->uid) : user_load($uid);
 
   // Set some sweet sweet shortcut ids.
-  $txn->cid = $txn->collection->cid;
+  $txn->cid = isset($txn->collection->cid) ? $txn->collection->cid : FALSE;
   $txn->pid = isset($txn->pin->pid) ? $txn->pin->pid : FALSE;
   $txn->uid = $txn->user->uid;
 
