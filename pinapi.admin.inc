@@ -29,9 +29,9 @@ function pinapi_view() {
   foreach ( $result as $collection ) {
     $rows[] = array(
       $collection->name,
-      l(t('update collection'), "admin/structure/pinapi/collection/update/$collection->cid"),
-      l(t('edit collection'), "admin/structure/pinapi/collection/edit/$collection->cid"),
-      l(t('delete collection'), "admin/structure/pinapi/collection/delete/$collection->cid"),
+      l(t('update collection'), "admin/structure/pin/collection/$collection->cid/update"),
+      l(t('edit collection'), "admin/structure/pin/collection/$collection->cid/edit"),
+      l(t('delete collection'), "admin/structure/pin/collection/$collection->cid/delete"),
     );
   }
 
@@ -117,13 +117,13 @@ function pinapi_form_collection_submit($form, &$form_state) {
       drupal_set_message(t('Created new collection %name.', array('%name' => $form_state['values']['name'])));
     }
 
-    $form_state['redirect'] = 'admin/structure/pinapi';
+    $form_state['redirect'] = 'admin/structure/pin';
   }
   else if ( $form_state['values']['op'] == t('Delete') ) {
     pinapi_collection_delete($form_state['values']['cid']);
     watchdog('pinapi', 'Collection %name has been deleted.', array('%name' => $form_state['values']['name']));
     drupal_set_message(t('The collection %name has been deleted.', array('%name' => $form_state['values']['name'])));
-    $form_state['redirect'] = 'admin/structure/pinapi';
+    $form_state['redirect'] = 'admin/structure/pin';
   }
 }
 
@@ -139,7 +139,7 @@ function pinapi_form_collection_delete($form, &$form_state, $collection) {
       ),
     ),
     t('Are you sure you want to delete this collection %name?', array('%name' => $collection->name)),
-    'admin/structure/pinapi',
+    'admin/structure/pin',
     t('This action cannot be undone.'),
     t('Delete collection'),
     t('Cancel')
@@ -151,5 +151,5 @@ function pinapi_form_collection_delete($form, &$form_state, $collection) {
  */
 function pinapi_form_collection_delete_submit($form, &$form_state) {
   pinapi_collection_delete($form_state['values']['collection']->cid);
-  $form_state['redirect'] = 'admin/structure/pinapi';
+  $form_state['redirect'] = 'admin/structure/pin';
 }

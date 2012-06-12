@@ -22,6 +22,19 @@ class PinAPITestCase extends DrupalWebTestCase {
     return $collection;
   }
 
+  /**
+   * Returns a new pin with random properties.
+   */
+  function createPin($collection, $quantity = 1) {
+    $pin = new stdClass();
+    $pin->cid = $collection->cid;
+    $pin->code = $this->randomName();
+    $pin->quantity = $quantity;
+    $pin->status = TRUE;
+    pinapi_pin_save($pin);
+    return $pin;
+  }
+
 }
 
 /**
@@ -49,7 +62,7 @@ class PinAPICollectionFunctionalTest extends PinAPITestCase {
    */
   function testCollectionInterface() {
     // Visit the pin overview page.
-    $this->drupalGet('admin/structure/pinapi');
+    $this->drupalGet('admin/structure/pin');
 
     // Create a new collection.
     $this->clickLink(t('Add collection'));
@@ -63,24 +76,55 @@ class PinAPICollectionFunctionalTest extends PinAPITestCase {
     $this->assertRaw(t('Created new collection %name.', array('%name' => $edit['name'])), t('Collection created successfully'));
 
     // Edit the collection.
-    $this->drupalGet('admin/structure/pinapi');
+    $this->drupalGet('admin/structure/pin');
     $this->assertText($edit['name'], t('Collection found in the collection overview listing.'));
     $this->clickLink(t('edit collection'));
     $edit = array();
     $edit['name'] = $this->randomName();
     $this->drupalPost(NULL, $edit, t('Save'));
-    $this->drupalGet('admin/structure/pinapi');
+    $this->drupalGet('admin/structure/pin');
     $this->assertText($edit['name'], t('Collection found in the collection overview listing.'));
 
     // Try to submit a collection with a duplicate machine name.
     $edit['machine_name'] = $machine_name;
-    $this->drupalPost('admin/structure/pinapi/collection/add', $edit, t('Save'));
+    $this->drupalPost('admin/structure/pin/collection/add', $edit, t('Save'));
     $this->assertText(t('The machine-readable name is already in use. It must be unique.'));
 
     // Try to submit an invalid machine name.
     $edit['machine_name'] = '!&^%';
-    $this->drupalPost('admin/structure/pinapi/collection/add', $edit, t('Save'));
+    $this->drupalPost('admin/structure/pin/collection/add', $edit, t('Save'));
     $this->assertText(t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
+  }
+
+  /**
+   * Delete a collection.
+   */
+  function testCollectionDelete() {
+    // Create collection.
+    $edit = array(
+      'name' => $this->randomName(),
+      'machine_name' => drupal_strtolower($this->randomName()),
+    );
+    $this->drupalPost('admin/structure/pin/collection/add', $edit, t('Save'));
+    $this->assertText(t('Created new collection'), t('New collection was created.'));
+
+    // Confirm collection was created.
+    $collections = pinapi_collection_load_all();
+    $cid = $collections[count($collections) - 1]->cid;
+    $collection = pinapi_collection_load($cid);
+    $this->assertTrue($collection, t('Collection found in database.'));
+
+    // Delete collection.
+    $edit = array();
+    $this->drupalPost('admin/structure/pin/collection/' . $collection->cid . '/edit', $edit, t('Delete'));
+    $this->assertRaw(t('Are you sure you want to delete this collection %name?', array('%name' => $collection->name)), t('[confirm deletion] Asks for confirmation.'));
+    $this->assertText(t('This action cannot be undone.'), t('[confirm deletion] Inform that collection will be deleted.'));
+
+    // Confirm deletion.
+    $this->drupalPost(NULL, NULL, t('Delete'));
+    $this->assertRaw(t('Deleted collection %name.', array('%name' => $collection->name)), t('Collection deleted'));
+    pinapi_collection_static_reset();
+    $this->assertFalse(pinapi_collection_load($cid), t('Collection is not found in the database'));
   }
 
 }
