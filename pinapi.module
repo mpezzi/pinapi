@@ -77,3 +77,107 @@ function xpinapi_theme() {
 
 }
 
+/**
+ * Implements hook_block_info().
+ */
+function pinapi_block_info() {
+  $blocks = array();
+  foreach ( pinapi_collection_load_all() as $collection ) {
+    $blocks[$collection->cid] = array(
+      'info' => t('Pin Collection Redeem Form (@name)', array('@name' => $collection->name)),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function pinapi_block_view($delta = '') {
+  $block = array();
+  if ( user_access('redeem pins') && $collection = pinapi_collection_load($delta) ) {
+    $block['subject'] = t('Collection Redeem Form (@name)', array('@name' => $collection->name));
+    $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_forms().
+ */
+function pinapi_forms() {
+  return array(
+    'pinapi_collection_block_form' => array(
+      'callback' => 'pinapi_collection_block_form',
+      'callback arguments' => array('pinapi_collection_block_form'),
+    ),
+  );
+}
+
+/**
+ * Form: Collection Block Form.
+ */
+function pinapi_collection_block_form($form, &$form_state, $collection) {
+  $form['code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Code'),
+    '#default_value' => '',
+    '#required' => TRUE,
+  );
+  $form['collection'] = array(
+    '#type' => 'value',
+    '#value' => $collection,
+  );
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Enter'),
+  );
+
+  return $form;
+}
+
+/**
+ * Form Validation Handler: Collection Block Form.
+ */
+function pinapi_collection_block_form_validate($form, &$form_state) {
+  if ( !empty($form_state['values']['code']) ) {
+
+    // Create a transaction object.
+    $txn = pinapi_txn($form_state['values']['code'], $form_state['values']['collection']->cid);
+
+    // Show appripriate error message based on transaction status.
+    switch ( $txn->txn_status ) {
+      case PINAPI_STATUS_UNAVAILABLE:
+        form_set_error('code', t('The code you have entered has already been used.'));
+        break;
+      case PINAPI_STATUS_CLOSED:
+        form_set_error('code', t('Codes are not being accepted at this time.'));
+        break;
+      case PINAPI_STATUS_NOT_FOUND:
+        form_set_error('code', t('The code you have entered is not valid.'));
+        break;
+    }
+
+    // Show message if not redeemable.
+    if ( !$txn->redeemable ) {
+      form_set_error('code', t('The code you have entered is not redeemable at this time.'));
+    }
+
+    // Pass transaction to submit handler.
+    $form_state['values']['txn'] = $txn;
+  }
+}
+
+/**
+ * Form Submit Handler: Collection Block Form.
+ */
+function pinapi_collection_block_form_submit($form, &$form_state) {
+  if ( $form_state['values']['txn']->redeemable ) {
+    pinapi_txn_redeem($form_state['values']['txn']);
+    drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
+  }
+}
