@@ -69,15 +69,52 @@ function pinapi_menu() {
     'file' => 'pinapi.admin.inc',
   );
 
-  $items['admin/structure/pin/transaction/%pinapi_txn/edit'] = array(
+  $items['pin/transaction/%pinapi_txn'] = array(
+    'title' => 'View transaction',
+    'description' => 'View transaction',
+    'page callback' => 'pinapi_transaction_view',
+    'page arguments' => array(2),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['pin/transaction/%pinapi_txn/edit'] = array(
     'title' => 'Edit transaction',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_transaction', 4),
+    'page arguments' => array('pinapi_form_transaction', 2),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+
+  $items['pin/pin/%pinapi_pin/edit'] = array(
+    'title' => 'Edit pin',
+    'description' => 'Edit pin',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_pin', 2),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['pin/pin/%pinapi_pin/delete'] = array(
+    'title' => 'Delete pin',
+    'description' => 'Delete pin',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_pin_delete', 2),
     'access arguments' => array('administer pins'),
     'file' => 'pinapi.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function pinapi_admin_paths() {
+  $paths = array(
+    'pin/transaction/*' => TRUE,
+    'pin/transaction/*/edit' => TRUE,
+    'pin/transaction/*/edit/*' => TRUE,
+  );
+  return $paths;
 }
 
 /**

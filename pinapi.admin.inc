@@ -155,6 +155,13 @@ function pinapi_form_collection_delete_submit($form, &$form_state) {
 }
 
 /**
+ * Transaction View.
+ */
+function pinapi_transaction_view($txn = NULL) {
+  return __FUNCTION__;
+}
+
+/**
  * Form constructor to add/edit/delete transactions.
  */
 function pinapi_form_transaction($form, &$form_state, $txn = NULL) {
@@ -209,4 +216,106 @@ function pinapi_form_transaction_submit($form, &$form_state) {
     drupal_set_message(t('The transaction has been deleted.'));
     $form_state['redirect'] = 'admin/structure/pin';
   }
+}
+
+/**
+ * Pin Form.
+ */
+function pinapi_form_pin($form, &$form_state, $pin = NULL) {
+  $collections = array();
+  foreach ( pinapi_collection_load_all() as $collection ) {
+    $collections[$collection->cid] = $collection->name;
+  }
+
+  $form['cid'] = array(
+    '#type' => 'select',
+    '#title' => t('Collection'),
+    '#default_value' => isset($pin->cid) ? $pin->cid : NULL,
+    '#required' => TRUE,
+    '#options' => $collections,
+  );
+  $form['code'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Code'),
+    '#default_value' => isset($pin->code) ? $pin->code : '',
+    '#required' => TRUE,
+  );
+  $form['quantity'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Quantity'),
+    '#default_value' => isset($pin->quantity) ? $pin->quantity : 1,
+    '#required' => TRUE,
+  );
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Published'),
+    '#default_value' => isset($pin->status) ? $pin->status : TRUE,
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
+  if ( isset($pin->pid) ) {
+    $form['actions']['delete'] = array('#type' => 'submit', '#value' => t('Delete'));
+    $form['pid'] = array('#type' => 'hidden', '#value' => $pin->pid);
+  }
+
+  return $form;
+}
+
+/**
+ * Pin Form Validation.
+ */
+function pinapi_form_pin_validate($form, &$form_state) {
+  // @TODO: Pin validation.
+}
+
+/**
+ * Pin Form Submit.
+ */
+function pinapi_form_pin_submit($form, &$form_state) {
+  if ( $form_state['values']['op'] == t('Save') ) {
+    $pin = (object) $form_state['values'];
+    pinapi_pin_save($pin);
+
+    if ( isset($form_values['pid']) ) {
+      drupal_set_message(t('Updated pin.'));
+    }
+    else {
+      watchdog('pinapi', 'Pin has been created.');
+      drupal_set_message(t('Created pin.'));
+    }
+  }
+  else if ( $form_state['values']['op'] == t('Delete') ){
+    pinapi_pin_delete($form_state['values']['pid']);
+    watchdog('pinapi', 'Pin has been deleted.');
+    drupal_set_message(t('Pin has been deleted.'));
+  }
+
+  $form_state['redirect'] = 'admin/structure/pin';
+}
+/**
+ * Form constructor to delete collections().
+ */
+function pinapi_form_pin_delete($form, &$form_state, $pin) {
+  return confirm_form(
+    array(
+      'pin' => array(
+        '#type' => 'value',
+        '#value' => $pin,
+      ),
+    ),
+    t('Are you sure you want to delete this pin?'),
+    'admin/structure/pin',
+    t('This action cannot be undone.'),
+    t('Delete pin'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for pinapi_form_collection_delete().
+ */
+function pinapi_form_pin_delete_submit($form, &$form_state) {
+  pinapi_pin_delete($form_state['values']['pin']->cid);
+  $form_state['redirect'] = 'admin/structure/pin';
 }
