@@ -165,16 +165,26 @@ function pinapi_transaction_view($txn = NULL) {
  * Form constructor to add/edit/delete transactions.
  */
 function pinapi_form_transaction($form, &$form_state, $txn = NULL) {
-  $form['uid'] = array(
+
+  // Determine username for autocomplete textfield.
+  if ( isset($txn->uid) ) {
+    $user = user_load($txn->uid);
+  }
+
+  $form['user'] = array(
     '#type' => 'textfield',
     '#title' => t('User'),
-    '#default_value' => isset($txn->uid) ? $txn->uid : NULL,
+    '#default_value' => isset($user->name) ? $user->name : NULL,
+    '#autocomplete_path' => 'user/autocomplete',
+    '#maxlength' => 60,
   );
+
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Published'),
     '#default_value' => isset($txn->status) ? $txn->status : FALSE,
   );
+
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save'));
   if ( isset($txn->txn_id) ) {
@@ -197,7 +207,11 @@ function pinapi_form_transaction_validate($form, &$form_state) {
  */
 function pinapi_form_transaction_submit($form, &$form_state) {
   if ( $form_state['values']['op'] == t('Save') ) {
+    $user = user_load_by_name($form_state['values']['user']);
+
     $txn = (object) $form_state['values'];
+    $txn->uid = $user->uid;
+
     pinapi_txn_save($txn);
 
     if ( isset($form_values['txn_id']) ) {
