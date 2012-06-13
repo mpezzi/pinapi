@@ -53,6 +53,7 @@ function pinapi_test_generate() {
   $collection = (object) array(
     'name' => t('Test'),
     'machine_name' => 'test',
+    'description' => t('This is a test collection, for you know, testing purposes.'),
     'status' => 1,
   );
   pinapi_collection_save($collection);
@@ -66,4 +67,6 @@ function pinapi_test_generate() {
     );
     pinapi_pin_save($pin);
   }
+
+  drupal_set_message(t('Successfully created test collection and pins.'));
 }
