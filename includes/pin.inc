@@ -81,6 +81,36 @@ function pinapi_pin_save($pin) {
 }
 
 /**
+ * Delete a pin.
+ */
+function pinapi_pin_delete($pid) {
+  if ( $pin = pinapi_pin_load($pid) ) {
+    $transaction = db_transaction();
+    try {
+      // Allow other modules to act on a collection being deleted.
+      module_invoke_all('pinapi_pin_delete', $pin);
+
+      $result = db_delete('pinapi_pin')
+        ->condition('pid', $pin->pid)
+        ->execute();
+
+      // Clear caches.
+      cache_clear_all();
+
+      // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
+      db_ignore_slave();
+    }
+    catch ( Exception $e ) {
+      $transaction->rollback();
+      watchdog_exception('pinapi', $e);
+      throw $e;
+    }
+  }
+
+  return $result;
+}
+
+/**
  * Redeem a pin.
  */
 function pinapi_pin_redeem($string, $collection, $account = NULL) {
