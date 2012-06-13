@@ -123,6 +123,30 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 1,
       ),
+      'created' => array(
+        'description' => 'Created timestamp.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'Changed timestamp.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'start' => array(
+        'description' => 'Start timestamp.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'end' => array(
+        'description' => 'End timestamp.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'status' => array(
         'description' => 'Status',
         'type' => 'int',

@@ -54,9 +54,14 @@ function pinapi_pin_save($pin) {
     $pin->is_new = empty($pin->pid);
 
     if ( $pin->is_new ) {
+      $pin->created = time();
+      $pin->changed = time();
+
       $result = drupal_write_record('pinapi_pin', $pin);
     }
     else {
+      $pin->changed = time();
+
       $result = drupal_write_record('pinapi_pin', $pin, 'pid');
     }
 
