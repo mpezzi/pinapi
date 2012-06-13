@@ -133,8 +133,22 @@ function pinapi_txn_redeem(&$txn) {
   if ( $txn->redeemable ) {
 
     // Decrease quantity on for pin, and then disable pin if quantity is 0.
-    db_query("UPDATE {pinapi_pin} SET quantity = quantity - 1 WHERE pid = :pid AND cid = :cid AND quantity > 0", array(':pid' => $txn->pid, ':cid' => $txn->cid));
-    db_query("UPDATE {pinapi_pin} SET status = 0 WHERE pid = :pid AND cid = :cid AND quantity = 0", array(':pid' => $txn->pid, ':cid' => $txn->cid));
+    db_update('pinapi_pin')
+      ->fields(array('changed' => time()))
+      ->expression('quantity', 'quantity - 1')
+      ->condition('pid', $txn->pid)
+      ->condition('cid', $txn->cid)
+      ->condition('quantity', 0, '>')
+      ->execute();
+    db_update('pinapi_pin')
+      ->fields(array('status' => 0, 'changed' => time()))
+      ->condition('pid', $txn->pid)
+      ->condition('cid', $txn->cid)
+      ->condition('quantity', 0)
+      ->execute();
+
+    //db_query("UPDATE {pinapi_pin} SET quantity = quantity - 1, changed = :changed WHERE pid = :pid AND cid = :cid AND quantity > 0", array(':pid' => $txn->pid, ':cid' => $txn->cid));
+    //db_query("UPDATE {pinapi_pin} SET status = 0 WHERE pid = :pid AND cid = :cid AND quantity = 0", array(':pid' => $txn->pid, ':cid' => $txn->cid));
 
     $txn->redeemed = TRUE;
 
