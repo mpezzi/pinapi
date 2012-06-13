@@ -100,6 +100,7 @@ function pinapi_pin_delete($pid) {
         ->execute();
 
       // Clear caches.
+      pinapi_pin_static_reset();
       cache_clear_all();
 
       // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
