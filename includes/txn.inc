@@ -104,7 +104,14 @@ function pinapi_txn($code, $cid, $uid = NULL) {
 function pinapi_txn_status($txn) {
   if ( $txn->collection && $txn->collection->status ) {
     if ( $txn->pin && $txn->pin->status ) {
-      $status = PINAPI_STATUS_AVAILABLE;
+      // Check if is within allowed time.
+      if ( $txn->pin->start != 0 && $txn->pin->start >= $txn->timestamp ) {
+        $status = PINAPI_STATUS_EARLY;
+      } else if ( $txn->pin->end != 0 && $txn->pin->end < $txn->timestamp ) {
+        $status = PINAPI_STATUS_LATE;
+      } else {
+        $status = PINAPI_STATUS_AVAILABLE;
+      }
     }
     else if ( $txn->pin && !$txn->pin->status ) {
       $status = PINAPI_STATUS_UNAVAILABLE;

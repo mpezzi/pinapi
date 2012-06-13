@@ -21,10 +21,19 @@ define('PINAPI_STATUS_UNAVAILABLE', 2);
 define('PINAPI_STATUS_CLOSED', 3);
 
 /**
+ * Pin is early.
+ */
+define('PINAPI_STATUS_EARLY', 4);
+
+/**
+ * Pin is late.
+ */
+define('PINAPI_STATUS_LATE', 5);
+
+/**
  * Pin was not found.
  */
-define('PINAPI_STATUS_NOT_FOUND', 4);
-
+define('PINAPI_STATUS_NOT_FOUND', 6);
 
 /**
  * Invoke hook_pinapi operation in all modules.
