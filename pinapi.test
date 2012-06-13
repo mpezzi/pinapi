@@ -40,7 +40,7 @@ class PinAPITestCase extends DrupalWebTestCase {
 /**
  * Tests for the pinapi collection interface.
  */
-class PinAPICollectionFunctionalTest extends PinAPITestCase {
+class PinAPICollectionInterfaceTest extends PinAPITestCase {
 
   public static function getInfo() {
     return array(
@@ -127,4 +127,63 @@ class PinAPICollectionFunctionalTest extends PinAPITestCase {
     $this->assertFalse(pinapi_collection_load($cid), t('Collection is not found in the database'));
   }
 
+}
+
+/**
+ * Tests for Pins.
+ */
+class PinAPIPinTest extends PinAPITestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Pin API Pin',
+      'description' => 'Test the pin.',
+      'group' => 'Pin API',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('pinapi');
+    $this->admin_user = $this->drupalCreateUser(array('administer pins'));
+    $this->drupalLogin($this->admin_user);
+    $this->collection = $this->createCollection();
+
+    $this->pins = array();
+    for ( $i = 0; $i < 5; $i++ ) {
+      $this->pins[] = $this->createPin($this->collection);
+    }
+  }
+
+  /**
+   * Create pin.
+   */
+  function testPinCreate() {
+    $pid = $this->pins[count($this->pins) - 1]->pid;
+    $pin = pinapi_pin_load($pid);
+    $this->assertTrue($pin, t('Pin found in database.'));
+  }
+
+  /**
+   * Update pin.
+   */
+  function testPinUpdate() {
+    // Check that changed timestamp is updated when saving.
+    $pid = $this->pins[count($this->pins) - 1]->pid;
+    $pin = pinapi_pin_load($pid);
+    $changed = $pin->changed;
+    sleep(1);
+    pinapi_pin_save($pin);
+    $this->assertTrue($changed != $pin->changed, t('Pin has updated changed timestamp.'));
+  }
+
+  /**
+   * Delete pin.
+   */
+  function testPinDelete() {
+    $pid = $this->pins[count($this->pins) - 1]->pid;
+    $pin = pinapi_pin_load($pid);
+    pinapi_pin_delete($pin->pid);
+    $pin = pinapi_pin_load($pid);
+    $this->assertFalse($pin, t('Pin not found in database.'));
+  }
 }
