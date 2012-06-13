@@ -345,6 +345,13 @@ function pinapi_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
+  $data['pinapi_txn']['edit_txn'] = array(
+    'field' => array(
+      'title' => t('Edit link'),
+      'help' => t('Provide a simple link to edit the transaction.'),
+      'handler' => 'pinapi_views_handler_field_txn_link_edit',
+    ),
+  );
 
   return $data;
 }
