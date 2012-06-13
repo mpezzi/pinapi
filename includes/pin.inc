@@ -73,7 +73,7 @@ function pinapi_pin_save($pin) {
   }
   catch ( Exception $e ) {
     $transaction->rollback();
-    watchlog_exception('pinapi', $e);
+    watchdog_exception('pinapi', $e);
     throw $e;
   }
 
