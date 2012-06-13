@@ -140,6 +140,7 @@ function pinapi_collection_block_form($form, &$form_state, $collection) {
     '#type' => 'textfield',
     '#title' => t('Code'),
     '#default_value' => '',
+    '#size' => 20,
     '#required' => TRUE,
   );
   $form['collection'] = array(
