@@ -233,6 +233,33 @@ function pinapi_form_transaction_submit($form, &$form_state) {
 }
 
 /**
+ * Form constructor to delete transactions.
+ */
+function pinapi_form_transaction_delete($form, &$form_state, $txn) {
+  return confirm_form(
+    array(
+      'txn' => array(
+        '#type' => 'value',
+        '#value' => $txn,
+      ),
+    ),
+    t('Are you sure you want to delete this transaction?'),
+    'admin/structure/pin',
+    t('This action cannot be undone.'),
+    t('Delete transaction'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for deleting transactions
+ */
+function pinapi_form_transaction_delete_submit($form, &$form_state) {
+  pinapi_txn_delete($form_state['values']['txn']->txn_id);
+  $form_state['redirect'] = 'admin/structure/pin';
+}
+
+/**
  * Pin Form.
  */
 function pinapi_form_pin($form, &$form_state, $pin = NULL) {
@@ -307,6 +334,7 @@ function pinapi_form_pin_submit($form, &$form_state) {
 
   $form_state['redirect'] = 'admin/structure/pin';
 }
+
 /**
  * Form constructor to delete collections().
  */
