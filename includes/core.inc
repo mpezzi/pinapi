@@ -58,7 +58,7 @@ function pinapi_invoke($hook, $op, &$object) {
 /**
  * Generate Test Object.
  */
-function pinapi_test_generate() {
+function pinapi_test_generate($number_of_pins = 5) {
   $collection = (object) array(
     'name' => t('Test'),
     'machine_name' => 'test',
@@ -67,7 +67,7 @@ function pinapi_test_generate() {
   );
   pinapi_collection_save($collection);
 
-  for ( $i = 0; $i < 5; $i++ ) {
+  for ( $i = 0; $i < $number_of_pins; $i++ ) {
     $pin = (object) array(
       'code' => 'test' . $i,
       'cid' => $collection->cid,
