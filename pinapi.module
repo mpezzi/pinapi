@@ -84,6 +84,14 @@ function pinapi_menu() {
     'access arguments' => array('administer pins'),
     'file' => 'pinapi.admin.inc',
   );
+  $items['pin/transaction/%pinapi_txn/delete'] = array(
+    'title' => 'Delete transaction',
+    'description' => 'Delete transaction',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_transaction_delete', 2),
+    'access arguments' => array('administer pins'),
+    'file' => 'pinapi.admin.inc',
+  );
 
   $items['pin/pin/%pinapi_pin/edit'] = array(
     'title' => 'Edit pin',
