@@ -1,0 +1,9 @@
+name = Pin API Rules
+description = Provides integration of Pin API with rules
+core = 7.x
+package = Pin API
+
+dependencies[] = pinapi
+dependencies[] = rules
+
+files[] = pinapi_rules.rules.inc

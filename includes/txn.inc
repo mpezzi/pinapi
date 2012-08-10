@@ -299,3 +299,17 @@ function pinapi_txn_stats_del($txn, $name) {
 function pinapi_txn_static_reset() {
   drupal_static_reset('pinapi_txn_load');
 }
+
+/**
+ * Returns properties of Transaction data object.
+ */
+function _pinapi_txn_properties() {
+  return array(
+    'user' => array(
+      'type' => 'user',
+      'label' => t('User'),
+      'description' => t('The user that created the transaction'),
+      'setter callback' => 'entity_metadata_verbatim_set',
+    ),
+  );
+}
