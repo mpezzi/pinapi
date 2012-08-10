@@ -214,7 +214,7 @@ function pinapi_form_transaction_submit($form, &$form_state) {
 
     pinapi_txn_save($txn);
 
-    if ( isset($form_values['txn_id']) ) {
+    if ( isset($form_state['values']['txn_id']) ) {
       drupal_set_message(t('Updated transaction.'));
     }
     else {
