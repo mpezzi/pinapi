@@ -7,4 +7,5 @@ files[] = pinapi.test
 files[] = pinapi.views.inc
 files[] = views/pinapi_views_handler_field_txn_link.inc
 files[] = views/pinapi_views_handler_field_txn_link_edit.inc
+files[] = views/pinapi_views_handler_field_txn_link_delete.inc
 configure = admin/structure/pinapi

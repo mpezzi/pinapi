@@ -352,6 +352,13 @@ function pinapi_views_data() {
       'handler' => 'pinapi_views_handler_field_txn_link_edit',
     ),
   );
+  $data['pinapi_txn']['delete_txn'] = array(
+    'field' => array(
+      'title' => t('Delete link'),
+      'help' => t('Provide a simple link to delete the transaction.'),
+      'handler' => 'pinapi_views_handler_field_txn_link_delete',
+    ),
+  );
 
   return $data;
 }
