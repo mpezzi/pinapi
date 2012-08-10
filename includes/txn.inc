@@ -64,6 +64,37 @@ function pinapi_txn_save(&$txn) {
 }
 
 /**
+ * Delete a Transaction.
+ */
+function pinapi_txn_delete($txn_id) {
+  if ( $txn = pinapi_txn_load($txn_id) ) {
+    $transaction = db_transaction();
+    try {
+      // Allow other modules to act on a collection being deleted.
+      module_invoke_all('pinapi_txn_delete', $txn);
+
+      $result = db_delete('pinapi_txn')
+        ->condition('txn_id', $txn->txn_id)
+        ->execute();
+
+      // Clear caches.
+      pinapi_txn_static_reset();
+      cache_clear_all();
+
+      // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
+      db_ignore_slave();
+    }
+    catch ( Exception $e ) {
+      $transaction->rollback();
+      watchdog_exception('pinapi', $e);
+      throw $e;
+    }
+  }
+
+  return $result;
+}
+
+/**
  * Creates a Transaction Object.
  */
 function pinapi_txn($code, $cid, $uid = NULL) {
