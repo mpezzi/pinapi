@@ -20,9 +20,9 @@ function pinapi_permission() {
       'title' => t('Administer pins'),
       'description' => t('Access the pin administration pages.')
     ),
-    'redeem pins' => array(
-      'title' => t('Redeem pins'),
-      'description' => t('Access to redeem pins.'),
+    'use pins' => array(
+      'title' => t('Use pins'),
+      'description' => t('Access to use pins.'),
     ),
   );
 }
@@ -158,7 +158,7 @@ function pinapi_block_info() {
  */
 function pinapi_block_view($delta = '') {
   $block = array();
-  if ( user_access('redeem pins') && $collection = pinapi_collection_load($delta) ) {
+  if ( user_access('use pins') && $collection = pinapi_collection_load($delta) ) {
     $block['subject'] = t('Collection Redeem Form (@name)', array('@name' => $collection->name));
     $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
   }
