@@ -256,18 +256,20 @@ function pinapi_txn_stats_inc($txn, $name, $value = 1) {
 /**
  * Return a Transaction Statistic.
  *
- * @param $txn
- *   A transaction object.
+ * @param $uid
+ *   A user id.
+ * @param $cid
+ *   A collection id.
  * @param $name
  *   The name of the variable to set.
  * @param $default
  *   The default value to use if this variable has never been set.
  */
-function pinapi_txn_stats_get($txn, $name, $default = NULL) {
+function pinapi_txn_stats_get($uid, $cid, $name, $default = NULL) {
   $result = db_select('pinapi_txn_stats', 's')
     ->fields('s', array('value'))
-    ->condition('uid', $txn->uid)
-    ->condition('cid', $txn->cid)
+    ->condition('uid', $uid)
+    ->condition('cid', $cid)
     ->condition('name', $name)
     ->execute()
     ->fetchField();
