@@ -145,8 +145,12 @@ function pinapi_views_api() {
 function pinapi_block_info() {
   $blocks = array();
   foreach ( pinapi_collection_load_all() as $collection ) {
-    $blocks[$collection->cid] = array(
+    $blocks['collection_' . $collection->cid] = array(
       'info' => t('Pin Collection Redeem Form (@name)', array('@name' => $collection->name)),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+    $blocks['stat_' . $collection->cid] = array(
+      'info' => t('Pin API Statistics (@name)', array('@name' => $collection->name)),
       'cache' => DRUPAL_NO_CACHE,
     );
   }
@@ -157,11 +161,24 @@ function pinapi_block_info() {
  * Implements hook_block_view().
  */
 function pinapi_block_view($delta = '') {
+  list($type, $id) = explode('_', $delta);
+
   $block = array();
-  if ( user_access('use pins') && $collection = pinapi_collection_load($delta) ) {
-    $block['subject'] = t('Collection Redeem Form (@name)', array('@name' => $collection->name));
-    $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
+  switch ( $type ) {
+    case 'collection':
+      if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
+        $block['subject'] = t('Collection Redeem Form (@name)', array('@name' => $collection->name));
+        $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
+      }
+      break;
+    case 'stat':
+      if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
+        $block['subject'] = t('Pin API Statistics (@name)', array('@name' => $collection->name));
+        $block['content'] = pinapi_txn_stats_get($GLOBALS['user']->uid, $collection->cid, 'total');
+      }
+      break;
   }
+
   return $block;
 }
 
