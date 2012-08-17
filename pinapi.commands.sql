@@ -1,0 +1,1 @@
+LOAD DATA INFILE '/input.txt' INTO TABLE pinapi_pin FIELDS TERMINATED BY ',' ENCLOSED BY '' ESCAPED BY '\\' LINES TERMINATED BY '\n' (code, cid, quantity, status) SET code = TRIM(code), cid = 1, quantity = 1, status = 1;
