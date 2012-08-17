@@ -215,11 +215,11 @@ function pinapi_schema() {
     'primary key' => array('txn_id'),
   );
 
-  $schema['pinapi_txn_stats'] = array(
+  $schema['pinapi_cache'] = array(
     'description' => t('Stores statistical information of transactions.'),
     'fields' => array(
-      'sid' => array(
-        'description' => 'Statistic ID',
+      'cache_id' => array(
+        'description' => 'Cache ID',
         'type' => 'serial',
         'not null' => TRUE,
       ),
@@ -235,8 +235,8 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'timestamp' => array(
-        'description' => 'Timestamp',
+      'updated' => array(
+        'description' => 'Updated Timestamp',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
@@ -256,7 +256,7 @@ function pinapi_schema() {
     'indexes' => array(
       'cid_uid_name' => array('cid', 'uid', 'name'),
     ),
-    'primary key' => array('sid'),
+    'primary key' => array('cache_id'),
   );
 
   return $schema;

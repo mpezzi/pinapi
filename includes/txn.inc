@@ -17,6 +17,7 @@ function pinapi_txn_load($txn_id) {
     $txn->pin = pinapi_pin_load($txn->pid);
     $txn->collection = pinapi_collection_load($txn->pin->cid);
     $txn->user = user_load($txn->uid);
+    $txn->cid = $txn->pin->cid;
 
     $txns[$txn_id] = $txn;
   }
@@ -42,9 +43,14 @@ function pinapi_txn_save(&$txn) {
       $result = drupal_write_record('pinapi_txn', $txn, 'txn_id');
     }
 
-    // Clear caches.
+    // Clear txn static cache.
     pinapi_txn_static_reset();
-    cache_clear_all();
+
+    // @TODO: Do we need this?
+    //cache_clear_all();
+
+    // Update Pin API Cache Value.
+    pinapi_cache_inc($txn->uid, $txn->cid, 'total');
 
     // Allow other modules to act when a collection is being saved.
     module_invoke_all('pinapi_txn_save', $txn);
@@ -79,7 +85,12 @@ function pinapi_txn_delete($txn_id) {
 
       // Clear caches.
       pinapi_txn_static_reset();
-      cache_clear_all();
+
+      // @TODO: Do we need this?
+      //cache_clear_all();
+
+      // Update Pin API Cache Value.
+      pinapi_cache_inc($txn->uid, $txn->cid, 'total', -1);
 
       // Ignore slave server temporarily to give time for the saved collection to be propagated to the slave server.
       db_ignore_slave();
@@ -195,104 +206,11 @@ function pinapi_txn_redeem(&$txn) {
     // Invoke hook_pinapi_txn() w/ 'redeem' operation.
     pinapi_invoke('pinapi_txn', 'redeem', $txn);
 
-    pinapi_txn_stats_update($txn);
-
     return TRUE;
   }
 
   // Transaction was not redeemed.
   return FALSE;
-}
-
-/**
- * Update Transaction Statistics.
- */
-function pinapi_txn_stats_update($txn) {
-  pinapi_txn_stats_inc($txn, 'total');
-
-  // Invoke hook_pinapi_txn() w/ 'stat update' operation.
-  pinapi_invoke('pinapi_txn', 'stats update', $txn);
-}
-
-/**
- * Set / Replace a Transaction Statistic.
- *
- * @param $txn
- *   A transaction object.
- * @param $name
- *   The name of the variable to set.
- * @param $value
- *   (int) The value to set.
- */
-function pinapi_txn_stats_set($txn, $name, $value = 1) {
-  $query = db_merge('pinapi_txn_stats')
-    ->key(array('uid' => $txn->uid, 'cid' => $txn->cid, 'name' => $name))
-    ->fields(array('timestamp' => time(), 'value' => $value))
-    ->execute();
-
-  return $query;
-}
-
-/**
- * Increment a Transaction Statistic.
- *
- * @param $txn
- *   A transaction object.
- * @param $name
- *   The name of the variable to set.
- * @param $value
- *   (int) The value to set.
- */
-function pinapi_txn_stats_inc($txn, $name, $value = 1) {
-  $query = db_merge('pinapi_txn_stats')
-    ->key(array('uid' => $txn->uid, 'cid' => $txn->cid, 'name' => $name))
-    ->fields(array('timestamp' => time(), 'value' => $value))
-    ->expression('value', 'value + :inc', array(':inc' => $value))
-    ->execute();
-
-  return $query;
-}
-
-/**
- * Return a Transaction Statistic.
- *
- * @param $uid
- *   A user id.
- * @param $cid
- *   A collection id.
- * @param $name
- *   The name of the variable to set.
- * @param $default
- *   The default value to use if this variable has never been set.
- */
-function pinapi_txn_stats_get($uid, $cid, $name, $default = NULL) {
-  $result = db_select('pinapi_txn_stats', 's')
-    ->fields('s', array('value'))
-    ->condition('uid', $uid)
-    ->condition('cid', $cid)
-    ->condition('name', $name)
-    ->execute()
-    ->fetchField();
-
-  return $result ? $result : $default;
-}
-
-/**
- * Delete a Transaction Statistic.
- *
- * @param $txn
- *   A transaction object.
- * @param $name
- *   The name of the variable to set.
- */
-function pinapi_txn_stats_del($txn, $name) {
-  $query = db_delete('pinapi_txn_stats')
-    ->condition('uid', $txn->uid)
-    ->condition('cid', $txn->cid)
-    ->condition('name', $name)
-    ->execute();
-
-  return $query;
 }
 
 /**

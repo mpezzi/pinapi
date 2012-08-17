@@ -115,7 +115,7 @@ function pinapi_collection_clear($cid) {
 
     db_query("DELETE pt.* FROM {pinapi_txn} pt INNER JOIN {pinapi_pin} pp ON pt.pid = pp.pid WHERE pp.cid = :cid", array(':cid' => $collection->cid));
     db_query("DELETE FROM {pinapi_pin} WHERE cid = :cid", array(':cid' => $collection->cid));
-    db_query("DELETE FROM {pinapi_txn_stats} WHERE cid = :cid", array(':cid' => $collection->cid));
+    db_query("DELETE FROM {pinapi_cache} WHERE cid = :cid", array(':cid' => $collection->cid));
     db_query("DELETE FROM {pinapi_collection_cache} WHERE cid = :cid", array(':cid' => $collection->cid));
 
     pinapi_collection_static_reset();
