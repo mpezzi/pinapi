@@ -208,7 +208,12 @@ function pinapi_txn_redeem(&$txn) {
 
     // Decrease collection cache counts.
     if ( !empty($txn->collection->inventory) ) {
-      pinapi_cache_collection_inc($txn->cid, 'available', -1);
+      if ( $txn->pin->test ) {
+        pinapi_cache_collection_inc($txn->cid, 'available_test', -1);
+      }
+      else {
+        pinapi_cache_collection_inc($txn->cid, 'available', -1);
+      }
     }
 
     return TRUE;

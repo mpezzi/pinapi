@@ -125,15 +125,26 @@ function pinapi_collection_calculate($cid) {
     module_invoke_all('pinapi_collection_calculate', $collection);
 
     // Total amount of pins for collection.
-    $total = db_query('SELECT SUM(quantity_original) FROM {pinapi_pin} WHERE cid = :cid', array(':cid' => $collection->cid))
+    $total = db_query('SELECT SUM(quantity_original) FROM {pinapi_pin} WHERE cid = :cid AND test = 0', array(':cid' => $collection->cid))
       ->fetchField();
 
     // Total amount of available pins for collection.
-    $available = db_query('SELECT SUM(quantity) FROM {pinapi_pin} WHERE cid = :cid', array(':cid' => $collection->cid))
+    $available = db_query('SELECT SUM(quantity) FROM {pinapi_pin} WHERE cid = :cid AND test = 0', array(':cid' => $collection->cid))
       ->fetchField();
 
-    pinapi_cache_collection_set($collection->cid, 'total', $total);
-    pinapi_cache_collection_set($collection->cid, 'available', $available);
+    // Total amount of pins for collection.
+    $total_test = db_query('SELECT SUM(quantity_original) FROM {pinapi_pin} WHERE cid = :cid AND test = 1', array(':cid' => $collection->cid))
+      ->fetchField();
+
+    // Total amount of available pins for collection.
+    $available_test = db_query('SELECT SUM(quantity) FROM {pinapi_pin} WHERE cid = :cid AND test = 1', array(':cid' => $collection->cid))
+      ->fetchField();
+
+    // Set values in collection cache.
+    pinapi_cache_collection_set($collection->cid, 'total', !is_null($total) ? $total : 0);
+    pinapi_cache_collection_set($collection->cid, 'available', !is_null($available) ? $available : 0);
+    pinapi_cache_collection_set($collection->cid, 'total_test', !is_null($total_test) ? $total_test : 0);
+    pinapi_cache_collection_set($collection->cid, 'available_test', !is_null($available_test) ? $available_test : 0);
   }
 }
 
