@@ -260,8 +260,10 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
  * Form Submit Handler: Collection Block Form.
  */
 function pinapi_collection_block_form_submit($form, &$form_state) {
-  if ( $form_state['values']['txn']->redeemable ) {
-    pinapi_txn_redeem($form_state['values']['txn']);
+  $txn = $form_state['values']['txn'];
+
+  if ( $txn->redeemable ) {
+    pinapi_txn_redeem($txn);
     drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
     drupal_goto('<front>');
   }
