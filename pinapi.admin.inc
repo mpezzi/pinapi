@@ -16,19 +16,21 @@ function pinapi_admin_overview() {
  * Displays the pin api administration page.
  */
 function pinapi_view() {
-  $result = db_query("SELECT * FROM {pinapi_collection} ORDER BY name");
-
   $output = '<h3>' . t('Collection overview') . '</h3>';
 
   $header = array(
     t('Name'),
+    t('Live Pins'),
+    t('Test Pins'),
     array('data' => t('Operations'), 'colspan' => '3'),
   );
 
   $rows = array();
-  foreach ( $result as $collection ) {
+  foreach ( pinapi_collection_load_all() as $collection ) {
     $rows[] = array(
       $collection->name,
+      $collection->inventory['available'] . '/' . $collection->inventory['total'],
+      $collection->inventory['available_test'] . '/' . $collection->inventory['total_test'],
       l(t('update collection'), "admin/structure/pin/collection/$collection->cid/update"),
       l(t('edit collection'), "admin/structure/pin/collection/$collection->cid/edit"),
       l(t('delete collection'), "admin/structure/pin/collection/$collection->cid/delete"),
