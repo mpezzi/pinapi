@@ -218,7 +218,8 @@ function pinapi_collection_block_form($form, &$form_state, $collection) {
     '#value' => t('Enter'),
   );
 
-  $form['#id'] = 'pinapi-collection-block-form-' . $collection->cid;
+  $form['#id'] = 'pinapi-collection-block-form-' . $collection->machine_name;
+  $form['#attributes']['class'][] = 'pinapi-collection-block-form';
 
   return $form;
 }
