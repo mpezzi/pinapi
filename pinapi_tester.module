@@ -7,18 +7,6 @@
 
 
 /**
- * Implements hook_permission().
- */
-function pinapi_tester_permission() {
-  return array(
-    'use test pins' => array(
-      'title' => t('Use test pins'),
-      'description' => t('Access to use test pins.'),
-    ),
-  );
-}
-
-/**
  * Implements hook_theme().
  */
 function pinapi_tester_theme() {

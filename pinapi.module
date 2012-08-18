@@ -25,6 +25,10 @@ function pinapi_permission() {
       'title' => t('Use pins'),
       'description' => t('Access to use pins.'),
     ),
+    'use test pins' => array(
+      'title' => t('Use test pins'),
+      'description' => t('Access to use test pins.'),
+    ),
   );
 }
 
