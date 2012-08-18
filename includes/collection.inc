@@ -13,15 +13,17 @@ function pinapi_collection_load($cid = NULL) {
   if ( !isset($collections[$cid]) ) {
     $collections[$cid] = db_query('SELECT * FROM {pinapi_collection} WHERE cid = :cid', array('cid' => $cid))->fetchObject();
 
-    $result = db_select('pinapi_collection_cache', 'p')
-      ->fields('p', array('name', 'value'))
-      ->condition('cid', $cid)
-      ->execute()
-      ->fetchAllAssoc('name');
+    if ( $collections[$cid] ) {
+      $result = db_select('pinapi_collection_cache', 'p')
+        ->fields('p', array('name', 'value'))
+        ->condition('cid', $cid)
+        ->execute()
+        ->fetchAllAssoc('name');
 
-    $collections[$cid]->inventory = array();
-    foreach ( $result as $r ) {
-      $collections[$cid]->inventory[$r->name] = $r->value;
+      $collections[$cid]->inventory = array();
+      foreach ( $result as $r ) {
+        $collections[$cid]->inventory[$r->name] = $r->value;
+      }
     }
   }
   return $collections[$cid];
