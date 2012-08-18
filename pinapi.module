@@ -243,6 +243,11 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
         break;
     }
 
+    // Only users with "use test pins" permissions can redeem test pins.
+    if ( $txn->pin->test && !user_access('use test pins') ) {
+      form_set_error('code', t('You account cannot redeem test pins'));
+    }
+
     // Show message if not redeemable.
     if ( !$txn->redeemable ) {
       form_set_error('code', t('The code you have entered is not redeemable at this time.'));
