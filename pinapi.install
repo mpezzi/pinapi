@@ -147,8 +147,15 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'test' => array(
+        'description' => 'Test Pin.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
       'status' => array(
-        'description' => 'Status',
+        'description' => 'Status.',
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
@@ -156,7 +163,7 @@ function pinapi_schema() {
       ),
     ),
     'indexes' => array(
-      'cid_code_status' => array('cid', 'code', 'status'),
+      'cid_code_test_status' => array('cid', 'code', 'test', 'status'),
     ),
     'primary key' => array('pid'),
   );
