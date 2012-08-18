@@ -35,8 +35,8 @@ function pinapi_cache_inc($uid, $cid, $name, $value = 1) {
  * Get Pin API Cache Value.
  */
 function pinapi_cache_get($uid, $cid, $name, $default = NULL) {
-  $result = db_select('pinapi_cache', 's')
-    ->fields('s', array('value'))
+  $result = db_select('pinapi_cache', 'c')
+    ->fields('c', array('value'))
     ->condition('uid', $uid)
     ->condition('cid', $cid)
     ->condition('name', $name)
