@@ -206,6 +206,11 @@ function pinapi_txn_redeem(&$txn) {
     // Invoke hook_pinapi_txn() w/ 'redeem' operation.
     pinapi_invoke('pinapi_txn', 'redeem', $txn);
 
+    // Decrease collection cache counts.
+    if ( !empty($txn->collection->inventory) ) {
+      pinapi_cache_collection_inc($txn->cid, 'available', -1);
+    }
+
     return TRUE;
   }
 

@@ -71,6 +71,7 @@ function pinapi_test_generate($number_of_pins = 5) {
     $pin = (object) array(
       'code' => 'test' . $i,
       'cid' => $collection->cid,
+      'quantity_original' => 1,
       'quantity' => 1,
       'test' => 1,
       'status' => 1,

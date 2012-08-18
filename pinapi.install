@@ -68,11 +68,10 @@ function pinapi_schema() {
   $schema['pinapi_collection_cache'] = array(
     'description' => t('Stores collection total information.'),
     'fields' => array(
-      'collection_cache_id' => array(
+      'cache_id' => array(
         'description' => 'Collection Cache ID',
-        'type' => 'int',
+        'type' => 'serial',
         'not null' => TRUE,
-        'default' => 0,
       ),
       'cid' => array(
         'description' => 'Collection ID',
@@ -80,8 +79,8 @@ function pinapi_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-      'value_type' => array(
-        'description' => 'Value Type',
+      'name' => array(
+        'description' => 'Name',
         'type' => 'varchar',
         'length' => 128,
       ),
@@ -93,9 +92,9 @@ function pinapi_schema() {
       ),
     ),
     'indexes' => array(
-      'cid_value_type' => array('cid', 'value_type'),
+      'cid_name' => array('cid', 'name'),
     ),
-    'primary key' => array('collection_cache_id'),
+    'primary key' => array('cache_id'),
   );
 
   $schema['pinapi_pin'] = array(
@@ -116,6 +115,12 @@ function pinapi_schema() {
         'description' => 'Code',
         'type' => 'varchar',
         'length' => 128,
+      ),
+      'quantity_original' => array(
+        'description' => 'Original Quantity',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
       ),
       'quantity' => array(
         'description' => 'Quantity',
