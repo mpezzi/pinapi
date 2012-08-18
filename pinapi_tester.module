@@ -90,11 +90,13 @@ function pinapi_tester_load_test_pins($cid, $limit = 10) {
  * Implements hook_preprocess_pinapi_tester().
  */
 function template_preprocess_pinapi_tester(&$vars) {
+  $vars['id'] = 'pinapi-tester-' . $vars['collection']->machine_name;
+
   drupal_add_js(drupal_get_path('module', 'pinapi_tester') . '/pinapi_tester.js');
   drupal_add_js(array(
     'pinapi_tester' => array(
-      '#pinapi-tester-' . $vars['collection']->cid => array(
-        'form' => '#pinapi-collection-block-form-' . $vars['collection']->cid,
+      '#' . $vars['id'] => array(
+        'form' => '#pinapi-collection-block-form-' . $vars['collection']->machine_name,
       ),
     ),
   ), 'setting');

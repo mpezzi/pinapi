@@ -1,3 +1,3 @@
-<div id="pinapi-tester-<?php print $collection->cid; ?>" class="pinapi-tester">
+<div id="<?php print $id; ?>" class="pinapi-tester">
   <?php print $codes; ?>
 </div>
