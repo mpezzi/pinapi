@@ -40,15 +40,17 @@ function pinapi_tester_block_view($delta = '') {
   list($type, $id) = explode('_', $delta);
 
   $block = array();
-  switch ( $type ) {
-    case 'tester':
-      if ( user_access('use test pins') && $collection = pinapi_collection_load($id) ) {
-        $pins = pinapi_tester_load_test_pins($collection->cid);
+  if ( isset($type) && isset($id) ) {
+    switch ( $type ) {
+      case 'tester':
+        if ( user_access('use test pins') && $collection = pinapi_collection_load($id) ) {
+          $pins = pinapi_tester_load_test_pins($collection->cid);
 
-        $block['subject'] = t('Pin API Collection Tester (@name)', array('@name' => $collection->name));
-        $block['content'] = theme('pinapi_tester', array('collection' => $collection, 'pins' => $pins));
-      }
-      break;
+          $block['subject'] = t('Pin API Collection Tester (@name)', array('@name' => $collection->name));
+          $block['content'] = theme('pinapi_tester', array('collection' => $collection, 'pins' => $pins));
+        }
+        break;
+    }
   }
 
   return $block;

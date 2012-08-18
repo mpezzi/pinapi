@@ -162,19 +162,21 @@ function pinapi_block_view($delta = '') {
   list($type, $id) = explode('_', $delta);
 
   $block = array();
-  switch ( $type ) {
-    case 'collection':
-      if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
-        $block['subject'] = t('Pin API Collection Form (@name)', array('@name' => $collection->name));
-        $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
-      }
-      break;
-    case 'txn-total':
-      if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
-        $block['subject'] = t('Pin API Transaction Total (@name)', array('@name' => $collection->name));
-        $block['content'] = pinapi_cache_get($GLOBALS['user']->uid, $collection->cid, 'total');
-      }
-      break;
+  if ( isset($type) && isset($id) ) {
+    switch ( $type ) {
+      case 'collection':
+        if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
+          $block['subject'] = t('Pin API Collection Form (@name)', array('@name' => $collection->name));
+          $block['content'] = drupal_get_form('pinapi_collection_block_form', $collection);
+        }
+        break;
+      case 'txn-total':
+        if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
+          $block['subject'] = t('Pin API Transaction Total (@name)', array('@name' => $collection->name));
+          $block['content'] = pinapi_cache_get($GLOBALS['user']->uid, $collection->cid, 'total');
+        }
+        break;
+    }
   }
 
   return $block;
