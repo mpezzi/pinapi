@@ -108,5 +108,10 @@ function template_preprocess_pinapi_tester(&$vars) {
     );
   }
 
-  $vars['codes'] = theme('item_list', array('items' => $codes, 'attributes' => array('class' => array('pinapi-tester-codes'))));
+  if ( count($codes) > 0 ) {
+    $vars['codes'] = theme('item_list', array('items' => $codes, 'attributes' => array('class' => array('pinapi-tester-codes'))));
+  }
+  else {
+    $vars['codes'] = t('No test pins available');
+  }
 }
