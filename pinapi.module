@@ -127,13 +127,6 @@ function pinapi_admin_paths() {
 }
 
 /**
- * Implements hook_theme().
- */
-function xpinapi_theme() {
-
-}
-
-/**
  * Implements hook_views_api().
  */
 function pinapi_views_api() {
