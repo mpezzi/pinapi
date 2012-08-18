@@ -1,0 +1,4 @@
+name = Pin API Flood Protection
+description = Provides flood protection for Pin API
+core = 7.x
+package = pinapi

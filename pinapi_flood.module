@@ -1,0 +1,89 @@
+<?php
+
+/**
+ * @file
+ * Provides flood protection for Pin API
+ */
+
+/**
+ * Implements hook_form_alter().
+ */
+function pinapi_flood_form_alter(&$form, &$form_state, $form_id) {
+  if ( $form_id == 'pinapi_collection_block_form' && variable_get('pinapi_flood', TRUE) ) {
+    $form['#validate'][] = 'pinapi_flood_collection_block_form_validate';
+
+    // Add submit handler to clear successful events from flood protection.
+    // @NOTE: This needs to execute before the drupal_goto in pinapi_collection_block_form_submit.
+    array_unshift($form['#submit'], 'pinapi_flood_collection_block_form_submit');
+
+    // Flood protection was triggered, remove validation callbacks to improve performance.
+    if ( !pinapi_flood_is_allowed() ) {
+
+      // Add flood blocker validation callback as first callback.
+      array_unshift($form['#validate'], 'pinapi_flood_collection_block_form_validate_blocker');
+
+      // Remove the following validation callbacks.
+      foreach ( $form['#validate'] as $key => $value ) {
+        switch ( $value ) {
+          case 'pinapi_collection_block_form_validate':
+          case 'pinapi_flood_collection_block_form_validate':
+            unset($form['#validate'][$key]);
+        }
+      }
+    }
+
+  }
+}
+
+/**
+ * Validate Callback: Pin API Collection Block Form.
+ */
+function pinapi_flood_collection_block_form_validate(&$form, &$form_state) {
+  // Trigger flood protection for the following transaction statuses.
+  if ( isset($form_state['values']['txn']) ) {
+    switch ( $form_state['values']['txn']->txn_status ) {
+      case PINAPI_STATUS_UNAVAILABLE:
+      case PINAPI_STATUS_CLOSED:
+      case PINAPI_STATUS_NOT_FOUND:
+        pinapi_flood_register_event();
+        break;
+    }
+  }
+}
+
+/**
+ * Validate Callback: Pin API Collection Block Form Blocker.
+ */
+function pinapi_flood_collection_block_form_validate_blocker(&$form, &$form_state) {
+  // @TODO: Come up with better message.
+  form_set_error('', t('Flood protection.'));
+}
+
+
+/**
+ * Submit Callback: Pin API Collection Block Form.
+ */
+function pinapi_flood_collection_block_form_submit(&$form, &$form_state) {
+  flood_clear_event('pinapi_flood_collection_block_form', $GLOBALS['user']->uid);
+}
+
+/**
+ * Return flood status.
+ */
+function pinapi_flood_is_allowed() {
+  $threshold = variable_get('pinapi_flood_threshold', 5);
+  $window = variable_get('pinapi_flood_window', 3600);
+  $identifier = $GLOBALS['user']->uid;
+
+  return flood_is_allowed('pinapi_flood_collection_block_form', $threshold, $window, $identifier);
+}
+
+/**
+ * Register a Pin API flood event.
+ */
+function pinapi_flood_register_event() {
+  $window = variable_get('pinapi_flood_window', 3600);
+  $identifier = $GLOBALS['user']->uid;
+
+  flood_register_event('pinapi_flood_collection_block_form', $window, $identifier);
+}

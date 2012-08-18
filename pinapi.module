@@ -229,17 +229,7 @@ function pinapi_collection_block_form($form, &$form_state, $collection) {
 function pinapi_collection_block_form_validate($form, &$form_state) {
   global $user;
 
-  // Get flood control settings.
-  $flood_control = variable_get('pinapi_flood_control', TRUE);
-  $flood_threshold = variable_get('pinapi_flood_threshold', 5);
-  $flood_window = variable_get('pinapi_flood_window', 3600);
-  $flood_identifier = $user->uid;
-  $flood_triggered = FALSE;
-
-  if ( $flood_control && !flood_is_allowed('pinapi_txn_redeem', $flood_threshold, $flood_window, $flood_identifier) ) {
-    form_set_error('code', t('Flood control.'));
-  }
-  else if ( !empty($form_state['values']['code']) ) {
+  if ( !empty($form_state['values']['code']) ) {
 
     // Create a transaction object.
     $txn = pinapi_txn($form_state['values']['code'], $form_state['values']['collection']->cid);
@@ -254,7 +244,6 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
         break;
       case PINAPI_STATUS_NOT_FOUND:
         form_set_error('code', t('The code you have entered is not valid.'));
-        $flood_triggered = TRUE;
         break;
     }
 
@@ -266,11 +255,6 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
     // Show message if not redeemable.
     if ( !$txn->redeemable ) {
       form_set_error('code', t('The code you have entered is not redeemable at this time.'));
-    }
-
-    // Flood control.
-    if ( $flood_control && $flood_triggered ) {
-      flood_register_event('pinapi_txn_redeem', $flood_window, $flood_identifier);
     }
 
     // Pass transaction to submit handler.
@@ -289,8 +273,6 @@ function pinapi_collection_block_form_submit($form, &$form_state) {
   if ( $txn->redeemable ) {
     // Finalize and redeem transaction.
     pinapi_txn_redeem($txn);
-
-    flood_clear_event('pinapi_txn_redeem', $user->uid);
 
     drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
 
