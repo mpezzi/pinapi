@@ -134,7 +134,7 @@ function pinapi_txn($code, $cid, $uid = NULL) {
   $txn->redeemable = ( $txn->txn_status == PINAPI_STATUS_AVAILABLE );
   $txn->redeemed = FALSE;
 
-  // Invoke hook_pinapi_request() w/ 'create' operation.
+  // Invoke hook_pinapi_txn() w/ 'create' operation.
   pinapi_invoke('pinapi_txn', 'create', $txn);
 
   return $txn;
