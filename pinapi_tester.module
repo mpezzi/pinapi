@@ -1,0 +1,112 @@
+<?php
+
+/**
+ * @file
+ * Provides a helpful testing block for testing pins
+ */
+
+
+/**
+ * Implements hook_permission().
+ */
+function pinapi_tester_permission() {
+  return array(
+    'use test pins' => array(
+      'title' => t('Use test pins'),
+      'description' => t('Access to use test pins.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme().
+ */
+function pinapi_tester_theme() {
+  return array(
+    'pinapi_tester' => array(
+      'variables' => array('collection' => NULL, 'pins' => NULL),
+      'template' => 'pinapi-tester',
+      'path' => drupal_get_path('module', 'pinapi_tester') . '/theme',
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function pinapi_tester_block_info() {
+  $blocks = array();
+  foreach ( pinapi_collection_load_all() as $collection ) {
+    $blocks['tester_' . $collection->cid] = array(
+      'info' => t('Pin API Collection Tester (@name)', array('@name' => $collection->name)),
+      'cache' => DRUPAL_NO_CACHE,
+    );
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function pinapi_tester_block_view($delta = '') {
+  list($type, $id) = explode('_', $delta);
+
+  $block = array();
+  switch ( $type ) {
+    case 'tester':
+      if ( user_access('use test pins') && $collection = pinapi_collection_load($id) ) {
+        $pins = pinapi_tester_load_test_pins($collection->cid);
+
+        $block['subject'] = t('Pin API Collection Tester (@name)', array('@name' => $collection->name));
+        $block['content'] = theme('pinapi_tester', array('collection' => $collection, 'pins' => $pins));
+      }
+      break;
+  }
+
+  return $block;
+}
+
+/**
+ * Load available test pins.
+ */
+function pinapi_tester_load_test_pins($cid, $limit = 10) {
+  $result = db_select('pinapi_pin', 'p')
+    ->fields('p', array())
+    ->condition('cid', $cid)
+    ->condition('test', 1)
+    ->condition('status', 1)
+    ->range(0, $limit)
+    ->execute();
+
+  $pins = array();
+  foreach ( $result as $pin ) {
+    $pins[] = $pin;
+  }
+
+  return $pins;
+}
+
+/**
+ * Implements hook_preprocess_pinapi_tester().
+ */
+function template_preprocess_pinapi_tester(&$vars) {
+  drupal_add_js(drupal_get_path('module', 'pinapi_tester') . '/pinapi_tester.js');
+  drupal_add_js(array(
+    'pinapi_tester' => array(
+      '#pinapi-tester-' . $vars['collection']->cid => array(
+        'form' => '#pinapi-collection-block-form-' . $vars['collection']->cid,
+      ),
+    ),
+  ), 'setting');
+
+  // Gather test pin codes.
+  $codes = array();
+  foreach ( $vars['pins'] as $pin ) {
+    $codes[] = array(
+      'data' => $pin->code . ' x' . $pin->quantity,
+      'data-code' => $pin->code,
+    );
+  }
+
+  $vars['codes'] = theme('item_list', array('items' => $codes, 'attributes' => array('class' => array('pinapi-tester-codes'))));
+}

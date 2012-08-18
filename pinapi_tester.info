@@ -1,0 +1,4 @@
+name = Pin API Tester
+description = Provides a helpful testing block for testing pins
+core = 7.x
+package = pinapi
