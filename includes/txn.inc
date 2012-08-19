@@ -49,9 +49,6 @@ function pinapi_txn_save(&$txn) {
     // @TODO: Do we need this?
     //cache_clear_all();
 
-    // Update Pin API Cache Value.
-    pinapi_cache_inc($txn->uid, $txn->cid, 'total');
-
     // Allow other modules to act when a collection is being saved.
     module_invoke_all('pinapi_txn_save', $txn);
 
@@ -202,6 +199,9 @@ function pinapi_txn_redeem(&$txn) {
     $txn->redeemed = TRUE;
 
     pinapi_txn_save($txn);
+
+    // Update Pin API Cache Value.
+    pinapi_cache_inc($txn->uid, $txn->cid, 'total');
 
     // Invoke hook_pinapi_txn() w/ 'redeem' operation.
     pinapi_invoke('pinapi_txn', 'redeem', $txn);
