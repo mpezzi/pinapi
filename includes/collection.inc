@@ -175,8 +175,7 @@ function pinapi_collection_reset($cid) {
     db_query("DELETE FROM {pinapi_collection_cache} WHERE cid = :cid", array(':cid' => $collection->cid));
 
     // Reset pins.
-    // @TODO: What happens with quantities field?
-    db_query("UPDATE {pinapi_pin} SET changed = 0, quantity = 1, status = 1 WHERE cid = :cid", array(':cid' => $collection->cid));
+    db_query("UPDATE {pinapi_pin} SET changed = 0, quantity = quantity_original, status = 1 WHERE cid = :cid", array(':cid' => $collection->cid));
 
     // Clear caches.
     pinapi_collection_static_reset();
