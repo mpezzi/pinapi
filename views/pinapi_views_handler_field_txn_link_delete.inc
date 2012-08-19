@@ -11,7 +11,7 @@ class pinapi_views_handler_field_txn_link_delete extends pinapi_views_handler_fi
 
       $text = !empty($this->options['text']) ? $this->options['text'] : t('delete');
 
-      $this->options['alter']['path'] = "pin/transaction/$data/delete";
+      $this->options['alter']['path'] = "admin/pinapi/transaction/$data/delete";
       $this->options['alter']['query'] = drupal_get_destination();
 
       return $text;

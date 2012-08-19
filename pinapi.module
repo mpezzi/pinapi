@@ -17,7 +17,7 @@ require_once dirname(__FILE__) . '/includes/cache.inc';
  */
 function pinapi_permission() {
   return array(
-    'administer pins' => array(
+    'administer pin api' => array(
       'title' => t('Administer pins'),
       'description' => t('Access the pin administration pages.')
     ),
@@ -36,98 +36,128 @@ function pinapi_permission() {
  * Implements hook_menu().
  */
 function pinapi_menu() {
-  $items['admin/structure/pin'] = array(
+  $items = array();
+
+  $items['admin/pinapi'] = array(
     'title' => 'Pins',
-    'description' => 'Manage pins and collections.',
-    'page callback' => 'pinapi_admin_overview',
-    'access arguments' => array('administer pins'),
-    'file' => 'pinapi.admin.inc',
+    'description' => 'Administer your pins.',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file path' => drupal_get_path('module', 'system'),
+    'file' => 'system.admin.inc',
+    'weight' => -7,
   );
 
-  $items['admin/structure/pin/collection/add'] = array(
-    'title' => 'Add collection',
+  $items['admin/pinapi/collection'] = array(
+    'title' => 'Collections',
+    'description' => 'Manage your pin collections.',
+    'page callback' => 'pinapi_admin_collection_view',
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/pinapi/collection/add'] = array(
+    'title' => 'Create Collection',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('pinapi_form_collection'),
-    'access arguments' => array('administer pins'),
+    'access arguments' => array('administer pin api'),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'pinapi.admin.inc',
   );
-  $items['admin/structure/pin/collection/%pinapi_collection/edit'] = array(
+  $items['admin/pinapi/collection/%pinapi_collection/edit'] = array(
     'title' => 'Edit collection',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_collection', 4),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_collection', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
-  $items['admin/structure/pin/collection/%pinapi_collection/delete'] = array(
+  $items['admin/pinapi/collection/%pinapi_collection/delete'] = array(
     'title' => 'Delete collection',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_collection_delete', 4),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_collection_delete', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
-  $items['admin/structure/pin/collection/%pinapi_collection/update'] = array(
-    'title' => 'Update collection',
+  $items['admin/pinapi/collection/%pinapi_collection/calculate'] = array(
+    'title' => 'Calculate collection',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_collection_update', 4),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_collection_calculate', 3),
+    'access arguments' => array('administer pin api'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/pinapi/collection/%pinapi_collection/reset'] = array(
+    'title' => 'Reset collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection_reset', 3),
+    'access arguments' => array('administer pin api'),
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/pinapi/collection/%pinapi_collection/clear'] = array(
+    'title' => 'Clear collection',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pinapi_form_collection_clear', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
 
-  $items['pin/transaction/%pinapi_txn'] = array(
+  $items['admin/pinapi/transaction'] = array(
+    'title' => 'Transactions',
+    'description' => 'Manage your pin transactions.',
+    'page callback' => 'pinapi_admin_transaction_overview',
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/pinapi/transaction/%pinapi_txn'] = array(
     'title' => 'View transaction',
     'description' => 'View transaction',
     'page callback' => 'pinapi_transaction_view',
-    'page arguments' => array(2),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array(3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
-  $items['pin/transaction/%pinapi_txn/edit'] = array(
+  $items['admin/pinapi/transaction/%pinapi_txn/edit'] = array(
     'title' => 'Edit transaction',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_transaction', 2),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_transaction', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
-  $items['pin/transaction/%pinapi_txn/delete'] = array(
+  $items['admin/pinapi/transaction/%pinapi_txn/delete'] = array(
     'title' => 'Delete transaction',
     'description' => 'Delete transaction',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_transaction_delete', 2),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_transaction_delete', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
 
-  $items['pin/pin/%pinapi_pin/edit'] = array(
+  $items['admin/pinapi/pin'] = array(
+    'title' => 'Pins',
+    'description' => 'Manage your pins.',
+    'page callback' => 'pinapi_admin_pin_overview',
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'pinapi.admin.inc',
+  );
+  $items['admin/pinapi/pin/%pinapi_pin/edit'] = array(
     'title' => 'Edit pin',
     'description' => 'Edit pin',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_pin', 2),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_pin', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
-  $items['pin/pin/%pinapi_pin/delete'] = array(
+  $items['admin/pinapi/pin/%pinapi_pin/delete'] = array(
     'title' => 'Delete pin',
     'description' => 'Delete pin',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('pinapi_form_pin_delete', 2),
-    'access arguments' => array('administer pins'),
+    'page arguments' => array('pinapi_form_pin_delete', 3),
+    'access arguments' => array('administer pin api'),
     'file' => 'pinapi.admin.inc',
   );
 
   return $items;
-}
-
-/**
- * Implements hook_admin_paths().
- */
-function pinapi_admin_paths() {
-  $paths = array(
-    'pin/transaction/*' => TRUE,
-    'pin/transaction/*/edit' => TRUE,
-    'pin/transaction/*/edit/*' => TRUE,
-  );
-  return $paths;
 }
 
 /**

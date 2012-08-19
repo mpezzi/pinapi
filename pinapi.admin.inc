@@ -5,35 +5,33 @@
  * Administration page callbacks for the pinapi.module
  */
 
-/**
- * Menu Callback: Display Pin API Administration.
- */
-function pinapi_admin_overview() {
-  return pinapi_view();
-}
 
 /**
  * Displays the pin api administration page.
  */
-function pinapi_view() {
-  $output = '<h3>' . t('Collection overview') . '</h3>';
+function pinapi_admin_collection_view() {
+  $output = '';
 
   $header = array(
     t('Name'),
     t('Live Pins'),
     t('Test Pins'),
-    array('data' => t('Operations'), 'colspan' => '3'),
+    array('data' => t('Operations'), 'colspan' => '5'),
+    t('Active'),
   );
 
   $rows = array();
   foreach ( pinapi_collection_load_all() as $collection ) {
     $rows[] = array(
       $collection->name,
-      $collection->inventory['available'] . '/' . $collection->inventory['total'],
-      $collection->inventory['available_test'] . '/' . $collection->inventory['total_test'],
-      l(t('update collection'), "admin/structure/pin/collection/$collection->cid/update"),
-      l(t('edit collection'), "admin/structure/pin/collection/$collection->cid/edit"),
-      l(t('delete collection'), "admin/structure/pin/collection/$collection->cid/delete"),
+      number_format(isset($collection->inventory['available']) ? $collection->inventory['available'] : 0) . '/' . number_format(isset($collection->inventory['total']) ? $collection->inventory['total'] : 0),
+      number_format(isset($collection->inventory['available_test']) ? $collection->inventory['available_test'] : 0) . '/' . number_format(isset($collection->inventory['total_test']) ? $collection->inventory['total_test'] : 0),
+      l(t('calculate'), "admin/pinapi/collection/$collection->cid/calculate"),
+      l(t('reset'), "admin/pinapi/collection/$collection->cid/reset"),
+      l(t('clear'), "admin/pinapi/collection/$collection->cid/clear"),
+      l(t('edit'), "admin/pinapi/collection/$collection->cid/edit"),
+      l(t('delete'), "admin/pinapi/collection/$collection->cid/delete"),
+      $collection->status ? t('Yes') : t('No'),
     );
   }
 
@@ -84,7 +82,7 @@ function pinapi_form_collection($form, &$form_state, $collection = NULL) {
   );
   $form['status'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Published'),
+    '#title' => t('Active'),
     '#default_value' => isset($collection->status) ? $collection->status : FALSE,
   );
   $form['actions'] = array('#type' => 'actions');
@@ -119,14 +117,95 @@ function pinapi_form_collection_submit($form, &$form_state) {
       drupal_set_message(t('Created new collection %name.', array('%name' => $form_state['values']['name'])));
     }
 
-    $form_state['redirect'] = 'admin/structure/pin';
+    $form_state['redirect'] = 'admin/pinapi/collection';
   }
   else if ( $form_state['values']['op'] == t('Delete') ) {
     pinapi_collection_delete($form_state['values']['cid']);
     watchdog('pinapi', 'Collection %name has been deleted.', array('%name' => $form_state['values']['name']));
     drupal_set_message(t('The collection %name has been deleted.', array('%name' => $form_state['values']['name'])));
-    $form_state['redirect'] = 'admin/structure/pin';
+    $form_state['redirect'] = 'admin/pinapi/collection';
   }
+}
+
+/**
+ * Form constructor to calculate collections().
+ */
+function pinapi_form_collection_calculate($form, &$form_state, $collection) {
+  return confirm_form(
+    array(
+      'collection' => array(
+        '#type' => 'value',
+        '#value' => $collection,
+      ),
+    ),
+    t('Are you sure you want to calculate this collection %name?', array('%name' => $collection->name)),
+    'admin/pinapi/collection',
+    t('This action cannot be undone.'),
+    t('Calculate collection'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for pinapi_form_collection_calculate().
+ */
+function pinapi_form_collection_calculate_submit($form, &$form_state) {
+  pinapi_collection_calculate($form_state['values']['collection']->cid);
+  $form_state['redirect'] = 'admin/pinapi/collection';
+}
+
+/**
+ * Form constructor to reset collections().
+ */
+function pinapi_form_collection_reset($form, &$form_state, $collection) {
+  return confirm_form(
+    array(
+      'collection' => array(
+        '#type' => 'value',
+        '#value' => $collection,
+      ),
+    ),
+    t('Are you sure you want to reset this collection %name?', array('%name' => $collection->name)),
+    'admin/pinapi/collection',
+    t('This action cannot be undone.'),
+    t('Reset collection'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for pinapi_form_collection_calculate().
+ */
+function pinapi_form_collection_reset_submit($form, &$form_state) {
+  pinapi_collection_reset($form_state['values']['collection']->cid);
+  $form_state['redirect'] = 'admin/pinapi/collection';
+}
+
+/**
+ * Form constructor to clear collections().
+ */
+function pinapi_form_collection_clear($form, &$form_state, $collection) {
+  return confirm_form(
+    array(
+      'collection' => array(
+        '#type' => 'value',
+        '#value' => $collection,
+      ),
+    ),
+    t('Are you sure you want to clear this collection %name?', array('%name' => $collection->name)),
+    'admin/pinapi/collection',
+    t('This action cannot be undone.'),
+    t('Clear collection'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Form submit handler for pinapi_form_collection_calculate().
+ */
+function pinapi_form_collection_clear_submit($form, &$form_state) {
+  pinapi_collection_clear($form_state['values']['collection']->cid);
+  $form_state['redirect'] = 'admin/pinapi/collection';
 }
 
 /**
@@ -141,7 +220,7 @@ function pinapi_form_collection_delete($form, &$form_state, $collection) {
       ),
     ),
     t('Are you sure you want to delete this collection %name?', array('%name' => $collection->name)),
-    'admin/structure/pin',
+    'admin/pinapi/collection',
     t('This action cannot be undone.'),
     t('Delete collection'),
     t('Cancel')
@@ -153,7 +232,7 @@ function pinapi_form_collection_delete($form, &$form_state, $collection) {
  */
 function pinapi_form_collection_delete_submit($form, &$form_state) {
   pinapi_collection_delete($form_state['values']['collection']->cid);
-  $form_state['redirect'] = 'admin/structure/pin';
+  $form_state['redirect'] = 'admin/pinapi/collection';
 }
 
 /**
@@ -224,13 +303,13 @@ function pinapi_form_transaction_submit($form, &$form_state) {
       drupal_set_message(t('Created new transaction.'));
     }
 
-    $form_state['redirect'] = 'admin/structure/pin';
+    $form_state['redirect'] = 'admin/pinapi/transaction';
   }
   else if ( $form_state['values']['op'] == t('Delete') ) {
     pinapi_txn_delete($form_state['values']['txn_id']);
     watchdog('pinapi', 'Transaction has been deleted.');
     drupal_set_message(t('The transaction has been deleted.'));
-    $form_state['redirect'] = 'admin/structure/pin';
+    $form_state['redirect'] = 'admin/pinapi/transaction';
   }
 }
 
@@ -246,7 +325,7 @@ function pinapi_form_transaction_delete($form, &$form_state, $txn) {
       ),
     ),
     t('Are you sure you want to delete this transaction?'),
-    'admin/structure/pin',
+    'admin/pinapi/transaction',
     t('This action cannot be undone.'),
     t('Delete transaction'),
     t('Cancel')
@@ -258,7 +337,7 @@ function pinapi_form_transaction_delete($form, &$form_state, $txn) {
  */
 function pinapi_form_transaction_delete_submit($form, &$form_state) {
   pinapi_txn_delete($form_state['values']['txn']->txn_id);
-  $form_state['redirect'] = 'admin/structure/pin';
+  $form_state['redirect'] = 'admin/pinapi/transaction';
 }
 
 /**
@@ -334,7 +413,7 @@ function pinapi_form_pin_submit($form, &$form_state) {
     drupal_set_message(t('Pin has been deleted.'));
   }
 
-  $form_state['redirect'] = 'admin/structure/pin';
+  $form_state['redirect'] = 'admin/pinapi/pin';
 }
 
 /**
@@ -349,7 +428,7 @@ function pinapi_form_pin_delete($form, &$form_state, $pin) {
       ),
     ),
     t('Are you sure you want to delete this pin?'),
-    'admin/structure/pin',
+    'admin/pinapi/pin',
     t('This action cannot be undone.'),
     t('Delete pin'),
     t('Cancel')
@@ -361,5 +440,5 @@ function pinapi_form_pin_delete($form, &$form_state, $pin) {
  */
 function pinapi_form_pin_delete_submit($form, &$form_state) {
   pinapi_pin_delete($form_state['values']['pin']->cid);
-  $form_state['redirect'] = 'admin/structure/pin';
+  $form_state['redirect'] = 'admin/pinapi/pin';
 }

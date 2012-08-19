@@ -44,7 +44,7 @@ class pinapi_views_handler_field_txn_link extends views_handler_field {
     $text = !empty($this->options['text']) ? $this->options['text'] : t('view');
 
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "admin/structure/pin/transaction/" . $data;
+    $this->options['alter']['path'] = "admin/pinapi/transaction/" . $data;
 
     return $text;
   }
