@@ -123,6 +123,9 @@ function pinapi_collection_delete($cid) {
  */
 function pinapi_collection_calculate($cid) {
   if ( $collection = pinapi_collection_load($cid) ) {
+    // Extend execution time limit.
+    drupal_set_time_limit(3600);
+
     // Invoke hook_pinapi_collection_calculate().
     module_invoke_all('pinapi_collection_calculate', $collection);
 
@@ -160,6 +163,9 @@ function pinapi_collection_calculate($cid) {
  */
 function pinapi_collection_reset($cid) {
   if ( $collection = pinapi_collection_load($cid) ) {
+    // Extend execution time limit.
+    drupal_set_time_limit(3600);
+
     // Invoke hook_pinapi_collection_reset().
     module_invoke_all('pinapi_collection_reset', $collection);
 
@@ -190,6 +196,9 @@ function pinapi_collection_reset($cid) {
  */
 function pinapi_collection_clear($cid) {
   if ( $collection = pinapi_collection_load($cid) ) {
+    // Extend execution time limit.
+    drupal_set_time_limit(3600);
+
     // Invoke hook_pinapi_collection_clear().
     module_invoke_all('pinapi_collection_clear', $collection);
 
