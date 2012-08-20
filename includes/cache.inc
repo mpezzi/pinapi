@@ -34,7 +34,7 @@ function pinapi_cache_inc($uid, $cid, $name, $value = 1) {
 /**
  * Get Pin API Cache Value.
  */
-function pinapi_cache_get($uid, $cid, $name, $default = NULL) {
+function pinapi_cache_get($uid, $cid, $name, $default = 0) {
   $result = db_select('pinapi_cache', 'c')
     ->fields('c', array('value'))
     ->condition('uid', $uid)
@@ -88,7 +88,7 @@ function pinapi_cache_collection_inc($cid, $name, $value = 1) {
 /**
  * Get Pin API Cache Value.
  */
-function pinapi_cache_collection__get($cid, $name, $default = NULL) {
+function pinapi_cache_collection_get($cid, $name, $default = 0) {
   $result = db_select('pinapi_collection_cache', 'c')
     ->fields('c', array('value'))
     ->condition('cid', $cid)
@@ -102,7 +102,7 @@ function pinapi_cache_collection__get($cid, $name, $default = NULL) {
 /**
  * Delete a Pin API Cache Value.
  */
-function pinapi_cache_collection__del($cid, $name) {
+function pinapi_cache_collection_del($cid, $name) {
   $query = db_delete('pinapi_collection_cache')
     ->condition('cid', $cid)
     ->condition('name', $name)
