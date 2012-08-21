@@ -224,6 +224,32 @@ function pinapi_txn_redeem(&$txn) {
 }
 
 /**
+ * Calculate transactions.
+ */
+function pinapi_txn_calculate($name, $cid, $uid = NULL) {
+  // Calculate txn_total.
+  if ( $name == 'txn_total' ) {
+
+    $sql  = "SELECT pp.cid, pt.uid, COUNT(uid) as value FROM {pinapi_txn} pt ";
+    $sql .= "INNER JOIN {pinapi_pin} pp ON pt.pid = pp.pid ";
+    $sql .= "WHERE pp.cid = :cid ";
+
+    // Filter uid.
+    if ( !is_null($uid) ) {
+      $sql .= "AND pt.uid = :uid ";
+    }
+
+    $sql .= "GROUP BY pt.uid";
+
+    $result = db_query($sql, array(':cid' => $cid, ':uid' => $uid));
+    foreach ( $result as $row ) {
+      pinapi_cache_set($row->uid, $row->cid, 'txn_total', $row->value);
+    }
+  }
+
+}
+
+/**
  * Reset statically cache variables.
  */
 function pinapi_txn_static_reset() {
