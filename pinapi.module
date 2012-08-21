@@ -268,23 +268,28 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
     switch ( $txn->txn_status ) {
       case PINAPI_STATUS_UNAVAILABLE:
         form_set_error('code', t('The code you have entered has already been used.'));
+        watchdog('pinapi', 'Failed pin transaction with @code (already used)', array('@code' => $txn->code), WATCHDOG_NOTICE, l('view user', 'user/' . $txn->uid));
         break;
       case PINAPI_STATUS_CLOSED:
         form_set_error('code', t('Codes are not being accepted at this time.'));
         break;
       case PINAPI_STATUS_NOT_FOUND:
         form_set_error('code', t('The code you have entered is not valid.'));
+        watchdog('pinapi', 'Failed pin transaction with @code (not found)', array('@code' => $txn->code), WATCHDOG_NOTICE, l('view user', 'user/' . $txn->uid));
         break;
     }
 
     // Only users with "use test pins" permissions can redeem test pins.
     if ( isset($txn->pin->test) && $txn->pin->test && !user_access('use test pins') ) {
       form_set_error('code', t('Your account cannot redeem test pins.'));
+      watchdog('pinapi', 'Failed pin transaction with @code (test pin)', array('@code' => $txn->code), WATCHDOG_WARNING, l('view user', 'user/' . $txn->uid));
     }
 
     // Show message if not redeemable.
     if ( !$txn->redeemable ) {
+      // @TODO: Does this actually get to do anything?
       form_set_error('code', t('The code you have entered is not redeemable at this time.'));
+      //watchdog('pinapi', 'Failed pin transaction with @code (not redeemable)', array('@code' => $txn->code), WATCHDOG_NOTICE, l('view user', 'user/' . $txn->uid));
     }
 
     // Pass transaction to submit handler.
@@ -304,7 +309,9 @@ function pinapi_collection_block_form_submit($form, &$form_state) {
     // Finalize and redeem transaction.
     pinapi_txn_redeem($txn);
 
-    drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
+    //drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
+
+    watchdog('pinapi', 'Redeemed pin transaction with @code', array('@code' => $txn->pin->code), WATCHDOG_NOTICE, l('edit', 'admin/pinapi/transaction/' . $txn->txn_id . '/edit'));
 
     // @TODO: Find a better way to redirect.
     drupal_goto('<front>');
