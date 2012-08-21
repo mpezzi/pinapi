@@ -201,7 +201,7 @@ function pinapi_txn_redeem(&$txn) {
     pinapi_txn_save($txn);
 
     // Update Pin API Cache Value.
-    pinapi_cache_inc($txn->uid, $txn->cid, 'total');
+    pinapi_cache_inc($txn->uid, $txn->cid, 'txn_total');
 
     // Invoke hook_pinapi_txn() w/ 'redeem' operation.
     pinapi_invoke('pinapi_txn', 'redeem', $txn);

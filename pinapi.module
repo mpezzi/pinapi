@@ -203,7 +203,7 @@ function pinapi_block_view($delta = '') {
       case 'txn-total':
         if ( user_access('use pins') && $collection = pinapi_collection_load($id) ) {
           $block['subject'] = t('Pin API Transaction Total (@name)', array('@name' => $collection->name));
-          $block['content'] = pinapi_cache_get($GLOBALS['user']->uid, $collection->cid, 'total');
+          $block['content'] = pinapi_cache_get($GLOBALS['user']->uid, $collection->cid, 'txn_total');
         }
         break;
     }
