@@ -119,6 +119,7 @@ function pinapi_txn($code, $cid, $uid = NULL) {
   $txn->uid = $txn->user->uid;
 
   // Additional transaction information.
+  $txn->code = $code;
   $txn->hostname = ip_address();
   $txn->timestamp = time();
   $txn->changed = time();
