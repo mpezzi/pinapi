@@ -180,6 +180,20 @@ function pinapi_views_data() {
       'handler' => 'views_handler_argument_string',
     ),
   );
+  $data['pinapi_pin']['quantity_original'] = array(
+    'title' => t('Quantity (Original)'),
+    'help' => t('Pin Quantity (Original)'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_numeric',
+    ),
+  );
   $data['pinapi_pin']['quantity'] = array(
     'title' => t('Quantity'),
     'help' => t('Pin Quantity'),
@@ -192,6 +206,26 @@ function pinapi_views_data() {
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_numeric',
+    ),
+  );
+  $data['pinapi_pin']['test'] = array(
+    'title' => t('Test'),
+    'help' => t('Weather or not the pin is a test pin.'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+      'output formats' => array(
+        'published-notpublished' => array(t('Test'), t('Not test')),
+      ),
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Test'),
+      'type' => 'yes-no',
+      'use equal' => TRUE, // Use status = 1 instead of status <> 0 in WHERE statment
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
     ),
   );
   $data['pinapi_pin']['status'] = array(
