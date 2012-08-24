@@ -76,3 +76,32 @@ function pinapi_generate_test_pins($cid, $number_of_pins = 5, $test = TRUE, $pre
 
   drupal_set_message(t('Successfully created test collection and pins.'));
 }
+
+/**
+ * Test user pin redeeming.
+ */
+function pinapi_test_redeem($cid) {
+  $result = db_select('users', 'u')
+    ->fields('u', array('uid'))
+    ->condition('uid', 1, '>')
+    ->execute();
+
+  $users = array();
+  foreach ( $result as $row ) {
+    $users[$row->uid] = user_load($row->uid);
+  }
+
+  $result = db_select('pinapi_pin', 'p')
+    ->fields('p', array('pid', 'code'))
+    ->condition('cid', $cid)
+    ->condition('test', 0)
+    ->execute();
+
+  $pins = array();
+  foreach ( $result as $row ) {
+    $txn = pinapi_txn($row->code, $cid, array_rand($users));
+    pinapi_txn_redeem($txn);
+  }
+
+  drupal_set_message(t('Successfully ran test.'));
+}
