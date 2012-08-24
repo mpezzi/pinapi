@@ -58,19 +58,11 @@ function pinapi_invoke($hook, $op, &$object) {
 /**
  * Generate Test Object.
  */
-function pinapi_test_generate($number_of_pins = 5, $test = TRUE) {
-  $collection = (object) array(
-    'name' => t('Test'),
-    'machine_name' => 'test',
-    'description' => t('This is a test collection, for you know, testing purposes.'),
-    'status' => 1,
-  );
-  pinapi_collection_save($collection);
-
+function pinapi_generate_test_pins($cid, $number_of_pins = 5, $test = TRUE, $prefix = 'test') {
   for ( $i = 0; $i < $number_of_pins; $i++ ) {
     $pin = (object) array(
-      'code' => 'test' . $i,
-      'cid' => $collection->cid,
+      'code' => $prefix . $i,
+      'cid' => $cid,
       'quantity_original' => 1,
       'quantity' => 1,
       'test' => $test,
@@ -80,7 +72,7 @@ function pinapi_test_generate($number_of_pins = 5, $test = TRUE) {
   }
 
   // Calculate collection inventory.
-  pinapi_collection_calculate($collection->cid);
+  pinapi_collection_calculate($cid);
 
   drupal_set_message(t('Successfully created test collection and pins.'));
 }
