@@ -150,6 +150,11 @@ function pinapi_collection_calculate($cid) {
     pinapi_cache_collection_set($collection->cid, 'available', !is_null($available) ? $available : 0);
     pinapi_cache_collection_set($collection->cid, 'total_test', !is_null($total_test) ? $total_test : 0);
     pinapi_cache_collection_set($collection->cid, 'available_test', !is_null($available_test) ? $available_test : 0);
+
+    // Clear caches.
+    pinapi_collection_static_reset();
+
+    cache_clear_all();
   }
 }
 
