@@ -10,6 +10,7 @@ require_once dirname(__FILE__) . '/includes/pin.inc';
 require_once dirname(__FILE__) . '/includes/collection.inc';
 require_once dirname(__FILE__) . '/includes/txn.inc';
 require_once dirname(__FILE__) . '/includes/cache.inc';
+require_once dirname(__FILE__) . '/includes/test.inc';
 
 
 /**
