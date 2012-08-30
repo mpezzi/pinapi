@@ -265,6 +265,9 @@ function pinapi_collection_block_form_validate($form, &$form_state) {
     // Create a transaction object.
     $txn = pinapi_txn($form_state['values']['code'], $form_state['values']['collection']->cid);
 
+    // Invoke hook_pinapi_txn with validate operation.
+    pinapi_invoke('pinapi_txn', 'validate', $txn);
+
     // Show appripriate error message based on transaction status.
     switch ( $txn->txn_status ) {
       case PINAPI_STATUS_UNAVAILABLE:
