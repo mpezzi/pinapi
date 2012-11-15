@@ -310,12 +310,12 @@ function pinapi_collection_block_form_submit($form, &$form_state) {
   $txn = $form_state['values']['txn'];
 
   if ( $txn->redeemable ) {
+    // Finalize and redeem transaction.
+    pinapi_txn_redeem($txn);
+
     // @TODO: Find a better way to show messages.
     //drupal_set_message(t('Congratulations! Your code has been entered successfully.'));
     watchdog('pinapi', 'Redeemed pin transaction with @code', array('@code' => $txn->pin->code), WATCHDOG_NOTICE, l('edit', 'admin/pinapi/transaction/' . $txn->txn_id . '/edit'));
-
-    // Finalize and redeem transaction.
-    pinapi_txn_redeem($txn);
 
     // Invoke hook_pinapi_txn with validate operation.
     pinapi_invoke('pinapi_txn', 'submit', $txn);
