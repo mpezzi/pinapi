@@ -49,6 +49,18 @@ function pinapi_drush_command() {
     ),
     'required-arguments' => TRUE,
   );
+  $items['pinapi-pin-create'] = array(
+    'description' => 'Create pin.',
+    'arguments' => array(
+      'code' => 'Code',
+      'cid' => 'Collection ID',
+    ),
+    'required-arguments' => TRUE,
+    'options' => array(
+      'quantity' => 'Quantity',
+      'status' => 'Status',
+    ),
+  );
   $items['pinapi-txn-calculate'] = array(
     'description' => 'Calculate transactions.',
     'arguments' => array(
@@ -165,6 +177,30 @@ function drush_pinapi_collection_clear($cid) {
     else {
       drush_set_error("Aborting.");
     }
+  }
+  else {
+    drush_set_error("Could not find collection!");
+  }
+}
+
+/**
+ * Command Callback: Create pin.
+ */
+function drush_pinapi_pin_create($code, $cid) {
+  $quantity = drush_get_option('quantity', 1);
+  $status = drush_get_option('status', 1);
+
+  $collection = pinapi_collection_load($cid);
+
+  if ( $collection !== FALSE ) {
+    $pin = (object) array(
+      'code' => $code,
+      'cid' => $collection->cid,
+      'quantity' => $quantity,
+      'status' => $status,
+    );
+    pinapi_pin_save($pin);
+    drush_log(t('Successfully created pin.'), 'success');
   }
   else {
     drush_set_error("Could not find collection!");
