@@ -10,16 +10,17 @@
  * Implements hook_pinapi_txn
  */
 function pinapi_rules_pinapi_txn($op, &$txn) {
-
   // Map hook operations to rules events.
   $event = NULL;
   switch ( $op ) {
     case 'create':
       $event = 'pinapi_event_txn_create';
       break;
+
     case 'pre redeem':
       $event = 'pinapi_event_txn_pre_redeem';
       break;
+
     case 'redeem':
       $event = 'pinapi_event_txn_redeem';
       break;
@@ -28,17 +29,13 @@ function pinapi_rules_pinapi_txn($op, &$txn) {
   // Invoke rules event.
   if ( !is_null($event) ) {
     try {
-
       // Load wrapped user entity so we can act on the object.
       $txn->user = entity_metadata_wrapper('user', $txn->uid);
-
       // Invoke rules event.
       rules_invoke_event($event, $txn);
-
     }
     catch ( EntityMetadataWrapperException $e ) {
       // @TODO: Add exception logic.
     }
   }
-
 }
