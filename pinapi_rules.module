@@ -5,9 +5,8 @@
  * Provides integration of Pin API with rules.
  */
 
-
 /**
- * Implements hook_pinapi_txn
+ * Implements hook_pinapi_txn().
  */
 function pinapi_rules_pinapi_txn($op, &$txn) {
   // Map hook operations to rules events.

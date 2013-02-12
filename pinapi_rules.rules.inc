@@ -5,7 +5,6 @@
  * Provides integration of Pin API with rules.
  */
 
-
 /**
  * Implements hook_rules_data_info().
  */
