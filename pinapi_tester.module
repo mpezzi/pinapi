@@ -95,13 +95,13 @@ function template_preprocess_pinapi_tester(&$vars) {
   $codes = array();
   foreach ( $vars['pins'] as $pin ) {
     $codes[] = array(
-      'data' => $pin->code . ' x' . $pin->quantity,
+      'data' => $pin->code . ' <span class="quantity">x' . $pin->quantity . '</span>',
       'data-code' => $pin->code,
     );
   }
 
   if ( count($codes) > 0 ) {
-    $vars['codes'] = theme('item_list', array('items' => $codes, 'attributes' => array('class' => array('pinapi-tester-codes'))));
+    $vars['codes'] = theme('item_list', array('items' => $codes, 'attributes' => array('class' => array('pinapi-tester-codes', 'clearfix'))));
   }
   else {
     $vars['codes'] = t('No test pins available');
