@@ -20,6 +20,29 @@ function pinapi_tester_theme() {
 }
 
 /**
+ * Implements hook_form_form_id_alter().
+ */
+function pinapi_tester_form_pinapi_collection_block_form_alter(&$form, &$form_state) {
+  if ( user_access('use test pins') ) {
+    $form['pinapi_tester'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Submit form using a test pin'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#weight' => 100,
+      '#attributes' => array(
+        'class' => array('fieldset-pinapi-tester'),
+      ),
+      'pins' => array(
+        '#theme' => 'pinapi_tester',
+        '#collection' => $form['collection']['#value'],
+        '#pins' => pinapi_tester_load_test_pins($form['collection']['#value']->cid),
+      ),
+    );
+  }
+}
+
+/**
  * Implements hook_block_info().
  */
 function pinapi_tester_block_info() {
