@@ -182,11 +182,13 @@ function drush_pinapi_collection_import($cid) {
           $sql .= "cid = :cid, ";
           $sql .= "quantity_original = :quantity, ";
           $sql .= "quantity = :quantity, ";
+          $sql .= "test = :test, ";
           $sql .= "status = :status";
 
           $args = array(
             ':cid' => $cid,
             ':quantity' => $quantity,
+            ':test' => $test,
             ':status' => $status,
           );
 
