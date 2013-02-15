@@ -35,12 +35,12 @@ function pinapi_drush_command() {
     ),
     'required-arguments' => TRUE,
     'options' => array(
-      'input' => 'Input directory containing txt files of pins.',
-      'sort' => 'Sort the imported file first to improve importing performance.',
-      'filter' => 'Filter out a sub string from codes',
-      'test' => 'Set pins to be marked as test pins.',
-      'quantity' => 'The quantity of each pin being imported.',
-      'status' => 'The status of the pin.',
+      'input' => 'Input directory containing txt files of pins. (Defaults to current working directory)',
+      'sort' => 'Sort the imported file first to improve importing performance. (Defaults to 1 or TRUE)',
+      'filter' => 'Filter out a sub string from codes.',
+      'test' => 'Set pins to be marked as test pins. (Defaults to 0 or FALSE)',
+      'quantity' => 'The quantity of each pin being imported. (Defaults to 1)',
+      'status' => 'The status of the pin. (Defaults to 1)',
     ),
   );
   $items['pinapi-collection-info'] = array(
