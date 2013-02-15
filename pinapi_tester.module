@@ -26,7 +26,7 @@ function pinapi_tester_form_pinapi_collection_block_form_alter(&$form, &$form_st
   if ( user_access('use test pins') ) {
     $form['pinapi_tester'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Submit form using a test pin'),
+      '#title' => t('Insert Test Pin'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#weight' => 100,
