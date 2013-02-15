@@ -147,7 +147,7 @@ function drush_pinapi_collection_import($cid) {
           // Filter out characters from file.
           if ( !is_null($filter) ) {
             $file->uri_filtered = str_replace($file->name, $file->name . '-filtered', $file->uri);
-            drush_shell_exec_interactive("cat %s | sed 's/%s/%s/g' > %s", $file->uri, $filter, '', $file->uri_filtered);
+            drush_shell_exec("cat %s | sed 's/%s/%s/g' > %s", $file->uri, $filter, '', $file->uri_filtered);
 
             // Update new source file location.
             $file->name = $file->name . '-filtered';
